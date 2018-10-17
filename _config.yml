@@ -4,9 +4,10 @@ description: >-
   In this blog we're going to solve CTF's & Write Some Software's.My goal is redirect my little knowledge to other people.
 baseurl: ''
 url: blacknbunny.github.io
-twitter_username: 0DAYanc
+twitter_username: 0DAYawnc
 github_username: blacknbunny
 markdown: kramdown
+future: true
 theme: minima
 plugins:
   - jekyll-feed
