@@ -7,7 +7,6 @@ url: blacknbunny.github.io
 twitter_username: 0DAYanc
 github_username: blacknbunny
 markdown: kramdown
-future: true
 theme: minima
 plugins:
   - jekyll-feed

@@ -1,7 +1,6 @@
 ---
 title: Format String Attack
 layout: post
-published: true
 ---
 
 # **Format String Nedir ?**
