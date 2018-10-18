@@ -137,7 +137,7 @@ Toplam byte sayısını hesaplamak için :
 
 4*4 = 16
 
-16 + 16 = 48
+16 + 16 + 16 = 48
 ```
 
 Bu da demek oluyor ki **int target;** değişkenimizin üzerine 48 yazmışız ki bunun da hex karşılığı 0x30 oluyor.
