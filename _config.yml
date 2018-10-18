@@ -8,5 +8,7 @@ twitter_username: 0DAYanc
 github_username: blacknbunny
 markdown: kramdown
 theme: minima
+exclude:
+ - vendor/bundle/
 plugins:
   - jekyll-feed
