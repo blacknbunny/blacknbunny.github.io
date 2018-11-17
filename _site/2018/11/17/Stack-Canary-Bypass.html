@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Stack Canary Bypass</title>
+  <meta name="description" content="Yazımıza geçmeden önce ben videodan daha iyi öğrenirim diyen arkadaşlar için youtube’da çektiğim videoya alalım sizleri : Video">
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://0.0.0.0:4000/2018/11/17/Stack-Canary-Bypass.html">
+  <link rel="alternate" type="application/rss+xml" title="Daily Security" href="/feed.xml">
+  
+  
+</head>
+
+
+  <body>
+
+    <header class="site-header" role="banner">
+
+  <div class="wrapper">
+    
+    
+    <a class="site-title" href="/">Daily Security</a>
+  
+    
+      <nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger">
+          
+            
+            
+          
+            
+            
+            <a class="page-link" href="/about/">About</a>
+            
+          
+            
+            
+          
+            
+            
+          
+            
+            
+          
+        </div>
+      </nav>
+    
+  </div>
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Stack Canary Bypass</h1>
+    <p class="post-meta">
+      <time datetime="2018-11-17T00:00:00+00:00" itemprop="datePublished">
+        
+        Nov 17, 2018
+      </time>
+      </p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>Yazımıza geçmeden önce ben videodan daha iyi öğrenirim diyen arkadaşlar için youtube’da çektiğim videoya alalım sizleri : <a href="https://www.youtube.com/watch?v=sWKxjoZKhx4&amp;t=845s">Video</a></p>
+
+<p>Merhaba arkadaşlar bu blogum da sizlere standart güvenlik önlemlerinden biri olan <strong>Stack Canary</strong> yani bir diğer adı ile de <strong>Stack Cookie</strong>‘sinin nasıl bypass edileceğinden bahsedeceğim. Kafanız da güvenlik önemleri terimine ait bir yapı olmuşması için çoğumuzun bildiği bir kaç güvenlik önleminin ismini vererek yazıma başlamak istiyorum.  <strong>ASLR, NX, RELRO, SafeSEH, DEP</strong> ve benzerleri… “Stack Canary” gibi güvenlik önlemleridir. Derleyiciniz ile bunları belirleyip işleme geçirebilirsiniz. Ya da işletim sisteminizi bunu otomatik belirlemesi için ayarlaya bilirsiniz.</p>
+
+<h1 id="güvenlik-önlemlerinden-kısa-bahsedelim">Güvenlik Önlemlerinden kısa bahsedelim</h1>
+
+<p>Güvenlik zafiyetlerinin sömürgesini bir az da olsa engellemek için vardırlar. Zafiyetler içerisinden en çok bilineni “Buffer Overflow” dur. Birazdan bahsedeceğimiz <strong>Stack Canary</strong>‘nin bize <strong>Buffer Overflow</strong> zafiyetini kullanmamamız için ne gibi engellerde bulunduğunu anlatmaya başladığımız da daha iyi kavrayacaksınızdır güvenlik önlemlerinin neler olduklarını.</p>
+
+<h1 id="stack-canary-nedir-">Stack Canary Nedir ?</h1>
+
+<p><strong>Stack Canary</strong> yazılım başlamadan önce yazılımın en üstünde <strong>EBP</strong> registerine aktarılmaya hazır 32 bit ise <strong>GS</strong> 64 bit ise <strong>FS</strong> flaglerinde rastegele oluşturulmuş bir değer saklar. Ve programın sonunda da bu değer hala aynımı diye test eder. Aşşağıda ki küçük python kodu bunu daha basit açıklayabilir.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>from random import randint
+cookie = randint(100, 100000)
+
+cookie_backup = cookie
+
+if cookie != cookie_backup:
+ print("*** Stack Smash Detected ***")
+ exit(0)
+else:
+ devametbeklemeyapma()
+
+</code></pre></div></div>
+
+<p>Yukarıda ki kodu anlamayanlar varsa basitçe anlatayım. 100 ile 100000 arasında rastgele bir sayı üretiyor ve bu ürettiğiyi sayıyı cookie değişkenine aktarıyor ve bu cookie değişkenini saklamak için cookie_backup değişkenine atıyor ve eğer bu cookie değişkeninin değeri programın sonunda aynı değil ise “Stack Smash Detected” outputunu verip programdan çıkış yapıyor. Aynı ise normal bir şekilde programa kışına devam ediyor. <strong>Stack Canary</strong> basit bir şekilde bu işi yapıyor.</p>
+
+<p>Eğer programın başında verilen cookie değeri değiştirildiyse programdan çıkış yapıyor. Aynı ise normal devam ediyor. Peki ya buffer overflowu engelleyen durum ne ? O kısımada birazdan geleceğiz.</p>
+
+<p><strong>Stack Canary</strong> bizleri bulunan buffer alanının üzerine yazıp geçmekten alı koyan güvenlik önlemlerinden biridir. Bunun yapısını anlatmak için varsayalım ki aşşağıdaki gibi bir 64 bytelık buffer alanımız var.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>char buffer[64];
+</code></pre></div></div>
+
+<p>Ve bu buffer alanı dışardan gelen bir veriyi <strong>strcpy</strong> fonksiyonu ile buffer alanının içerisine aktarıyor.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>strcpy(buffer, argv[1]);
+</code></pre></div></div>
+
+<p>Normal bir programın akışını <strong>Buffer Overflow</strong> zafiyeti ile terse kullandığımız da normal olarak 64 byte’ın üzerinde bir değer yazacağımızdan alanı delip geçeceğizdir ve stack içerisinde değişkenlere, adreslere ve benzerlerine yazacak hale geleceğizdir. En önemlisi de <strong>EIP</strong> registerinin üzerine yazmak ve return adresini kontrol edip programa kışını yönlendirmek. Fakat <strong>Stack Canary</strong>‘nin <strong>Cookie</strong>‘leri bize engel olacağından <strong>Buffer Overflow</strong> zafiyetini kullanamayacağızdır.</p>
+
+<p>Ve unutmayalım ki <strong>Cookie</strong>‘ler <strong>dinamiktir</strong> aynı değillerdir her program çalıştığın da farklı bir değer alırlar.</p>
+
+<p>Stack içerisin de normal bir programın ve <strong>Stack Canary</strong> güvenlik önleminin etkin olduğu programın görüntüsü :</p>
+
+<p>Normal :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>-------------------
+|                 |
+|  Buffer         |
+|------------------
+|  Saved EIP |
+-------------------
+|  Saved EBP |
+|------------------
+|  Return Address  |
+ ------------------
+
+</code></pre></div></div>
+
+<p>Stack Canary :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>-------------------
+|                 |
+|  Buffer         |
+|                 |
+|------------------
+|  Cookie         |
+|------------------
+|  Saved EIP      |
+-------------------
+|  Saved EBP      |
+-------------------
+|  __stack_chk_fail@plt |
+|------------------
+|  Return Address |
+ ------------------
+
+</code></pre></div></div>
+
+<h1 id="ortamımızı-hazırlayalım">Ortamımızı hazırlayalım</h1>
+
+<p>Aşşağıda ki kaynak kodu indirelim ve belirtilen opsiyonlar ile derliyelim. Sonra da <strong>ASLR</strong>‘yi devre dışı bırakalım.</p>
+
+<p><a href="https://pastebin.com/pUJwmRgu">Örnek Buffer Overflow</a></p>
+
+<p><code class="highlighter-rouge">gcc -Wl,-z,norelro -z execstack -no-pie canary.c -o canary</code></p>
+
+<p><strong>ASLR</strong>‘yi disable etmek için bu command line kodu kullanalım :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>echo 0 | sudo tee /proc/sys/kernel/randomize_va_space
+</code></pre></div></div>
+
+<h1 id="yavaştan-analize-başlayalım-ve-stack-canaryi-daha-iyi-anlayalım">Yavaştan analize başlayalım ve stack canary’i daha iyi anlayalım</h1>
+
+<p>Yukarıdakileri yaptıktan sonra programı aşşağıda ki gibi çalıştıralım ve çıkacak sonuca bakalım :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@ubuntu:~# ./canary AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+*** stack smashing detected ***: &lt;unknown&gt; terminated
+Aborted (core dumped)
+</code></pre></div></div>
+
+<p>Buffer alanımız 64 olduğu için 64’ten daha büyük bir byte sayısı verdiğimiz de program crash oluyor fakat bu normal bir crash değil. Normal de hatırlarsanız <strong>Segmentation fault</strong> çıktısını alıyorduk.</p>
+
+<p>Bu sefer “Stack Smashing Detected” Çıktısını aldık. Bu bizim <strong>Stack Canary</strong>‘mizin güvenlik önlemi. Şimdi assembly içerisinde biraz daha detaylı inceleyelim :</p>
+
+<p><a href="https://i.imgur.com/RgGDoqL.png">Disassemble Edilmiş ./canary</a></p>
+
+<p>Yukarıda ki fotorafa girdiğimiz de normal bir program akışı dışın da programın içerisinde bulunan bir kaç kod parçacığı görebiliyoruz. Bunlardan biri :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0x0000000000401151 &lt;+15&gt;:    mov    rax,QWORD PTR fs:0x28
+0x000000000040115a &lt;+24&gt;:    mov    QWORD PTR [rbp-0x8],rax
+</code></pre></div></div>
+
+<p>Bir diğeri ise :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0x0000000000401190 &lt;+78&gt;:    mov    rcx,QWORD PTR [rbp-0x8]
+0x0000000000401194 &lt;+82&gt;:    xor    rcx,QWORD PTR fs:0x28
+0x000000000040119d &lt;+91&gt;:    je     0x4011a4 &lt;main+98&gt;
+0x000000000040119f &lt;+93&gt;:    call   0x401040 &lt;__stack_chk_fail@plt&gt;
+</code></pre></div></div>
+
+<p>Başta yazdığımız küçük python kodunu hatırladınızmı ? Aslında burada dönen olay oradakiyle tam aynı.</p>
+
+<p>64 bit bir işletim sistemi kullandığımızdan <strong>FS</strong> flaginin içerisinden 0x28 offsetini <strong>RAX</strong> registerine movluyor. Peki bu <strong>FS</strong> registerinin 0x28 içerisinde ne var ?</p>
+
+<p>Tabiki de bizim <strong>Stack Cookie</strong>‘miz olan <strong>0x24582bb086d7a100</strong> :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gdb-peda$ x/x $rax
+0x24582bb086d7a100:     Cannot access memory at address 0x24582bb086d7a100
+</code></pre></div></div>
+
+<p>Unutmayalım ki 64 bit sistemler de <strong>Stack Cookie</strong>‘sinin uzunluğu 7 byte’tır. 32 Bit sistemler de ise bu 4 bytetır ve bunların ikisi de bakın burası çok önemli <strong>00</strong> ile başlar.</p>
+
+<p>Python kodunda da olduğu gibi şuan da cookieyi cookie_backup değişkenine aktardık.</p>
+
+<ol>
+  <li>Kod parçacığı olan kısım ise bu cookie hala aynımı değilmi testidir.</li>
+</ol>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0x401190 &lt;main+78&gt;:  mov    rcx,QWORD PTR [rbp-0x8]
+</code></pre></div></div>
+
+<p>Bu kısım ile rbp-0x8’de bulunan <strong>Stack Cookie</strong>‘sini <strong>RCX</strong> registerine atıyoruz.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0x401194 &lt;main+82&gt;:  xor    rcx,QWORD PTR fs:0x28
+</code></pre></div></div>
+
+<p><strong>XOR</strong> ile de bu <strong>Stack Cookie</strong>‘sinin değiştirilip değiştirilmediğine bakıyoruz.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0x40119d &lt;main+91&gt;:  je     0x4011a4 &lt;main+98&gt;
+</code></pre></div></div>
+
+<p>Eğer değiştirilmediyse program akışını normal şekil de devam ettir.</p>
+
+<p>Değiştirilmediyse :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0x000000000040119f &lt;+93&gt;:    call   0x401040 &lt;__stack_chk_fail@plt&gt;
+</code></pre></div></div>
+
+<p><strong>__stack_chk_fail fonksiyonunu çağır.</strong></p>
+
+<p>Bu fonksiyon da bizi programdan atıp exit(0) fonksiyonunu çağırıp programdan çıkıyor. Ekranada “Stack Smashin Detected” yazdırıyor.</p>
+
+<p>Yani buradaki en önemli kısım olan :</p>
+
+<p><strong>Buffer alanını deldiğimiz sırada cookie’nin üzerine de yazdığımızdan program bir iş karıştırdığımızı anlıyor ve çıkış yapıp ekrana stack’i ezmeye çalıştığımızı yazıyor.</strong></p>
+
+<p>Yani biz <strong>EIP</strong> registerinin üzerine yazalım derken <strong>Stack Cookie</strong>‘sinin de üzerine yazıyoruz ve <strong>__stack_chk_fail</strong> fonksiyonu bu değişikliği görüp birşeyler yapmaya çalıştığımızı anlayıp programdan <strong>exit(0)</strong> fonksiyonu ile çıkış yapıyor.</p>
+
+<p>Gnu Debugger ile programa <strong>92</strong> byte verelim. Normal de <strong>92</strong> byte’ta <strong>EIP</strong> registerinin üzerine yazıp shellcode’un adresini verebilmemiz lazımdı fakat çalıştırdığımız da :</p>
+
+<p><img src="https://i.imgur.com/Q444cqe.png" alt="Can't overwrite EIP" /></p>
+
+<p>Görebiliriz ki <strong>EIP</strong> üzerine yazamıyoruz çünkü <strong>Stack Cookie</strong>‘sinin üzerine yazdık ve <strong>__stack_chk_fail</strong> bunu görüp programı durdurdu ve ekrana “<em>** Stack Smash Detected **</em>” yazısını yazdı.</p>
+
+<h1 id="stack-canarynin-bypass-edilme-tekniği">Stack Canary’nin bypass edilme tekniği</h1>
+
+<p><strong>Stack Canary</strong>‘nin ne olduğunu iyice kavradığımıza göre yavaştan bypass edilmesine geçelim.</p>
+
+<p>Bypass tekniği olmadan neler olduğunu yukarı da gördük şimdi eip yani return adresini değiştirmemiz için nasıl bypass edileceğini açıklayalım.</p>
+
+<p>Öncelikle programa tekrar <strong>88</strong> bytelık <strong>A</strong> harfini verelim ve geri kalan 4 byte’ı da <strong>B</strong> ile dolduralım ve eip üzerine <strong>B</strong>‘leri nasıl ekleyeceğimizi görelim <strong>Stack Canary</strong>‘i bypass edip.</p>
+
+<p>GDB ile bu kısıma geldiğimiz de:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0x401151 &lt;main+15&gt;:  mov    rax,QWORD PTR fs:0x28
+0x40115a &lt;main+24&gt;:  mov    QWORD PTR [rbp-0x8],rax
+</code></pre></div></div>
+
+<p><strong>RAX</strong> registerine aktarılan <strong>Cookie</strong> değerini alıp saklamamız gerek. Yani notepade yazın, chrome’de yeni sekme oluşturun yazın yada aklınızda tutun ama bir yerde tutun o adresi :</p>
+
+<p><strong>x/x $rax</strong> komutu ile <strong>gdb</strong> içerisinde <strong>Cookie</strong> değerini aldım ben <strong>0x3169b6a3c855be00</strong>. 64 Bit olduğu için 7 byte uzunlıkta ve <strong>00</strong> ile başlıyor.</p>
+
+<p>Şimdi adresi aldığımıza göre 2. kısmımıza geçelim ve <strong>RCX</strong> registerinin değeri yani <strong>Cookie</strong>‘mizin değeri büyük ihtimal <strong>B</strong>‘ler ve <strong>A</strong>‘lar ile kaplanmış olucaktır. <strong>__stack_chk_fail</strong> kısmına gelmeden <strong>breakpoint</strong> ile duralım yani bu kısımda :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>=&gt; 0x401194 &lt;main+82&gt;:  xor    rcx,QWORD PTR fs:0x28
+0x40119d &lt;main+91&gt;:  je     0x4011a4 &lt;main+98&gt;
+0x40119f &lt;main+93&gt;:  call   0x401040 &lt;__stack_chk_fail@plt&gt;
+</code></pre></div></div>
+
+<p>Bir adım ilerleyelim ve <strong>RCX</strong> registerinin değerine bakalım :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gdb-peda$ x/x $rcx
+0x4141414141414141:     Cannot access memory at address 0x4141414141414141
+</code></pre></div></div>
+
+<p>Görebiliyoruz ki <strong>Cookie</strong> değerimiz <strong>A</strong> harfi ile dolmuş ve <strong>_stack_chk_fail</strong> bu <strong>Cookie</strong> değerinin değiştiğini görecektir bu yüzden bizim başta sakladığımız cookie değerini tekrar <strong>RCX</strong> registerine vermemiz gerekiyor.</p>
+
+<p>Şu şekilde verelim hemen :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gdb-peda$  set $rcx = 0x3169b6a3c855be00
+</code></pre></div></div>
+
+<p>Ve tekrardan bakalım <strong>Cookie</strong> değerimiz verildimi diye :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gdb-peda$ x/x $rcx
+0x3169b6a3c855be00:     Cannot access memory at address 0x3169b6a3c855be00
+</code></pre></div></div>
+
+<p><strong>Cookie</strong> değerimiz eski haline döndü ve programdan artık çıkış yapılmayacaktır. Bizde <strong>EIP</strong> registerinin üzerine basit bir şekilde yazabiliriz bundan sonra :</p>
+
+<p><a href="https://i.imgur.com/kSwv6YW.png">EIP Resim</a></p>
+
+<p>ve gördüğünüz gibi <strong>EIP</strong> registerinin üzerine yani return addresinin üzerine <strong>B</strong> harflerimizi yerleştirdik tabi bu bir örnek oraya normal de shellcodeumuzun adresi geliyor.</p>
+
+<p><strong>GDB</strong> içerisin de yukarıdaki adımları takip etmeniz çok önemli.</p>
+
+<p>Okuduğunuz için çok teşekkürler umarım yardımcı olabilmişimdir. Sorularınız varsa veya herhangi bir hata gördüyseniz lütfen bana twitter hesabım olan @0DAYanc’tan yazmaya çekinmeyin. Bir Sonraki Yazıda Görüşmek Üzere !</p>
+
+  </div>
+
+  
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Daily Security</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>
+            
+              Daily Security
+            
+            </li>
+            
+            <li><a href="mailto:xazamaxi@protonmail.com">xazamaxi@protonmail.com</a></li>
+            
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+          <li>
+            <a href="https://github.com/blacknbunny"><span class="icon icon--github"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
+</span><span class="username">blacknbunny</span></a>
+
+          </li>
+          
+
+          
+          <li>
+            <a href="https://twitter.com/0DAYanc"><span class="icon icon--twitter"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27 c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767 c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206 C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271 c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469 c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg>
+</span><span class="username">0DAYanc</span></a>
+
+          </li>
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>In this blog we&#39;re going to solve CTF&#39;s &amp; Write Some Software&#39;s.My goal is redirect my little knowledge to other people.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>
