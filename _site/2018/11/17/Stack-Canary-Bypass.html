@@ -10,7 +10,7 @@
   <meta name="description" content="Yazımıza geçmeden önce ben videodan daha iyi öğrenirim diyen arkadaşlar için youtube’da çektiğim videoya alalım sizleri : Video">
 
   <link rel="stylesheet" href="/assets/main.css">
-  <link rel="canonical" href="http://0.0.0.0:4000/2018/11/17/Stack-Canary-Bypass.html">
+  <link rel="canonical" href="http://192.168.0.100:4000/2018/11/17/Stack-Canary-Bypass.html">
   <link rel="alternate" type="application/rss+xml" title="Daily Security" href="/feed.xml">
   
   
@@ -72,7 +72,7 @@
   <header class="post-header">
     <h1 class="post-title" itemprop="name headline">Stack Canary Bypass</h1>
     <p class="post-meta">
-      <time datetime="2018-11-17T00:00:00+00:00" itemprop="datePublished">
+      <time datetime="2018-11-17T00:00:00-05:00" itemprop="datePublished">
         
         Nov 17, 2018
       </time>
@@ -84,7 +84,7 @@
 
 <p>Merhaba arkadaşlar bu blogum da sizlere standart güvenlik önlemlerinden biri olan <strong>Stack Canary</strong> yani bir diğer adı ile de <strong>Stack Cookie</strong>‘sinin nasıl bypass edileceğinden bahsedeceğim. Kafanız da güvenlik önemleri terimine ait bir yapı olmuşması için çoğumuzun bildiği bir kaç güvenlik önleminin ismini vererek yazıma başlamak istiyorum.  <strong>ASLR, NX, RELRO, SafeSEH, DEP</strong> ve benzerleri… “Stack Canary” gibi güvenlik önlemleridir. Derleyiciniz ile bunları belirleyip işleme geçirebilirsiniz. Ya da işletim sisteminizi bunu otomatik belirlemesi için ayarlaya bilirsiniz.</p>
 
-<h1 id="güvenlik-önlemlerinden-kısa-bahsedelim">Güvenlik Önlemlerinden kısa bahsedelim</h1>
+<h1 id="güvenlik-Önlemlerinden-kısa-bahsedelim">Güvenlik Önlemlerinden kısa bahsedelim</h1>
 
 <p>Güvenlik zafiyetlerinin sömürgesini bir az da olsa engellemek için vardırlar. Zafiyetler içerisinden en çok bilineni “Buffer Overflow” dur. Birazdan bahsedeceğimiz <strong>Stack Canary</strong>‘nin bize <strong>Buffer Overflow</strong> zafiyetini kullanmamamız için ne gibi engellerde bulunduğunu anlatmaya başladığımız da daha iyi kavrayacaksınızdır güvenlik önlemlerinin neler olduklarını.</p>
 
