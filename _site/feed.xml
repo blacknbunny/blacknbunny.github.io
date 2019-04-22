@@ -1,4 +1,158 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.2">Jekyll</generator><link href="http://192.168.0.100:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://192.168.0.100:4000/" rel="alternate" type="text/html" /><updated>2019-04-14T02:54:45-04:00</updated><id>http://192.168.0.100:4000/</id><title type="html">Daily Security</title><subtitle>In this blog we're going to solve CTF's &amp; Write Some Software's.My goal is redirect my little knowledge to other people.</subtitle><entry><title type="html">Linux Function Hooking</title><link href="http://192.168.0.100:4000/2019/04/14/Linux-Function-Hooking.html" rel="alternate" type="text/html" title="Linux Function Hooking" /><published>2019-04-14T00:00:00-04:00</published><updated>2019-04-14T00:00:00-04:00</updated><id>http://192.168.0.100:4000/2019/04/14/Linux-Function-Hooking</id><content type="html" xml:base="http://192.168.0.100:4000/2019/04/14/Linux-Function-Hooking.html">&lt;h1 id=&quot;linux-load-time-function-hooking&quot;&gt;Linux Load-Time Function Hooking&lt;/h1&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.2">Jekyll</generator><link href="http://192.168.0.100:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://192.168.0.100:4000/" rel="alternate" type="text/html" /><updated>2019-04-22T11:50:29-04:00</updated><id>http://192.168.0.100:4000/</id><title type="html">Daily Security</title><subtitle>In this blog we're going to solve CTF's &amp; Write Some Software's.My goal is redirect my little knowledge to other people.</subtitle><entry><title type="html">Loadable Kernel Module Development</title><link href="http://192.168.0.100:4000/2019/04/22/loadable-kernel-module.html" rel="alternate" type="text/html" title="Loadable Kernel Module Development" /><published>2019-04-22T00:00:00-04:00</published><updated>2019-04-22T00:00:00-04:00</updated><id>http://192.168.0.100:4000/2019/04/22/loadable-kernel-module</id><content type="html" xml:base="http://192.168.0.100:4000/2019/04/22/loadable-kernel-module.html">&lt;h1 id=&quot;loadable-kernel-module-lkm&quot;&gt;Loadable Kernel Module (LKM)&lt;/h1&gt;
+
+&lt;p&gt;Merhaba arkadaşlar. &lt;strong&gt;Loadable Kernel Module (LKM)&lt;/strong&gt; yazıma hoşgeldiniz.&lt;/p&gt;
+
+&lt;p&gt;Bu yazımda sizlere &lt;strong&gt;Yüklenebilir Çekirdek Modülünün&lt;/strong&gt; yani &lt;strong&gt;LKM&lt;/strong&gt;‘nin geliştirilmesinden bahsedeceğim. Dürüst olursam benim bu, önceki ve ilerideki gelecek yazılarımdan bahsetmiş ve bahsedecek olma sebebim rootkit geliştirebilesiniz diye ama insanlık adına kullanacağım diyen olursa oda kabulumdur.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;LKM&lt;/strong&gt; rootkit geliştirilmesinin en basit yoludur ayrıca bu karşısında basitçe savunma kurabileceğiniz bir yoldur. İşletim sisteminde bir kere root alındıktan sonra rootkit bu yetkiyi kontrol etmenin en iyi yoludur. Bunuda ek bilgi olarak verdiğime göre artık yazımıza geçip &lt;strong&gt;LKM&lt;/strong&gt;‘nin nasıl yazıldığından bahsedelim.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;LKM&lt;/strong&gt;‘yi &lt;strong&gt;kernel&lt;/strong&gt; yani &lt;strong&gt;çekirdek&lt;/strong&gt; için bir eklenti olarak düşünebiliriz ayrıca &lt;strong&gt;LKM&lt;/strong&gt; size bulunduğunuz yetkiler ile &lt;strong&gt;kernel&lt;/strong&gt; içerisinde kod çalıştırmanızı sağlar. &lt;strong&gt;LKM&lt;/strong&gt; az çok kafanızda bunun ne olduğu canlandıysa devam edelim.&lt;/p&gt;
+
+&lt;h1 id=&quot;İlk-yüklenebilir-Çekirdek-modülümüz&quot;&gt;İlk Yüklenebilir Çekirdek Modülümüz&lt;/h1&gt;
+&lt;p&gt;Bu modülü yazmadan önce bize kütüphanelerimiz gerek her programda olduğu gibi :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#include &amp;lt;linux/module.h&amp;gt;
+#include &amp;lt;linux/init.h&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Bu kısımdan sonra bu modül hakkında bilgileri verdiğimiz kısım geliyor :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;MODULE_AUTHOR(&quot;blacknbunny&quot;);
+MODULE_DESCRIPTION(&quot;Basit Merhaba Dunya Modulu&quot;);
+MODULE_LICENSE(&quot;GPL&quot;);
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Modülü kimin yazdığı, modül hakkında açıklama ve lisans yer alıyor bu kısımda.&lt;/p&gt;
+
+&lt;p&gt;Bu kısmıda anladığımıza göre biraz daha teknik bölüm olan yükleme kısmına gelelim :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;static int __init merhaba_init(void)
+{
+  printk(&quot;Merhaba Dünya!\n&quot;);
+  return 0;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Bu kısımda modülümüz kernel’e yüklendikten sonra çalışma aşamasında ne yapacağını belirliyor.&lt;/p&gt;
+
+&lt;p&gt;Fonksiyon tipimizi ve return tipini belirledikten sonra burada karşımıza çıkan farklı bir fonksiyon var oda &lt;strong&gt;printk&lt;/strong&gt; fonksiyonu.&lt;/p&gt;
+
+&lt;p&gt;Bu fonksiyon adındanda anlaşılabileceği gibi kernel içerisinde yazdırma yapan bir fonksiyon bu. Daha da detaylı incelemek istiyorum diyen varsa aranızda buyurun &lt;a href=&quot;https://en.wikipedia.org/wiki/Printk&quot;&gt;Wikipedia printk&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Kernel içerisinde modülümüz aracılığı ile “Merhaba Dünya” yazdırdık fakat her girişin bir çıkışıda vardır &lt;strong&gt;I/O&lt;/strong&gt; mantığı gibi düşünün. Günün sonunda bunu nasıl kernel içerisine install edeceğimizi göreceğin &lt;strong&gt;insmod&lt;/strong&gt; komutu ile yalnız bunu birde kernelin içinden çıkarmak var bunuda &lt;strong&gt;rmmod&lt;/strong&gt; ile yapabiliyoruz.&lt;/p&gt;
+
+&lt;p&gt;Rootkitimizi karşıdaki sisteme yükleyip uçup kaçtıktan sonra bu rootkit modülünü sistemden çıkartmamız gerekebilir. O zamanda rootkit içerisinde bir çıkış fonksiyonunun bulunması gerekebilir tabi bu basit bir &lt;strong&gt;LKM&lt;/strong&gt; olduğundan detaya girmiyorum.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;static void __exit merhaba_exit(void)
+{
+  printk(&quot;Hello world kernelden cikartiliyor.\n&quot;);
+  return;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Bu şekilde de modülümüzü kernel içerisinden &lt;strong&gt;Unload&lt;/strong&gt; edebiliyoruz. Şimdi geldi son kodumuza tüm bu &lt;strong&gt;__init&lt;/strong&gt; ve &lt;strong&gt;__exit&lt;/strong&gt; fonksiyonlarını modül içine yüklemeye :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;module_init(merhaba_init);
+module_exit(merhaba_exit);
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Ve &lt;strong&gt;module_init&lt;/strong&gt; ile yüklenmenin &lt;strong&gt;module_exit&lt;/strong&gt; ilede çıkarılmanın gerçekleştiğini görebiliyoruz.&lt;/p&gt;
+
+&lt;p&gt;Şimdi geriye kalan tüm bu kodu birleştirip bir adet &lt;strong&gt;Makefile&lt;/strong&gt; dosyası oluşturup &lt;strong&gt;make&lt;/strong&gt; komutu ile derlemek.&lt;/p&gt;
+
+&lt;p&gt;Alttaki &lt;strong&gt;LKM&lt;/strong&gt;‘yi &lt;strong&gt;merhaba.c&lt;/strong&gt; olarak kaydettiğinizi varsayıyorum.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#include &amp;lt;linux/module.h&amp;gt;
+#include &amp;lt;linux/init.h&amp;gt;
+
+MODULE_AUTHOR(&quot;blacknbunny&quot;);
+MODULE_DESCRIPTION(&quot;Basit Merhaba Dunya Modulu&quot;);
+MODULE_LICENSE(&quot;GPL&quot;);
+
+static int __init merhaba_init(void)
+{
+  printk(&quot;Merhaba Dünya!\n&quot;);
+  return 0;
+}
+
+static void __exit merhaba_exit(void)
+{
+  printk(&quot;Hello world kernelden cikartiliyor.\n&quot;);
+  return;
+}
+
+module_init(merhaba_init);
+module_exit(merhaba_exit);
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h1 id=&quot;make-ile-lkm-derlenmesi&quot;&gt;Make ile LKM derlenmesi&lt;/h1&gt;
+&lt;p&gt;Bu modülü derlemek içinde komut satırımızdan yada bir pad ile &lt;strong&gt;Makefile&lt;/strong&gt; adında bir dosya oluşturup içine eklememiz lazım.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;obj-m += merhaba.o
+
+all:
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+
+clean:
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Derlemeyi gerçekleştirmek için alttaki komut satırında gerçekleştirdiğim komutları kullanabilirsiniz.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;remnux@remnux:~/heyhey$ ls
+Makefile  merhaba.c
+remnux@remnux:~/heyhey$ make
+make -C /lib/modules/3.13.0-53-generic/build M=/home/remnux/heyhey modules
+make[1]: Entering directory `/usr/src/linux-headers-3.13.0-53-generic'
+  CC [M]  /home/remnux/heyhey/merhaba.o
+  Building modules, stage 2.
+  MODPOST 1 modules
+  CC      /home/remnux/heyhey/merhaba.mod.o
+  LD [M]  /home/remnux/heyhey/merhaba.ko
+make[1]: Leaving directory `/usr/src/linux-headers-3.13.0-53-generic'
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;make&lt;/strong&gt; komutu sonrasında tekrar &lt;strong&gt;ls&lt;/strong&gt; komutunu çalıştırdığımızda klasörümüzdeki dosya sayısının arttığını görebiliriz :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;remnux@remnux:~/heyhey$ ls
+Makefile   merhaba.ko     merhaba.mod.o  modules.order
+merhaba.c  merhaba.mod.c  merhaba.o      Module.symvers
+remnux@remnux:~/heyhey$
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Bu dosyaların arasından bizim modülümüz &lt;strong&gt;merhaba.ko&lt;/strong&gt;. Bu modülü kernel içerisine &lt;strong&gt;load&lt;/strong&gt; edebilmemiz yani yükleyebilmemiz için başta da bahsettiğimiz &lt;strong&gt;insmod&lt;/strong&gt; komutunu kullanmamız gerekli.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;remnux@remnux:~/heyhey$ insmod ./merhaba.ko
+insmod: ERROR: could not insert module ./merhaba.ko: Operation not permitted
+remnux@remnux:~/heyhey$ sudo insmod ./merhaba.ko
+remnux@remnux:~/heyhey$ dmesg | tail -n 1
+[ 6350.260783] Merhaba D\xffffffc3\xffffffbc\xffffffbcnya!
+remnux@remnux:~/heyhey$ 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;insmod&lt;/strong&gt; ile bunu kernele yükleyip &lt;strong&gt;dmesg&lt;/strong&gt; ile incelediğimizde kernelde bize gelen &lt;strong&gt;Merhaba Dünya&lt;/strong&gt; çıktısını görebiliriz. Yalnız kernel içerisinde türkçe karakter kullanımı mevcut olmadığından ve size bunuda ek olarak göstermek istediğimden çıktıyı &lt;strong&gt;hex code&lt;/strong&gt;‘ları ile almış bulunuyoruz.&lt;/p&gt;
+
+&lt;p&gt;Modülümüzün sağlıklı şekilde çalıştığını gözlemledik ve eğer bu modülü silmek istiyorsak &lt;strong&gt;rmmod&lt;/strong&gt; komutunu kullanabiliriz :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;remnux@remnux:~/heyhey$ sudo rmmod merhaba
+remnux@remnux:~/heyhey$ dmesg | tail -n 1
+[ 6593.845495] Hello world kernelden cikartiliyor.
+remnux@remnux:~/heyhey$
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Ve çıkartılma sonucunda bizim modülümüz içerisinde belirlediğimiz &lt;strong&gt;__exit&lt;/strong&gt; fonksiyonu çalıştı.&lt;/p&gt;
+
+&lt;p&gt;Eğer modülleri listelemek istiyorsanız &lt;strong&gt;lsmod&lt;/strong&gt; komutunu kullanabilirsiniz örneğin :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;remnux@remnux:~/heyhey$ lsmod | grep merhaba
+merhaba                12427  0 
+remnux@remnux:~/heyhey$
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Bu yazımızda basit bir şekilde &lt;strong&gt;LKM&lt;/strong&gt; yani &lt;strong&gt;Yüklenebilir Çekirdek Modülünü&lt;/strong&gt; en basit şeklinde geliştirmeyi öğrendik.&lt;/p&gt;
+
+&lt;p&gt;Bir daha ki yazımda büyük ihtimal &lt;strong&gt;sys_call_table hijacking&lt;/strong&gt; anlatacağım.&lt;/p&gt;
+
+&lt;p&gt;Sonra ki yazılarda da artık bir rootkit yazarız diye düşünüyorum. Kendinize iyi bakın görüşmek dileği ile !&lt;/p&gt;</content><author><name></name></author><summary type="html">Loadable Kernel Module (LKM)</summary></entry><entry><title type="html">Linux Function Hooking</title><link href="http://192.168.0.100:4000/2019/04/14/Linux-Function-Hooking.html" rel="alternate" type="text/html" title="Linux Function Hooking" /><published>2019-04-14T00:00:00-04:00</published><updated>2019-04-14T00:00:00-04:00</updated><id>http://192.168.0.100:4000/2019/04/14/Linux-Function-Hooking</id><content type="html" xml:base="http://192.168.0.100:4000/2019/04/14/Linux-Function-Hooking.html">&lt;h1 id=&quot;linux-load-time-function-hooking&quot;&gt;Linux Load-Time Function Hooking&lt;/h1&gt;
 
 &lt;p&gt;Uzun bir süreden sonra bloguma yazı yazıyorum. 2019’un ilk blog yazısı olacak umarım yazıyı beğenirsiniz.&lt;/p&gt;
 
