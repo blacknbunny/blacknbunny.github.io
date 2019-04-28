@@ -10,7 +10,7 @@
   <meta name="description" content="Loadable Kernel Module (LKM)">
 
   <link rel="stylesheet" href="/assets/main.css">
-  <link rel="canonical" href="http://192.168.0.100:4000/2019/04/22/loadable-kernel-module.html">
+  <link rel="canonical" href="http://192.168.0.104:4000/2019/04/22/loadable-kernel-module.html">
   <link rel="alternate" type="application/rss+xml" title="Daily Security" href="/feed.xml">
   
   
@@ -72,7 +72,7 @@
   <header class="post-header">
     <h1 class="post-title" itemprop="name headline">Loadable Kernel Module Development</h1>
     <p class="post-meta">
-      <time datetime="2019-04-22T00:00:00-04:00" itemprop="datePublished">
+      <time datetime="2019-04-22T00:00:00+03:00" itemprop="datePublished">
         
         Apr 22, 2019
       </time>
@@ -90,7 +90,7 @@
 
 <p><strong>LKM</strong>‘yi <strong>kernel</strong> yani <strong>çekirdek</strong> için bir eklenti olarak düşünebiliriz ayrıca <strong>LKM</strong> size bulunduğunuz yetkiler ile <strong>kernel</strong> içerisinde kod çalıştırmanızı sağlar. <strong>LKM</strong> az çok kafanızda bunun ne olduğu canlandıysa devam edelim.</p>
 
-<h1 id="İlk-yüklenebilir-Çekirdek-modülümüz">İlk Yüklenebilir Çekirdek Modülümüz</h1>
+<h1 id="i̇lk-yüklenebilir-çekirdek-modülümüz">İlk Yüklenebilir Çekirdek Modülümüz</h1>
 <p>Bu modülü yazmadan önce bize kütüphanelerimiz gerek her programda olduğu gibi :</p>
 
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#include &lt;linux/module.h&gt;
