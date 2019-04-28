@@ -159,7 +159,7 @@ HANDLE processwithpid = OpenProcess(PROCESS_ALL_ACCESS, FALSE, DWORD(atoi(argv[1
  
  Bunuda **WriteProcessMemory** ile yapabiliyoruz. **Windows** tarafından oluşturulmuş **dökümantasyonuna** ulaşmak için :
  
- [WriteProcessMemory](https://docs.microsoft.com/en-us/windows/desktop/api/memoryapi/nf-memoryapi-writeprocessmemory)
+ [WriteProcessMemory Win API](https://docs.microsoft.com/en-us/windows/desktop/api/memoryapi/nf-memoryapi-writeprocessmemory)
  
  Şimdi bir **thread** oluşturup tüm bu yukarıda gerçekleştirdiğimiz işlemleri gerçekleştirmeye geldi sıra :
  
@@ -177,10 +177,12 @@ HANDLE processwithpid = OpenProcess(PROCESS_ALL_ACCESS, FALSE, DWORD(atoi(argv[1
  CloseHandle(processwithpid);
  ```
  
- Yukarıda ki tüm kodların birleşimine buradan ulaşıp derleyebilirsiniz : https://pastebin.com/1gPb1PAM
+ Yukarıda ki tüm kodların birleşimine buradan ulaşıp derleyebilirsiniz : [Pastebin](https://pastebin.com/1gPb1PAM)
  
  # Demo
  
  **Derledikten** sonra nasıl çalışıp **putty** içerisine **shellcode** **injection** ettiğimizi gösteren küçük bir gizli youtube videosu :
  
  [Demo Video](https://youtu.be/oaNvWM9k84g)
+ 
+ Yazı hakkında aklınızda soru işareti varsa twitter hesabım : [@0DAYanc](https://www.twitter.com/0DAYanc)

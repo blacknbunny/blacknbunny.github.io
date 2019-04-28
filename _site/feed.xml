@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.2">Jekyll</generator><link href="http://192.168.0.104:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://192.168.0.104:4000/" rel="alternate" type="text/html" /><updated>2019-04-29T01:53:09+03:00</updated><id>http://192.168.0.104:4000/</id><title type="html">Daily Security</title><subtitle>In this blog we're going to solve CTF's &amp; Write Some Software's.My goal is redirect my little knowledge to other people.</subtitle><entry><title type="html">Process Shellcode Injection</title><link href="http://192.168.0.104:4000/2019/04/28/Process-Shellcode-Injection.html" rel="alternate" type="text/html" title="Process Shellcode Injection" /><published>2019-04-28T00:00:00+03:00</published><updated>2019-04-28T00:00:00+03:00</updated><id>http://192.168.0.104:4000/2019/04/28/Process-Shellcode-Injection</id><content type="html" xml:base="http://192.168.0.104:4000/2019/04/28/Process-Shellcode-Injection.html">&lt;h3 id=&quot;process-shellcode-injection&quot;&gt;Process Shellcode Injection&lt;/h3&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.2">Jekyll</generator><link href="http://192.168.0.104:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://192.168.0.104:4000/" rel="alternate" type="text/html" /><updated>2019-04-29T01:57:02+03:00</updated><id>http://192.168.0.104:4000/</id><title type="html">Daily Security</title><subtitle>In this blog we're going to solve CTF's &amp; Write Some Software's.My goal is redirect my little knowledge to other people.</subtitle><entry><title type="html">Process Shellcode Injection</title><link href="http://192.168.0.104:4000/2019/04/28/Process-Shellcode-Injection.html" rel="alternate" type="text/html" title="Process Shellcode Injection" /><published>2019-04-28T00:00:00+03:00</published><updated>2019-04-28T00:00:00+03:00</updated><id>http://192.168.0.104:4000/2019/04/28/Process-Shellcode-Injection</id><content type="html" xml:base="http://192.168.0.104:4000/2019/04/28/Process-Shellcode-Injection.html">&lt;h3 id=&quot;process-shellcode-injection&quot;&gt;Process Shellcode Injection&lt;/h3&gt;
 
 &lt;p&gt;Merhaba arkadaşlar yeni yazıma hoşgeldiniz.&lt;/p&gt;
 
@@ -144,7 +144,7 @@
 
 &lt;p&gt;Bunuda &lt;strong&gt;WriteProcessMemory&lt;/strong&gt; ile yapabiliyoruz. &lt;strong&gt;Windows&lt;/strong&gt; tarafından oluşturulmuş &lt;strong&gt;dökümantasyonuna&lt;/strong&gt; ulaşmak için :&lt;/p&gt;
 
-&lt;p&gt;&lt;a href=&quot;https://docs.microsoft.com/en-us/windows/desktop/api/memoryapi/nf-memoryapi-writeprocessmemory&quot;&gt;WriteProcessMemory&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://docs.microsoft.com/en-us/windows/desktop/api/memoryapi/nf-memoryapi-writeprocessmemory&quot;&gt;WriteProcessMemory Win API&lt;/a&gt;&lt;/p&gt;
 
 &lt;p&gt;Şimdi bir &lt;strong&gt;thread&lt;/strong&gt; oluşturup tüm bu yukarıda gerçekleştirdiğimiz işlemleri gerçekleştirmeye geldi sıra :&lt;/p&gt;
 
@@ -160,13 +160,15 @@
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; CloseHandle(processwithpid);
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;Yukarıda ki tüm kodların birleşimine buradan ulaşıp derleyebilirsiniz : https://pastebin.com/1gPb1PAM&lt;/p&gt;
+&lt;p&gt;Yukarıda ki tüm kodların birleşimine buradan ulaşıp derleyebilirsiniz : &lt;a href=&quot;https://pastebin.com/1gPb1PAM&quot;&gt;Pastebin&lt;/a&gt;&lt;/p&gt;
 
 &lt;p&gt;# Demo&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;Derledikten&lt;/strong&gt; sonra nasıl çalışıp &lt;strong&gt;putty&lt;/strong&gt; içerisine &lt;strong&gt;shellcode&lt;/strong&gt; &lt;strong&gt;injection&lt;/strong&gt; ettiğimizi gösteren küçük bir gizli youtube videosu :&lt;/p&gt;
 
-&lt;p&gt;&lt;a href=&quot;https://youtu.be/oaNvWM9k84g&quot;&gt;Demo Video&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Process Shellcode Injection</summary></entry><entry><title type="html">Loadable Kernel Module Development</title><link href="http://192.168.0.104:4000/2019/04/22/loadable-kernel-module.html" rel="alternate" type="text/html" title="Loadable Kernel Module Development" /><published>2019-04-22T00:00:00+03:00</published><updated>2019-04-22T00:00:00+03:00</updated><id>http://192.168.0.104:4000/2019/04/22/loadable-kernel-module</id><content type="html" xml:base="http://192.168.0.104:4000/2019/04/22/loadable-kernel-module.html">&lt;h1 id=&quot;loadable-kernel-module-lkm&quot;&gt;Loadable Kernel Module (LKM)&lt;/h1&gt;
+&lt;p&gt;&lt;a href=&quot;https://youtu.be/oaNvWM9k84g&quot;&gt;Demo Video&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Yazı hakkında aklınızda soru işareti varsa twitter hesabım : &lt;a href=&quot;https://www.twitter.com/0DAYanc&quot;&gt;@0DAYanc&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Process Shellcode Injection</summary></entry><entry><title type="html">Loadable Kernel Module Development</title><link href="http://192.168.0.104:4000/2019/04/22/loadable-kernel-module.html" rel="alternate" type="text/html" title="Loadable Kernel Module Development" /><published>2019-04-22T00:00:00+03:00</published><updated>2019-04-22T00:00:00+03:00</updated><id>http://192.168.0.104:4000/2019/04/22/loadable-kernel-module</id><content type="html" xml:base="http://192.168.0.104:4000/2019/04/22/loadable-kernel-module.html">&lt;h1 id=&quot;loadable-kernel-module-lkm&quot;&gt;Loadable Kernel Module (LKM)&lt;/h1&gt;
 
 &lt;p&gt;Merhaba arkadaşlar. &lt;strong&gt;Loadable Kernel Module (LKM)&lt;/strong&gt; yazıma hoşgeldiniz.&lt;/p&gt;
 
