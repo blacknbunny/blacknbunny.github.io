@@ -1,4 +1,153 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.2">Jekyll</generator><link href="http://192.168.254.251:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://192.168.254.251:4000/" rel="alternate" type="text/html" /><updated>2019-05-08T01:48:07+03:00</updated><id>http://192.168.254.251:4000/</id><title type="html">Daily Security</title><subtitle>In this blog we're going to solve CTF's &amp; Write Some Software's.My goal is redirect my little knowledge to other people.</subtitle><entry><title type="html">Linux System Call Hooking</title><link href="http://192.168.254.251:4000/2019/05/07/linux-system-call-hooking.html" rel="alternate" type="text/html" title="Linux System Call Hooking" /><published>2019-05-07T00:00:00+03:00</published><updated>2019-05-07T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2019/05/07/linux-system-call-hooking</id><content type="html" xml:base="http://192.168.254.251:4000/2019/05/07/linux-system-call-hooking.html">&lt;h1 id=&quot;linux-system-call-hooking&quot;&gt;Linux System Call Hooking&lt;/h1&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.2">Jekyll</generator><link href="http://192.168.254.251:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://192.168.254.251:4000/" rel="alternate" type="text/html" /><updated>2019-05-16T15:32:27+03:00</updated><id>http://192.168.254.251:4000/</id><title type="html">Daily Security</title><subtitle>In this blog we're going to solve CTF's &amp; Write Some Software's.My goal is redirect my little knowledge to other people.</subtitle><entry><title type="html">Malware Analysis - Lab Setup (Part 1)</title><link href="http://192.168.254.251:4000/2019/05/16/malware-analysis-part-1.html" rel="alternate" type="text/html" title="Malware Analysis - Lab Setup (Part 1)" /><published>2019-05-16T00:00:00+03:00</published><updated>2019-05-16T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2019/05/16/malware-analysis-part-1</id><content type="html" xml:base="http://192.168.254.251:4000/2019/05/16/malware-analysis-part-1.html">&lt;h1 id=&quot;malware-analysis-part-1&quot;&gt;Malware Analysis (Part 1)&lt;/h1&gt;
+
+&lt;p&gt;Merhaba arkadaşlar &lt;strong&gt;Malware Analizi&lt;/strong&gt; serimin ilk part’ına hoşgeldiniz.&lt;/p&gt;
+
+&lt;p&gt;Bu part içerisinde bir &lt;strong&gt;Malware&lt;/strong&gt;‘nin &lt;strong&gt;Analiz&lt;/strong&gt;‘ini yapacağımız &lt;strong&gt;Lab&lt;/strong&gt;‘ı oluşturacağız.&lt;/p&gt;
+
+&lt;p&gt;Teknik konulara ileriki partlarda değineceğiz. Şimdi &lt;strong&gt;Lab&lt;/strong&gt;‘imizi kurmaya geçelim yavaştan.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Malware&lt;/strong&gt; kelimesine daha önce denk gelmeyen arkadaşlar için &lt;strong&gt;Twitter&lt;/strong&gt;‘de denk geldiğim bir arkadaşın blog yazısını bırakıyorum buraya :&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://uae-ii.blogspot.com/2019/02/kotu-amacl-yazlm-nam-diger-malware.html&quot;&gt;Blog yazısı&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Bu &lt;strong&gt;Lab&lt;/strong&gt; için ben &lt;strong&gt;VMware&lt;/strong&gt; kullanacağım &lt;strong&gt;sanal makine&lt;/strong&gt; olarak.&lt;/p&gt;
+
+&lt;p&gt;Ayrıca ben bir &lt;strong&gt;Portable Executable&lt;/strong&gt;‘ın analizini yapacağımdan &lt;strong&gt;Win 7&lt;/strong&gt; kurdum test makinesi olarak.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://lh3.googleusercontent.com/4M5yk7FG0aqjJ4J4bKqINLmhVSNSc4Wa6_homsWz4fvUi3I-Tt8UH5Jilf79mznnmhw0qg9SPmpW7BYwm_mWtNE7tE7mc8FlnoznkO839qLibLzQvcxT6-GZfyXi1c_rA76xGhmo02K9HMnEk-O_cW7sTL0s1qScc3bhZeFxzSTMTGR7Mjp3lvHCq4bwuL0WpS1xKF9IA5iM5eN5_0dUaV-P3P6J6GcVLTM0LChOiBMy3_sfvl7pjHt8OnvDpt16x1zDkvdj8d0gWlBgk-TvCo77JOnrRK5r-ABguHFxvOKbY-RIO_fbaexVdwc2L8pxbLMC57wpfE5cAbtAu74jNsV2TZcBTHiPDjWfLBkjAgx4LtJN69a73yRrAluWGqLFpaFNV6vSVLmEM2g79UaCiXfPJrhV4dnO32xeHPyEOhwBlSNmQjJiryjXn1xUUV4cB6X1ftFatThgRmVAQtJYnrj1g431tbzFKDuzQtB48hoH8rt0SpWSYvT5OhOWTl4INyzsUIxLUw1DdCp8cPHDGQW5pbCBOU_RQpN9NeF5KedCWpg5eUYwBAfMnfllxfPjBZoZ1IA220zsLGvMUQvzrxMkD5YR-BwF3Y6CL0dfkiRkF6RDfYqAHNRWcRSDr8f6lPV3VkJcdqCt2MzTy86Fmhjttd3luS4=w1836-h973-no&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Bunun dışında birde &lt;strong&gt;Malware&lt;/strong&gt;‘nin :&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;HTTP&lt;/strong&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;HTTPS&lt;/strong&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;DNS&lt;/strong&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;SMTP&lt;/strong&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;POP3&lt;/strong&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;FTP&lt;/strong&gt;&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Protokolleri&lt;/strong&gt; gibi ağ üzerinde gerçekleştirdiği &lt;strong&gt;request&lt;/strong&gt;‘leri dinleyeceğimiz ve &lt;strong&gt;Win 7&lt;/strong&gt;‘nin &lt;strong&gt;gateway&lt;/strong&gt;‘i olarak kullanacağımız &lt;strong&gt;Tersine Mühendis&lt;/strong&gt;‘leri ve &lt;strong&gt;Malware 
+Analist&lt;/strong&gt;‘leri için özel geliştirilmiş &lt;strong&gt;REMnux&lt;/strong&gt;‘u kullanacağım.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://lh3.googleusercontent.com/21j8a2KmVy27F1GsAXbc_maS8Ignb563w8OPMtMG77Lk2Ox5J621uIVuHwXH7V38NEVslxetT1lG-Vufl7bY4Vt8s7OUdlJZgyRDfnzNNJs-mEOyB9y-DJ35er2aZp-vFNDMOkiLjEZFvfT4Tx792AsBUlVrKaAxNgSGIpavBr-Qr0VWGl39CJ8LRb6-_CpyHxo2TyrDj9ch9Rc9NCJ1taT_3g9ieCY-sdxBzCRIhr2BgM_Hdrv7vPr02DyCW6Q07-NB9ChlVbng4IDDD3ApJXwAzhvmgqgWRB05dc7kOvOo-LOTzw67gZwOPNSGIXOG7qRkQDq0Dzkof6Z_6jCzdfGI-NGo1N6luvFEX6_PwDLB6HzEZ3pI7EbECZ1LNaq47Z75dIdgcordz9c0oiqSKdAbAgSONDYMUrYSTRo6A-EuG14OcfPFw5IHoFf3XE7XOie9-PnhNIoXSMfkoTkFTMFqBFnNb4eQUJxsehNdZMT5rSVVaYSZDFQukkz8-APtI0uJu62F7K8yLpy6qP8HU3C8jAT1cvU-dxegw6GyvDqmmEfXwERwH6ih-IP9k-QNdGpo1i0y39qblWI44vCe9jcEjbpf1cJ5Z4Qzh4uy8h7YJLIwXpjjL7-F_xVFeYpUC2b26bThCwv7ajXiaTWZXqgnsldOgao=w1731-h940-no&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Eğer &lt;strong&gt;işletim sistem&lt;/strong&gt;‘lerinde tamamsak şayet şimdi &lt;strong&gt;Network Configuration&lt;/strong&gt; kısmımıza geçmeden önce biraz &lt;strong&gt;Statik&lt;/strong&gt;, &lt;strong&gt;Dinamik&lt;/strong&gt;, &lt;strong&gt;Snapshot&lt;/strong&gt; ve &lt;strong&gt;Malware&lt;/strong&gt; anahtar kelimelerinden bahsedelim.&lt;/p&gt;
+
+&lt;h1 id=&quot;dynamic-vs-static-analysis&quot;&gt;Dynamic vs Static Analysis&lt;/h1&gt;
+
+&lt;p&gt;Örnek veriyorum elimizde bir &lt;strong&gt;Portable Executable&lt;/strong&gt; yani çalıştırılabilir bir dosyamız var &lt;strong&gt;Malware&lt;/strong&gt; olarak. Bu &lt;strong&gt;Malware&lt;/strong&gt;‘yi çalıştırmadan ne yaptığını anlamak &lt;strong&gt;Statik Analiz&lt;/strong&gt; ile mümkün. Anlatmaya devam etmeden önce &lt;strong&gt;Statik&lt;/strong&gt; ve &lt;strong&gt;Dinamik&lt;/strong&gt; analizlerinin neler olduklarına bir bakalım.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Static Analysis&lt;/strong&gt;&lt;/p&gt;
+
+    &lt;ol&gt;
+      &lt;li&gt;
+        &lt;p&gt;&lt;strong&gt;Malware&lt;/strong&gt;‘yi çalıştırmadan incelemek&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;&lt;strong&gt;Disassemble&lt;/strong&gt; edip içerisinde bulunduğu instructionları gözlemlemek&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;İçerdiği &lt;strong&gt;Library&lt;/strong&gt; ve &lt;strong&gt;Function&lt;/strong&gt;‘ları görüntülemek&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;İçerdiği &lt;strong&gt;String&lt;/strong&gt;‘leri görüntülemek&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;&lt;strong&gt;Obfuscate&lt;/strong&gt; edildimi edilmedimi &lt;strong&gt;PEid&lt;/strong&gt; gibi bir tool ile test etmek&lt;/p&gt;
+      &lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://uldissprogis.files.wordpress.com/2016/01/static-analysis-dynamic-analysis.jpg?w=640&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Dynamic Analysis&lt;/strong&gt;
+    &lt;ol&gt;
+      &lt;li&gt;
+        &lt;p&gt;&lt;strong&gt;Malware&lt;/strong&gt;‘yi çalışırken incelemek&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;Bir &lt;strong&gt;Debugger&lt;/strong&gt; aracılığı ile içerisindeki instructionları gözlemlemek&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;Bir &lt;strong&gt;Sanal Makine&lt;/strong&gt; içerisinde &lt;strong&gt;Snapshot&lt;/strong&gt; aldıktan sonra çalıştırıp &lt;strong&gt;Etkisini&lt;/strong&gt; gözlemleyip eski &lt;strong&gt;Snapshot&lt;/strong&gt;‘a geri dönmek&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;&lt;strong&gt;Malware&lt;/strong&gt;‘i çalıştırmadan önce &lt;strong&gt;RegShot&lt;/strong&gt; gibi bir tool ile &lt;strong&gt;Registry&lt;/strong&gt;‘nin &lt;strong&gt;Shot&lt;/strong&gt;‘unu alıp &lt;strong&gt;Malware&lt;/strong&gt; çalıştıktan sonraki &lt;strong&gt;Registry&lt;/strong&gt; ile karşılaştırmak&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;&lt;strong&gt;Malware&lt;/strong&gt; çalıştıktan sonra &lt;strong&gt;REMnux&lt;/strong&gt; gibi bir &lt;strong&gt;İşletim Sistemi&lt;/strong&gt; içerisinden &lt;strong&gt;Malware&lt;/strong&gt;‘nin gerçekleştirdiği &lt;strong&gt;Protocol Request&lt;/strong&gt;‘lerini gözlemlemek&lt;/p&gt;
+      &lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Tabi bu yukarıda saydıklarımız sadece bir kaçı. İleride bazılarını daha detaylı inceleyeceğimizden şimdilik sadece kafanızda &lt;strong&gt;Dinamik&lt;/strong&gt; ve &lt;strong&gt;Statik&lt;/strong&gt; analizlerinin neler olduklarına dair bir şema oluşması için yukarıda ekleme yaptım.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Dinamik Analiz&lt;/strong&gt; bize &lt;strong&gt;Malware&lt;/strong&gt;‘yi anlamamız açısından daha iyi yardımcı olacaktır &lt;strong&gt;Yüzeysel&lt;/strong&gt; olarak.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Malware&lt;/strong&gt; çalıştırdığımız &lt;strong&gt;Sanal Makine&lt;/strong&gt; içerisinden asıl makinemize ulaşmaya çalışıyor olması bile muhtemel olabilir.&lt;/p&gt;
+
+&lt;p&gt;Bu yüzden bu &lt;strong&gt;Malware&lt;/strong&gt;‘yi çalıştırdıktan sonra ne olursa olsun bizim &lt;strong&gt;Ana Makinemize&lt;/strong&gt; dokunmayacağından hem &lt;strong&gt;Network&lt;/strong&gt; hemde &lt;strong&gt;VM Escape&lt;/strong&gt; açısından korunaklı olduğumuzdan emin olmamız lazım.&lt;/p&gt;
+
+&lt;p&gt;Bu açıdan &lt;strong&gt;Ağ&lt;/strong&gt;‘ımızı asıl makinemize ulaşılamayacak şekilde düzenlememiz yani &lt;strong&gt;Host&lt;/strong&gt;‘tan &lt;strong&gt;İzole&lt;/strong&gt; etmemiz ve &lt;strong&gt;Sanal Makine&lt;/strong&gt;‘nin bir &lt;strong&gt;Snapshot&lt;/strong&gt;‘unu almamız gerekiyor.&lt;/p&gt;
+
+&lt;h1 id=&quot;virtual-network-and-snapshot&quot;&gt;Virtual Network and Snapshot&lt;/h1&gt;
+
+&lt;p&gt;&lt;strong&gt;Snapshot&lt;/strong&gt; nedir ? :&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Makine&lt;/strong&gt;‘mizin alınmış bir kopyasıdır. &lt;strong&gt;Malware&lt;/strong&gt; çalıştıktan sonra &lt;strong&gt;Sanal Makine&lt;/strong&gt; içerisinde &lt;strong&gt;Kırılmalar&lt;/strong&gt; oluşabilir bu yüzden tekrar eski haline getirmek için bir &lt;strong&gt;Snapshot&lt;/strong&gt;‘unu almamız gereklidir.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;VMware&lt;/strong&gt; içerisinde bulunan &lt;strong&gt;Sanal Makinemiz&lt;/strong&gt; için bir &lt;strong&gt;Snapshot&lt;/strong&gt; alalım :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://lh3.googleusercontent.com/rBTUrIsb76zq4sEOuAVUGba7rO0dQdOwnRNdlXVxIceYrWaXSK8B_qRsJsSQBHRL48MHM0a-6_ueCJExrHE321gIiZxnhfhlSHyw27HfDWxSXVZFthKIiPrMMpiZaiGQvhyubuus4MqCrI5Jpcdd0iWuKWSnW5wMctwcHfcwC7pFgppiU0NoUcjHLWNkM5_Unmu7hihQPDGJrrFIsKufl4jnAps8DUqOBdHiyp8CGHEorqtz50lOGxSz44XgqSkR9Y2yfZfSOQmm1q1YT2UskhAktTHc541wNOkdpsfwRtgEFJTUzBxZZ5wpgfnFESV7RTTnaQJLxnPF0eBvmO5rSOwOcYIUW4k3fnXEwfyKIgZLlLj4J8FrIXa-cncD-gTQvlyDVsv6i45-tF-Q3yQbkCjASsx2hzbn4IHpvatbgnuYzVHhfRFVM91nt-M3wE6DTrVfqYa4gvvnxSHCK20qMuyKjsIneORgA0nx_MmKYCqhJSrbXNSvHEnv92FwwONu_HteJSBX-0fWLAXGE8omMV6hcC28AL1fc39e6CQ19SgWvs0qbAfS_dZcpajixHleJSqhmyC065NnBsgMkK29gBpxHTQ2zV5e1O3j1vh1hQm2XOuLqCZCOKhQpZ1CXmAeq7nkGjuXg3ZWBNVR_4fZZCZu5A0SYvI=w1797-h973-no&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Snapshot&lt;/strong&gt;‘umuzu aldığımıza göre şimdi &lt;strong&gt;Network Configuration&lt;/strong&gt; kısmına geçebiliriz.&lt;/p&gt;
+
+&lt;p&gt;Bu kısımı görsel ile anlatmak biraz uzun sürebilir bu yüzden hem &lt;strong&gt;REMnux&lt;/strong&gt; hemde &lt;strong&gt;Win 7&lt;/strong&gt; için &lt;strong&gt;Ağ&lt;/strong&gt; ayarlarını yaptığım ve nasıl yapıldığını anlattım.&lt;/p&gt;
+
+&lt;p&gt;Ayrıca bir &lt;strong&gt;Malware&lt;/strong&gt;‘nin &lt;strong&gt;Protocol Request&lt;/strong&gt;‘lerini canlı olarak nasıl izlendiğini anlattığım videoma alıyım sizleri :&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://youtu.be/oCO3xsIktng&quot;&gt;Network Visulation &amp;amp; Malware Request Track Youtube Vid&lt;/a&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;video-hakkında&quot;&gt;Video hakkında&lt;/h1&gt;
+
+&lt;p&gt;Bu videoda kullandığım &lt;strong&gt;inetsim&lt;/strong&gt;, &lt;strong&gt;fakedns&lt;/strong&gt; gibi toollar bize sahte protocol sunucuları oluşturdu.&lt;/p&gt;
+
+&lt;p&gt;Video içerisinde anlattığım &lt;strong&gt;Route Traffic&lt;/strong&gt; olayıda basit bir şekilde bilgisayarı ve interneti olan bir kişi &lt;strong&gt;Google&lt;/strong&gt;‘ye girmek isterse bu trafik &lt;strong&gt;Gateway&lt;/strong&gt;‘inden geçer ve bu gateway ancak izin verirse istediği yere ulaşabilir &lt;strong&gt;Google&lt;/strong&gt;‘ye girmek isteyen kişi.&lt;/p&gt;
+
+&lt;p&gt;Bizde normal bir &lt;strong&gt;Gateway&lt;/strong&gt; kullanmak yerine &lt;strong&gt;Win 7&lt;/strong&gt; için &lt;strong&gt;Gateway&lt;/strong&gt; olarak &lt;strong&gt;REMnux&lt;/strong&gt;‘umuzu kullandık.&lt;/p&gt;
+
+&lt;p&gt;Dolayısıyla &lt;strong&gt;Win 7&lt;/strong&gt; içerisinde geçen tüm &lt;strong&gt;Request&lt;/strong&gt;‘ler bizim &lt;strong&gt;REMnux&lt;/strong&gt;‘umuz içerisine yönlendirildi.&lt;/p&gt;
+
+&lt;p&gt;Bu şekilde de &lt;strong&gt;Malware&lt;/strong&gt;‘mizin internet üzerinde yaptığı tüm istekleri izleyebilir hale geldik.&lt;/p&gt;
+
+&lt;h1 id=&quot;the-end&quot;&gt;THE END&lt;/h1&gt;
+&lt;p&gt;&lt;strong&gt;Malware Analysis&lt;/strong&gt; serimizin ilk part’ını umarım keyifle okumuşsunuzdur.&lt;/p&gt;
+
+&lt;p&gt;İlerideki partlarda &lt;strong&gt;Static&lt;/strong&gt; ve &lt;strong&gt;Dynamic&lt;/strong&gt; analizlere deyineceğim.&lt;/p&gt;
+
+&lt;p&gt;Ve dahada ileriki partlarda dahada teknik detaylara gireceğiz.&lt;/p&gt;
+
+&lt;p&gt;Sağlıcakla Kalın !&lt;/p&gt;</content><author><name></name></author><summary type="html">Malware Analysis (Part 1)</summary></entry><entry><title type="html">Linux System Call Hooking</title><link href="http://192.168.254.251:4000/2019/05/07/linux-system-call-hooking.html" rel="alternate" type="text/html" title="Linux System Call Hooking" /><published>2019-05-07T00:00:00+03:00</published><updated>2019-05-07T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2019/05/07/linux-system-call-hooking</id><content type="html" xml:base="http://192.168.254.251:4000/2019/05/07/linux-system-call-hooking.html">&lt;h1 id=&quot;linux-system-call-hooking&quot;&gt;Linux System Call Hooking&lt;/h1&gt;
 
 &lt;p&gt;Merhaba arkadaşlar &lt;strong&gt;Linux System Call Hooking&lt;/strong&gt; isimli yazıma hoşgeldiniz.&lt;/p&gt;
 
@@ -1479,98 +1628,4 @@ sistemde / dizinine geçip : find / -name “key-3-of3.txt”&lt;/p&gt;
 &lt;br /&gt;
 ve son flagimizide böylelikle buluyoruz. : 04787ddef27c3dee1ee161b21670b4e4&lt;/p&gt;
 
-&lt;p&gt;bir dahaki yazımda görüşürüz :)&lt;/p&gt;</content><author><name></name></author><summary type="html">Merhaba arkadaşım.Görüşmeyeli uzun süre oldu :D neyse yazımıza geçelim.</summary></entry><entry><title type="html">Hackfest2016: Quaoar - Walkthrough</title><link href="http://192.168.254.251:4000/2017/12/07/hackfest2016-quaoar-walkthrough.html" rel="alternate" type="text/html" title="Hackfest2016: Quaoar - Walkthrough" /><published>2017-12-07T00:00:00+03:00</published><updated>2017-12-07T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2017/12/07/hackfest2016-quaoar-walkthrough</id><content type="html" xml:base="http://192.168.254.251:4000/2017/12/07/hackfest2016-quaoar-walkthrough.html">&lt;h1 style=&quot;color:red;&quot;&gt;Bu yazı içerisindeki fotoraflar imgur.com sitesine yüklüdür ve bu site türkiyede engellidir fotorafları görmek için proxy kullanınız !&lt;/h1&gt;
-
-&lt;p&gt;Yeniden merhaba uzun bir süredir blog yazmıyordum yine google botlarına ayıp olmasın ve geride okuyabileceğim birşeyler bırakayım diye çözdüğüm vulnhub’u paylaşmak istedim.&lt;/p&gt;
-
-&lt;p&gt;Öncelikle vulnhub’u indirip kurduktan sonra bizi böyle bir ekran karşılıyor çok garipsedim bu ekranı nedenide şu vulnhub’u çözdükten sonra farkettim açılış penceresinde aslında kısaca neler yapılacak yazılmış onları görsem daha kolay ve kısa sürebilirdi aslında.Siz siz olun girişleri okuyun xD.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/FtBUx76.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Bize verilen local ip’ye girdiğimiz’de bizi böyle bir ekran karşılıyor :&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/FRDKDI1.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Kaynak kodlarını ne kadar incelesemde resimlerden başka birşey çıkmadı, ikinci olarak klasik bir nmap taraması yaptım ve sonuçlar :&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/EX1Mjtz.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Çıkan sonuçlardaki versiyonlar’a yönelik bir sürü cve docsları var ama hemen onlarla uğraşmak istemedim.Eğer sonuç çıkmazsa yapacağım son şey olarak onu belirlemiştim, ama ondan önce bir dizin taraması yaptım dirbuster aracımızla :&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/hSx0n5W.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Ve aniden elime 2 koz geçti ya wordpress’ten yürüyecektim yada upload dizininden.Öncelikle kolaylık olsun diye upload dizinine baktım ama oradan birşey çıkartamadım, ve wordpress dizinine girdim :&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/fvNpdyj.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Bu şekilde bir sayfa bizi karşıladı klasik wordpress templatesi ve bir wikipedia linki, türkçe versiyonunu incelediğimde yeni bir bilgi öğrenmiştim ama hala vulnhub için elimde bir sonuç yoktu.&lt;/p&gt;
-
-&lt;p&gt;Ama sonuçta wordpress ve bizim wpscan aracımız var.Yapılan tarama sonucu&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/2VZZQSo.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Wpscan’ımız aynı zamanda userimizin default olduğunu söyledi. kullanıcı adı ve şifreyi “192.168.0.122/wordpress/wp-login”e girdiğimizde kendimizi içeride buluyorduk.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/3rfraYy.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Artık geriye bash’imize erişmek kalıyor, ben template içinde 404.php’ye atmaya karar verdim shell’imi :&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/oX7IiIa.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Ve erişimimiz geldi :&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/YWR9kOt.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Bundan sonra yapmamız gereken root erişimini almak ve flagimizi bulmak.&lt;/p&gt;
-
-&lt;p&gt;Küçük bir ‘config.php’ araştırması ile root şifremize ulaşabilirdik. Araştırmada kullanılan komut :&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;find / -name &quot;config.php&quot;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Araştırma sonucu baştada bulduğumuz ‘/upload’ dizininden bir ‘config.php’ dosyası çıktı.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/AH4qBHs.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;İçini açtığımızda karşımıza “mysql database” şifreleri çıktı :&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/vTEanP2.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Merakıma yenik düşüp oradaki database şifresini root kullanıcımıza denemek istedim ama hiçbir sudo komutunu kabul etmedi :&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/ZmurLHe.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Küçük bir google aramasından sonra bu sorunun python’daki pty modülü ile kolayca çözülebileceğini öğrendim ama bunu yazmak için ne python’u açabiliyordum nede nano ve onun gibi editörleri çalıştırabiliyordum.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/daCoe30.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Bu sorunuda echo ile /tmp(temporary) dizinine script kodlarımızı direkt yazarak çözdüm :&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;echo &quot;import pty; pty.spawn('/bin/bash')&quot; &amp;gt; /tmp/fuckbody.py
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Son olarak sadece script’imizi çalıştırmak ve şifremizi denemek vardı :&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/c0hgjJd.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Ve root’uz. Artık zaman flagimizi avlama zamanı.İlk olarak klasik home dizinine baktım ve 1. flagimiz oradaydı :&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/7M4wLJx.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;1.Flag : 2bafe61f03117ac66a73c3c514de796e&lt;/p&gt;
-
-&lt;p&gt;Ama bir sorun vardı bu flag’in yetkilerine baktığımda normal bir userde görebiliyordu aynı zamanda (/home/admin) dizinlerede girebiliyor’du, bende farklı flag arayışlarına çıktım.İlk flagimiz “flag.txt” olduğuna göre  diğeride ya flag2.txt yada flag.txt diye başka bir dizinde olacaktı hiç uğraşmadan aşşağıdaki simple find command’ı yazıp iki farklı flagi’de aradım :&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;find / -name &quot;flag2.txt&quot; &amp;amp;&amp;amp; find / -name &quot;flag.txt&quot;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Ve /root dizinimizde bir flag daha bulduk :&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/3DaO8pS.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;2.Flag : 8e3f9ec016e3598c5eec11fd3d73f6fb&lt;/p&gt;
-
-&lt;p&gt;Google botlarına teşekkürler iyi günler :)&lt;/p&gt;</content><author><name></name></author><summary type="html">Bu yazı içerisindeki fotoraflar imgur.com sitesine yüklüdür ve bu site türkiyede engellidir fotorafları görmek için proxy kullanınız !</summary></entry></feed>
+&lt;p&gt;bir dahaki yazımda görüşürüz :)&lt;/p&gt;</content><author><name></name></author><summary type="html">Merhaba arkadaşım.Görüşmeyeli uzun süre oldu :D neyse yazımıza geçelim.</summary></entry></feed>
