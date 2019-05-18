@@ -1,4 +1,287 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.2">Jekyll</generator><link href="http://192.168.254.251:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://192.168.254.251:4000/" rel="alternate" type="text/html" /><updated>2019-05-16T15:32:27+03:00</updated><id>http://192.168.254.251:4000/</id><title type="html">Daily Security</title><subtitle>In this blog we're going to solve CTF's &amp; Write Some Software's.My goal is redirect my little knowledge to other people.</subtitle><entry><title type="html">Malware Analysis - Lab Setup (Part 1)</title><link href="http://192.168.254.251:4000/2019/05/16/malware-analysis-part-1.html" rel="alternate" type="text/html" title="Malware Analysis - Lab Setup (Part 1)" /><published>2019-05-16T00:00:00+03:00</published><updated>2019-05-16T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2019/05/16/malware-analysis-part-1</id><content type="html" xml:base="http://192.168.254.251:4000/2019/05/16/malware-analysis-part-1.html">&lt;h1 id=&quot;malware-analysis-part-1&quot;&gt;Malware Analysis (Part 1)&lt;/h1&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.2">Jekyll</generator><link href="http://192.168.254.251:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://192.168.254.251:4000/" rel="alternate" type="text/html" /><updated>2019-05-18T17:10:11+03:00</updated><id>http://192.168.254.251:4000/</id><title type="html">Daily Security</title><subtitle>In this blog we're going to solve CTF's &amp; Write Some Software's.My goal is redirect my little knowledge to other people.</subtitle><entry><title type="html">Malware Analysis - Static Analysis (Part 2)</title><link href="http://192.168.254.251:4000/2019/05/18/malware-analysis-part-2.html" rel="alternate" type="text/html" title="Malware Analysis - Static Analysis (Part 2)" /><published>2019-05-18T00:00:00+03:00</published><updated>2019-05-18T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2019/05/18/malware-analysis-part-2</id><content type="html" xml:base="http://192.168.254.251:4000/2019/05/18/malware-analysis-part-2.html">&lt;h4 id=&quot;malware-analysis---static-analysis-part-2&quot;&gt;Malware Analysis - Static Analysis (Part 2)&lt;/h4&gt;
+
+&lt;p&gt;Merhaba arkadaşlar &lt;strong&gt;Malware Analizi&lt;/strong&gt; serimin ikinci part’ına hoşgeldiniz.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.hizliresim.com/0RPDnY.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Bu part içerisinde bir &lt;strong&gt;Malware&lt;/strong&gt;‘nin &lt;strong&gt;Statik&lt;/strong&gt; analizinin nasıl yapacağını anlatacağım.&lt;/p&gt;
+
+&lt;p&gt;İleride ki part içerisinde &lt;strong&gt;Dinamik&lt;/strong&gt; analizini anlatacağım.&lt;/p&gt;
+
+&lt;p&gt;Bu ikisini ayrı ayrı partlara bölmemin sebebi ikisininde tam olarak derinliklerine ineceğiz. Bu yüzden ikisini ayrı ayrı paylaşma gereği duydum.&lt;/p&gt;
+
+&lt;p&gt;Önceki part içerisinden &lt;strong&gt;Win 7&lt;/strong&gt; ve &lt;strong&gt;REMnux&lt;/strong&gt;‘u kurduğunuzu aynı zamanda &lt;strong&gt;Network&lt;/strong&gt; ve &lt;strong&gt;Snapshot&lt;/strong&gt; ayarlarını gerçekleştirdiğinizi varsayıp devam ediyorum.&lt;/p&gt;
+
+&lt;p&gt;Bu yazımızda &lt;strong&gt;Sanal Makine&lt;/strong&gt; kullanmayacağız. Çünkü &lt;strong&gt;Malware&lt;/strong&gt;‘yi çalıştırmadan inceleyeceğiz. Yalnız ileride &lt;strong&gt;Dynamic Analysis&lt;/strong&gt; yazımda artık bir kaç &lt;strong&gt;Malware&lt;/strong&gt; çalıştırmaya başladığımızda &lt;strong&gt;Sanal Makine&lt;/strong&gt; kullanacağımız için gerekli olacaktır.&lt;/p&gt;
+
+&lt;p&gt;Şimdi yavaştan yazımıza geçelim ve bir &lt;strong&gt;Malware&lt;/strong&gt;‘nin &lt;strong&gt;Statik&lt;/strong&gt; analizinin nasıl yapacağını anlatalım.&lt;/p&gt;
+
+&lt;h2 id=&quot;what-the-fk-is-packing-and-obfuscating-&quot;&gt;What The F!!K is packing and obfuscating ?&lt;/h2&gt;
+
+&lt;p&gt;Bir &lt;strong&gt;Malware&lt;/strong&gt;‘nin &lt;strong&gt;Statik&lt;/strong&gt; analizini gerçekleştirmeye başlayacağımızda bakmamız gereken ilk noktalardan biri &lt;strong&gt;Pack&lt;/strong&gt; ve &lt;strong&gt;Obfuscate&lt;/strong&gt; terimleridir.&lt;/p&gt;
+
+&lt;p&gt;Hemen bu terimlere daha önce denk gelmeyen arkadaşlar için basitçe anlatayım.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Packing Nedir ?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;Dosya sıkıştırma denilebilir basit bir şekilde.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Sıkıştırılan dosya kendi içinde aynı zamanda bu sıkıştırmayı çözmek için bir kod bulundurur.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Genellikle packlenmiş yani sıkıştırılmış dosyalar bu packing’i kendi içinde çözmek için anahtarlar kullanır.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Dahada basit bir şekilde &lt;strong&gt;Packing&lt;/strong&gt; bir &lt;strong&gt;Zararlı Yazılımın&lt;/strong&gt; asıl kodlarını &lt;strong&gt;Encode&lt;/strong&gt; eder yani &lt;strong&gt;Şifreler&lt;/strong&gt;.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Bir &lt;strong&gt;Zararlı Yazılım&lt;/strong&gt;‘ı &lt;strong&gt;Pack&lt;/strong&gt;‘lemenin asıl amacı &lt;strong&gt;Ana Kod&lt;/strong&gt;‘u &lt;strong&gt;Encode&lt;/strong&gt; etmek ve sonra bu &lt;strong&gt;Zararlı Yazılım&lt;/strong&gt; çalıştığında &lt;strong&gt;Encode&lt;/strong&gt; edilmiş kodu &lt;strong&gt;Memory&lt;/strong&gt; yani &lt;strong&gt;Hafıza&lt;/strong&gt; içerisinde çözmektir.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Bir &lt;strong&gt;Malware&lt;/strong&gt;‘nin analizini engellemek için ve kafa karıştırmak için çokça kullanılan bir yöntemdir.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Bir &lt;strong&gt;Packing&lt;/strong&gt;‘in &lt;strong&gt;Routine&lt;/strong&gt;‘ini yani &lt;strong&gt;Rutin&lt;/strong&gt;‘ini gösteren googleden bulduğum görsel :
+&lt;img src=&quot;https://i.hizliresim.com/k92BdJ.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Obfuscating Nedir ?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;İnsanların anlaması için zorlaştırma işlemi denilebilir basit bir şekilde.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Bir kodu ne kadar daha az okuna bilir kılarsanız anlaşılmasıda zorlaşır buda bir &lt;strong&gt;Malware&lt;/strong&gt;‘nin anlaşılmasını zorlaştıran bir yöntemdir.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Örneğin elimizdeki &lt;strong&gt;isim&lt;/strong&gt; değişkeni kod içerisinde &lt;strong&gt;vtkej12ns&lt;/strong&gt; şeklinde göründüğünde bu değişkenin &lt;strong&gt;isim&lt;/strong&gt; alanını tuttuğun anlamak zorlaşır ve buda &lt;strong&gt;Obfuscated&lt;/strong&gt; bir değişkendir.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Örnek bir &lt;strong&gt;Obfuscate&lt;/strong&gt; edilmiş kod :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.hizliresim.com/0RPn3R.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Yukarıda bulunan resimdeki basit bir &lt;strong&gt;HTML&lt;/strong&gt; ve &lt;strong&gt;Javascript&lt;/strong&gt; kodunun ne kadar karmaşıklaştırıldığı anlaşılabilir durumda.&lt;/p&gt;
+
+&lt;h2 id=&quot;how-to-unpack-and-deobfuscate&quot;&gt;How to unpack and deobfuscate&lt;/h2&gt;
+
+&lt;p&gt;Öncelikle aşşağıdakileri anlamakta zorluk çekebilecek arkadaşlarımız için bazı terimlerin türkçe karşılığını yazayım :&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Portable Executable&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Çalıştırılabilir dosyamızdır. Buna uzantısı &lt;strong&gt;.exe&lt;/strong&gt; vs.. olan dosyalarda denilebilir.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Packer&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Bir yazılımı &lt;strong&gt;Encode&lt;/strong&gt; etmeye yarayan yazılım.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Unpacker&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Encode&lt;/strong&gt; edilmiş bir yazılımı çözmeye yarayan yazılım&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;PE Sections&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Çalıştırılabilir dosyamızın içerdiği &lt;strong&gt;Code&lt;/strong&gt;, &lt;strong&gt;Data&lt;/strong&gt; gibi bilgileri tutan bölümlerdir.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&quot;detecting-packing-and-unpacking-it&quot;&gt;Detecting packing and unpacking it&lt;/h1&gt;
+
+&lt;h4 id=&quot;detecting-packing&quot;&gt;Detecting packing&lt;/h4&gt;
+
+&lt;p&gt;&lt;strong&gt;Pack&lt;/strong&gt; edilmiş bir &lt;strong&gt;Malware&lt;/strong&gt;‘yi &lt;strong&gt;Unpack&lt;/strong&gt; etmek yani çözmek ise bazen işin en kolay kısmı olabilirken en zor kısmıda olabilir.&lt;/p&gt;
+
+&lt;p&gt;Öncelikle pack edilmiş bir &lt;strong&gt;Malware&lt;/strong&gt;‘nin hangi pack yazılımını kullandığını bulmamız gerek.&lt;/p&gt;
+
+&lt;p&gt;Fakat bunu gerçekleştirebilecek &lt;strong&gt;Yazılım&lt;/strong&gt;‘ları göstermeye geçmeden önce önemli bir not eklemek istiyorum. Hangi &lt;strong&gt;pack&lt;/strong&gt; bulma yazılımını kullanırsanız kullanın bu yazılımlar sadece bilinen &lt;strong&gt;Packer&lt;/strong&gt;‘ların isimlerini tutuyor.&lt;/p&gt;
+
+&lt;p&gt;Dolayısı ile bulunamayan bir &lt;strong&gt;Packing&lt;/strong&gt; işlemini anlamak için &lt;strong&gt;Portable Executable&lt;/strong&gt; yani &lt;strong&gt;Çalıştırılabilir Dosya&lt;/strong&gt;‘mızın &lt;strong&gt;PE Section&lt;/strong&gt;‘larına bakmamız gereklidir.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Pack&lt;/strong&gt; edilmiş bir &lt;strong&gt;Malware&lt;/strong&gt;‘nin hangi &lt;strong&gt;Pack&lt;/strong&gt; yazılımını kullandığını bulmak için bazı araçlar :&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;RDG Packer Detector&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;PEiD&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Bu verdiğimiz toollardan eğer &lt;strong&gt;Malware&lt;/strong&gt;‘nin &lt;strong&gt;Packer&lt;/strong&gt; adını çıkarabilirseniz bu &lt;strong&gt;Packer&lt;/strong&gt;‘in bir &lt;strong&gt;Unpacker&lt;/strong&gt;‘ini bulmaya aramaya başlayabilirsiniz.&lt;/p&gt;
+
+&lt;p&gt;Eğer &lt;strong&gt;Packer&lt;/strong&gt; adını verdiyse ve bu &lt;strong&gt;Packer&lt;/strong&gt; için herhangi bir &lt;strong&gt;Unpacker&lt;/strong&gt; bulunmuyorsa kendi ellerinizle işi bitirmeye kendinizi yavaştan hazırlamaya başlayın.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Packer&lt;/strong&gt;‘in adını bulamadıysanız şayet &lt;strong&gt;Portable Executable&lt;/strong&gt; içerisinde yani &lt;strong&gt;Malware&lt;/strong&gt;‘miz içerisinde bir &lt;strong&gt;Packing&lt;/strong&gt; işleminin gerçekleştiğini anlamak için &lt;strong&gt;PE Section&lt;/strong&gt;‘larına bakmanız yeterli olacaktır.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.hizliresim.com/7aOgOm.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Yukarıdaki fotorafta örnek bir &lt;strong&gt;Portable Executable&lt;/strong&gt;‘nin &lt;strong&gt;UPX Packer&lt;/strong&gt; ile &lt;strong&gt;Pack&lt;/strong&gt;‘lendiğini görebiliriz.&lt;/p&gt;
+
+&lt;p&gt;Genellik ile normal bir &lt;strong&gt;PE&lt;/strong&gt;‘nin içerdiği &lt;strong&gt;Section&lt;/strong&gt;‘lar dışında &lt;strong&gt;Section&lt;/strong&gt;‘lar içeren &lt;strong&gt;PE&lt;/strong&gt;‘ler &lt;strong&gt;Packing&lt;/strong&gt; işlemine tabir tutulduğunu ortaya dökmemiz için bir yoldur.&lt;/p&gt;
+
+&lt;p&gt;Ayrıca sadece &lt;strong&gt;Packing&lt;/strong&gt; işlemi değil aynı zamanda bu &lt;strong&gt;Section&lt;/strong&gt;‘lar içerisinden &lt;strong&gt;Zararlı Yazılım&lt;/strong&gt;‘ın kendi içerisinden farklı bir yazılım çıkarttığı gibi değişik türde durumlara şahit olabilirsiniz.&lt;/p&gt;
+
+&lt;h4 id=&quot;unpacking&quot;&gt;Unpacking&lt;/h4&gt;
+
+&lt;p&gt;Dosyanın yani &lt;strong&gt;Malware&lt;/strong&gt;‘nin bir &lt;strong&gt;Packing&lt;/strong&gt; işlemi içerdiğini anladıktan sonra kendi elimizle &lt;strong&gt;Unpack&lt;/strong&gt; etmek için herhangi bir &lt;strong&gt;Debugger&lt;/strong&gt; aracılığı ile &lt;strong&gt;Malware&lt;/strong&gt;‘yi izleyip kendini &lt;strong&gt;Memory&lt;/strong&gt; İçerisinde &lt;strong&gt;Unpack&lt;/strong&gt; ettikten sonra &lt;strong&gt;Unpack&lt;/strong&gt; edilmiş &lt;strong&gt;Kodu&lt;/strong&gt; dışarıya bir &lt;strong&gt;.exe&lt;/strong&gt; olarak aktarabiliriz.&lt;/p&gt;
+
+&lt;p&gt;Bir arkadaşımız &lt;strong&gt;Amber Packer&lt;/strong&gt; adında bir &lt;strong&gt;Packing&lt;/strong&gt; yazılımı geliştirdi. Yukarıda bahsettiğimiz toollardan neredeyse hepsi bunu bulamıyor.&lt;/p&gt;
+
+&lt;p&gt;Ve bulamamasına rağmen yukarıda bahsettiğim tekniği kullanıp bu &lt;strong&gt;Packing&lt;/strong&gt; edilmiş dosyayı &lt;strong&gt;Unpack&lt;/strong&gt; edip bunu blog yazısına döken sevdiğim bir arkadaşımın blog yazısı :&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://robindimyan.blogspot.com/2018/02/dkhos-rev300-cozumu.html&quot;&gt;Amber unpacking&lt;/a&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;detecting-obfuscating-and-deobfuscating-it&quot;&gt;Detecting obfuscating and deobfuscating it&lt;/h1&gt;
+&lt;h4 id=&quot;detecting-obfuscating&quot;&gt;Detecting Obfuscating&lt;/h4&gt;
+
+&lt;p&gt;&lt;strong&gt;Detecting&lt;/strong&gt; kısmı çok basit.&lt;/p&gt;
+
+&lt;p&gt;Anlaşılabilir bir &lt;strong&gt;Kod&lt;/strong&gt; ise şayet &lt;strong&gt;Obfuscated&lt;/strong&gt; bir &lt;strong&gt;Kod&lt;/strong&gt; değildir.&lt;/p&gt;
+
+&lt;p&gt;Anlaşılmaz bir &lt;strong&gt;Kod&lt;/strong&gt; ise &lt;strong&gt;Obfuscated&lt;/strong&gt; bir &lt;strong&gt;Kod&lt;/strong&gt; olduğu söylenebilir.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.hizliresim.com/V9ZYvB.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;deobfuscating&quot;&gt;Deobfuscating&lt;/h4&gt;
+
+&lt;p&gt;Bir &lt;strong&gt;Obfuscated&lt;/strong&gt; kodu &lt;strong&gt;Deobfuscate&lt;/strong&gt; etmek için &lt;strong&gt;Değişkenlerin&lt;/strong&gt;, &lt;strong&gt;Fonksiyonların&lt;/strong&gt; neler yaptığını takip edip sonra yaptığı şeye göre tekrar isimlendirebilirsiniz.&lt;/p&gt;
+
+&lt;p&gt;Ya da internette bulunan &lt;strong&gt;Deobfuscation Tool&lt;/strong&gt;‘larından yararlanabilirsiniz.&lt;/p&gt;
+
+&lt;p&gt;Buraya 13 tanesinin listelendiği bir forum post’unu bırakıyorum :&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://rstforums.com/forum/topic/103595-13-deobfuscation-tools-for-reverse-engineers/&quot;&gt;13 Deobfuscator Tools&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Basit bir şekilde bir &lt;strong&gt;Malware&lt;/strong&gt;‘nin yapılması gereken ilk iki &lt;strong&gt;Statik&lt;/strong&gt; analizinden bahsettim.&lt;/p&gt;
+
+&lt;p&gt;Şimdi yavaştan &lt;strong&gt;Malware&lt;/strong&gt;‘mizin diğer &lt;strong&gt;Statik&lt;/strong&gt; analizlerini yapıp &lt;strong&gt;Zararlı yazılımımızı&lt;/strong&gt; dahada yakından tanıyalım.&lt;/p&gt;
+
+&lt;h2 id=&quot;linked-libraries-and-functions&quot;&gt;Linked Libraries And Functions&lt;/h2&gt;
+
+&lt;p&gt;Bir &lt;strong&gt;Malware&lt;/strong&gt;‘yi yani &lt;strong&gt;Zararlı Yazılım&lt;/strong&gt;‘ı daha yakından tanımak için içerdiği &lt;strong&gt;Kütüphane&lt;/strong&gt; ve &lt;strong&gt;Fonksiyon&lt;/strong&gt;‘lara bakmamız yeterli olacaktır.&lt;/p&gt;
+
+&lt;p&gt;15 kilo dumbell’ı kanadıma çektikten sonra bu kısımı daha da derinden inceleyeceğiz.&lt;/p&gt;
+
+&lt;p&gt;Ve çokta zorlu olmayan setlerden sonra geldim.&lt;/p&gt;
+
+&lt;p&gt;Şimdi örnek bir &lt;strong&gt;Malware&lt;/strong&gt;‘nin &lt;strong&gt;Kütüphane&lt;/strong&gt; ve &lt;strong&gt;Fonksiyon&lt;/strong&gt;‘larını listelemek için kendi yazdığım &lt;a href=&quot;https://github.com/blacknbunny/peanalyzer&quot;&gt;peanalyzer&lt;/a&gt; tool’unu kullanıp &lt;strong&gt;Malware&lt;/strong&gt;‘miz neler yapıyor inceleyelim.&lt;/p&gt;
+
+&lt;p&gt;Tool’u indirdikten sonra :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;python peanalyzer.py --file file.exe --show imports
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Demeniz yeterli olacaktır.&lt;/p&gt;
+
+&lt;p&gt;Sonrasındaki çıktıda &lt;strong&gt;Kütüphaneler&lt;/strong&gt;  içerisinden &lt;strong&gt;Program&lt;/strong&gt; içerisinde hangi fonksiyonların kullanıldığını listelemiş olacağız.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.hizliresim.com/169dp1.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Bu bir &lt;strong&gt;Malware&lt;/strong&gt;‘nin kullandığı fonksiyonlar değil yalnız bu &lt;strong&gt;Fonksiyonlar&lt;/strong&gt; arasından &lt;strong&gt;ShellExecuteW&lt;/strong&gt;, &lt;strong&gt;GetCurrentProcess&lt;/strong&gt; gibi &lt;strong&gt;Fonksiyonlar&lt;/strong&gt; genellik ile &lt;strong&gt;Malware&lt;/strong&gt;‘ler tarafından kullanılıyor.&lt;/p&gt;
+
+&lt;p&gt;Burada objektif bir şekilde anlatıyorum size bunu. Artık siz kendi inceleyeceğiniz &lt;strong&gt;Malware&lt;/strong&gt;‘yi daha yakından tanımak için neler yapmanız gerektiğini daha iyi anlayacaksınız.&lt;/p&gt;
+
+&lt;p&gt;Yani bir &lt;strong&gt;Zararlı Yazılım&lt;/strong&gt;‘ın herhangi bir &lt;strong&gt;Internet Sayfasından&lt;/strong&gt; dosya indirdiğini &lt;strong&gt;Fonksiyonlar&lt;/strong&gt; aracılığıyla görmek mümkün.&lt;/p&gt;
+
+&lt;p&gt;Ve bu sayede kafanızda &lt;strong&gt;Zararlı Yazılım&lt;/strong&gt;‘ın neler yaptığına dair kafamızda bir şema olacaktır.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Kütüphaneler&lt;/strong&gt;‘in ve &lt;strong&gt;Fonksiyon&lt;/strong&gt;‘ların &lt;strong&gt;Statik&lt;/strong&gt; bir analiz içerisinde ne gibi büyük bir rol oynadığını bu şekilde anlayabilirsiniz.&lt;/p&gt;
+
+&lt;h2 id=&quot;disassemble-decompiling-patching&quot;&gt;Disassemble, Decompiling, Patching&lt;/h2&gt;
+
+&lt;h4 id=&quot;disassemble&quot;&gt;Disassemble&lt;/h4&gt;
+
+&lt;p&gt;&lt;strong&gt;Statik&lt;/strong&gt; bir analiz içerisinde ayrıca &lt;strong&gt;Malware&lt;/strong&gt;‘nin nasıl bir gidişat izlediğini görmek ve düzenlemek bize ayrıca büyük bir avantaj sağlar.&lt;/p&gt;
+
+&lt;p&gt;Yukarıda da kullandığımız &lt;a href=&quot;https://github.com/blacknbunny/peanalyzer&quot;&gt;peanalyzer&lt;/a&gt; tool’u yazılımları &lt;strong&gt;Disassemble&lt;/strong&gt; etmemize yarıyor.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;python peanalyzer.py --file file.exe --disassemble all
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.hizliresim.com/jgEnDn.gif&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;File.exe&lt;/strong&gt;‘yi bir malware olarak düşünürsek şayet &lt;strong&gt;Assembly&lt;/strong&gt; dilinde neler yaptığını incelememiz çok yararlı olacaktır.&lt;/p&gt;
+
+&lt;h4 id=&quot;decompiling&quot;&gt;Decompiling&lt;/h4&gt;
+
+&lt;p&gt;Şayet bazı &lt;strong&gt;Malware&lt;/strong&gt;‘leri &lt;strong&gt;Assembly&lt;/strong&gt; değilde kendi dilinden okumak mümkün olabiliyor.&lt;/p&gt;
+
+&lt;p&gt;Örneğin bir &lt;strong&gt;C#&lt;/strong&gt; ile yazılan &lt;strong&gt;Malware&lt;/strong&gt;‘nin &lt;strong&gt;Kaynak Kod&lt;/strong&gt;‘u verilmesede bazı araçlar ile o &lt;strong&gt;Kaynak Kod&lt;/strong&gt;‘u almak mümkün.&lt;/p&gt;
+
+&lt;p&gt;Yani kısaca &lt;strong&gt;Compile&lt;/strong&gt; edilip &lt;strong&gt;Assembly&lt;/strong&gt;‘e çevirilen bir kodu tekrar eski haline çevirmek &lt;strong&gt;Decompiling&lt;/strong&gt; oluyor.&lt;/p&gt;
+
+&lt;p&gt;Dahada kısaca aşşağıdaki fotorafı tersine çevirdiğinizde olan şey basit bir şekilde &lt;strong&gt;Decompiling&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.hizliresim.com/zjW4ZY.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;patching&quot;&gt;Patching&lt;/h4&gt;
+
+&lt;p&gt;&lt;strong&gt;Hex Code&lt;/strong&gt;‘ları yani &lt;strong&gt;Shellcode&lt;/strong&gt;‘ları ile oynama zamanı geldi demek bu.&lt;/p&gt;
+
+&lt;p&gt;Diyelim ki &lt;strong&gt;Zararlı Yazılım&lt;/strong&gt;‘ı geliştiren kişi &lt;strong&gt;UploadFileToServer&lt;/strong&gt; adında bir fonksiyon geliştirdi &lt;strong&gt;Program&lt;/strong&gt; içerisinde.&lt;/p&gt;
+
+&lt;p&gt;Ve sizin bazı özel dosyalarınızı kendi &lt;strong&gt;Sunucu&lt;/strong&gt;‘suna yüklüyor. Ve bu şekilde &lt;strong&gt;Sunucu&lt;/strong&gt;‘dan direk bu dosyalara ulaşabiliyor.&lt;/p&gt;
+
+&lt;p&gt;Diyelim ki bu &lt;strong&gt;Fonksiyon&lt;/strong&gt; 1 adet string alıyor parametre olarak. Ve bu parametrede yükleyeceği dosya olsun.&lt;/p&gt;
+
+&lt;p&gt;Ve bu parametreyide &lt;strong&gt;Zararlı Yazılım Geliştiricisi&lt;/strong&gt; özel olarak &lt;strong&gt;secret.txt&lt;/strong&gt; olarak atadı.&lt;/p&gt;
+
+&lt;p&gt;Şayet biz bunu program içerisinde &lt;strong&gt;Hex Code&lt;/strong&gt;‘ları arasında değiştirip &lt;strong&gt;reverseshell.php&lt;/strong&gt; adında kendi yazdığımız küçük bir &lt;strong&gt;Reverse Shell&lt;/strong&gt; kodları içeren &lt;strong&gt;PHP&lt;/strong&gt; dosyası ile değiştirdik.&lt;/p&gt;
+
+&lt;p&gt;Ve bilgisayarımızdan &lt;strong&gt;PORT&lt;/strong&gt;‘u dinlemeye başladık.&lt;/p&gt;
+
+&lt;p&gt;Bu dosya &lt;strong&gt;Remote Server&lt;/strong&gt;‘e yükleneceğinden. &lt;strong&gt;Zararlı Yazılım&lt;/strong&gt; geliştiricisinin sunucusuna basit bir şekilde ulaşabileceğiz.&lt;/p&gt;
+
+&lt;p&gt;Ve basit bir şekilde &lt;strong&gt;Patching&lt;/strong&gt; bu.&lt;/p&gt;
+
+&lt;h2 id=&quot;pe-i̇çerisinden-alabileceğimiz-bilgiler&quot;&gt;PE İçerisinden Alabileceğimiz Bilgiler&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;TimeDateStamp&lt;/strong&gt; : Yazılan &lt;strong&gt;Program&lt;/strong&gt;‘ın yani &lt;strong&gt;Zararlı Yazılım&lt;/strong&gt;‘ın ne tarihte ve ne zamanda &lt;strong&gt;Compile&lt;/strong&gt; edildiği bilgisini tutar.&lt;/p&gt;
+
+&lt;p&gt;Bu bilgi değiştirilebilirdir &lt;strong&gt;Expert Malware Developer&lt;/strong&gt; arkadaşlarımız genellikle bunun yerine sahte bir bilgi koymayı tercih eder malum çok büyük bir yazılım ise şayet devlet baba uyumuyor.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.hizliresim.com/grNoE0.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Bunun dışında &lt;strong&gt;Yazılım&lt;/strong&gt;‘ın hangi dil ile geliştirdiği,&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Compiler&lt;/strong&gt; olarak ne kullanıldığı dair tüm bilgileri içerir.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Windows&lt;/strong&gt;‘un &lt;strong&gt;PE&lt;/strong&gt; dökümantasyonu :&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://docs.microsoft.com/en-us/windows/desktop/debug/pe-format&quot;&gt;PE Format&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;statik-analiz-için-işimizi-kolaylaştıracak-kaynaklar-ve-birkaç-tool&quot;&gt;Statik analiz için işimizi kolaylaştıracak kaynaklar ve birkaç tool&lt;/h2&gt;
+
+&lt;h4 id=&quot;genellikle-kullandığım-araçlar-&quot;&gt;Genellikle kullandığım araçlar :&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;RegShot&lt;/strong&gt; : &lt;strong&gt;Malware&lt;/strong&gt; çalışmadan önce &lt;strong&gt;Registry&lt;/strong&gt;‘i kaydedip çalıştıktan sonraki ile karşılaştırmamıza yarıyor. Basitce &lt;strong&gt;Malware&lt;/strong&gt;‘nin &lt;strong&gt;Registry&lt;/strong&gt; içerisinde neleri değiştirdiğini inceleyebiliriz.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;PE-Bear&lt;/strong&gt; : Zamanında &lt;strong&gt;CIA&lt;/strong&gt;‘inde kullandığı bir &lt;strong&gt;PE View&lt;/strong&gt; aracı.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;güzel-kaynaklar-&quot;&gt;Güzel kaynaklar :&lt;/h4&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://malwareanalysis.tools/&quot;&gt;malwareanalysis.tools&lt;/a&gt; : Web sayfası içerisinden analizini yaptığınız malware için ne gerekiyorsa basit bir şekilde ulaşabilmenizi sağlayan yararlı bir sayfa.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/rshipp/awesome-malware-analysis&quot;&gt;awesome-malware-analysis&lt;/a&gt; : Güzel bir &lt;strong&gt;Cheat Sheet&lt;/strong&gt; malware analizi için.&lt;/p&gt;
+
+&lt;h2 id=&quot;the-end&quot;&gt;THE END&lt;/h2&gt;
+
+&lt;p&gt;Umarım yazıyı okurken keyif almışsınızdır.&lt;/p&gt;
+
+&lt;p&gt;Sorular için twitter : &lt;a href=&quot;https://twitter.com/0DAYanc&quot;&gt;0DAYanc&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Malware Analysis - Static Analysis (Part 2)</summary></entry><entry><title type="html">Malware Analysis - Lab Setup (Part 1)</title><link href="http://192.168.254.251:4000/2019/05/16/malware-analysis-part-1.html" rel="alternate" type="text/html" title="Malware Analysis - Lab Setup (Part 1)" /><published>2019-05-16T00:00:00+03:00</published><updated>2019-05-16T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2019/05/16/malware-analysis-part-1</id><content type="html" xml:base="http://192.168.254.251:4000/2019/05/16/malware-analysis-part-1.html">&lt;h1 id=&quot;malware-analysis-part-1&quot;&gt;Malware Analysis (Part 1)&lt;/h1&gt;
 
 &lt;p&gt;Merhaba arkadaşlar &lt;strong&gt;Malware Analizi&lt;/strong&gt; serimin ilk part’ına hoşgeldiniz.&lt;/p&gt;
 
@@ -14,7 +297,7 @@
 
 &lt;p&gt;Ayrıca ben bir &lt;strong&gt;Portable Executable&lt;/strong&gt;‘ın analizini yapacağımdan &lt;strong&gt;Win 7&lt;/strong&gt; kurdum test makinesi olarak.&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;https://lh3.googleusercontent.com/4M5yk7FG0aqjJ4J4bKqINLmhVSNSc4Wa6_homsWz4fvUi3I-Tt8UH5Jilf79mznnmhw0qg9SPmpW7BYwm_mWtNE7tE7mc8FlnoznkO839qLibLzQvcxT6-GZfyXi1c_rA76xGhmo02K9HMnEk-O_cW7sTL0s1qScc3bhZeFxzSTMTGR7Mjp3lvHCq4bwuL0WpS1xKF9IA5iM5eN5_0dUaV-P3P6J6GcVLTM0LChOiBMy3_sfvl7pjHt8OnvDpt16x1zDkvdj8d0gWlBgk-TvCo77JOnrRK5r-ABguHFxvOKbY-RIO_fbaexVdwc2L8pxbLMC57wpfE5cAbtAu74jNsV2TZcBTHiPDjWfLBkjAgx4LtJN69a73yRrAluWGqLFpaFNV6vSVLmEM2g79UaCiXfPJrhV4dnO32xeHPyEOhwBlSNmQjJiryjXn1xUUV4cB6X1ftFatThgRmVAQtJYnrj1g431tbzFKDuzQtB48hoH8rt0SpWSYvT5OhOWTl4INyzsUIxLUw1DdCp8cPHDGQW5pbCBOU_RQpN9NeF5KedCWpg5eUYwBAfMnfllxfPjBZoZ1IA220zsLGvMUQvzrxMkD5YR-BwF3Y6CL0dfkiRkF6RDfYqAHNRWcRSDr8f6lPV3VkJcdqCt2MzTy86Fmhjttd3luS4=w1836-h973-no&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://i.hizliresim.com/V9Za9V.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;Bunun dışında birde &lt;strong&gt;Malware&lt;/strong&gt;‘nin :&lt;/p&gt;
 
@@ -42,7 +325,7 @@
 &lt;p&gt;&lt;strong&gt;Protokolleri&lt;/strong&gt; gibi ağ üzerinde gerçekleştirdiği &lt;strong&gt;request&lt;/strong&gt;‘leri dinleyeceğimiz ve &lt;strong&gt;Win 7&lt;/strong&gt;‘nin &lt;strong&gt;gateway&lt;/strong&gt;‘i olarak kullanacağımız &lt;strong&gt;Tersine Mühendis&lt;/strong&gt;‘leri ve &lt;strong&gt;Malware 
 Analist&lt;/strong&gt;‘leri için özel geliştirilmiş &lt;strong&gt;REMnux&lt;/strong&gt;‘u kullanacağım.&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;https://lh3.googleusercontent.com/21j8a2KmVy27F1GsAXbc_maS8Ignb563w8OPMtMG77Lk2Ox5J621uIVuHwXH7V38NEVslxetT1lG-Vufl7bY4Vt8s7OUdlJZgyRDfnzNNJs-mEOyB9y-DJ35er2aZp-vFNDMOkiLjEZFvfT4Tx792AsBUlVrKaAxNgSGIpavBr-Qr0VWGl39CJ8LRb6-_CpyHxo2TyrDj9ch9Rc9NCJ1taT_3g9ieCY-sdxBzCRIhr2BgM_Hdrv7vPr02DyCW6Q07-NB9ChlVbng4IDDD3ApJXwAzhvmgqgWRB05dc7kOvOo-LOTzw67gZwOPNSGIXOG7qRkQDq0Dzkof6Z_6jCzdfGI-NGo1N6luvFEX6_PwDLB6HzEZ3pI7EbECZ1LNaq47Z75dIdgcordz9c0oiqSKdAbAgSONDYMUrYSTRo6A-EuG14OcfPFw5IHoFf3XE7XOie9-PnhNIoXSMfkoTkFTMFqBFnNb4eQUJxsehNdZMT5rSVVaYSZDFQukkz8-APtI0uJu62F7K8yLpy6qP8HU3C8jAT1cvU-dxegw6GyvDqmmEfXwERwH6ih-IP9k-QNdGpo1i0y39qblWI44vCe9jcEjbpf1cJ5Z4Qzh4uy8h7YJLIwXpjjL7-F_xVFeYpUC2b26bThCwv7ajXiaTWZXqgnsldOgao=w1731-h940-no&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://i.hizliresim.com/V9Za9r.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;Eğer &lt;strong&gt;işletim sistem&lt;/strong&gt;‘lerinde tamamsak şayet şimdi &lt;strong&gt;Network Configuration&lt;/strong&gt; kısmımıza geçmeden önce biraz &lt;strong&gt;Statik&lt;/strong&gt;, &lt;strong&gt;Dinamik&lt;/strong&gt;, &lt;strong&gt;Snapshot&lt;/strong&gt; ve &lt;strong&gt;Malware&lt;/strong&gt; anahtar kelimelerinden bahsedelim.&lt;/p&gt;
 
@@ -68,7 +351,7 @@ Analist&lt;/strong&gt;‘leri için özel geliştirilmiş &lt;strong&gt;REMnux&l
         &lt;p&gt;İçerdiği &lt;strong&gt;String&lt;/strong&gt;‘leri görüntülemek&lt;/p&gt;
       &lt;/li&gt;
       &lt;li&gt;
-        &lt;p&gt;&lt;strong&gt;Obfuscate&lt;/strong&gt; edildimi edilmedimi &lt;strong&gt;PEid&lt;/strong&gt; gibi bir tool ile test etmek&lt;/p&gt;
+        &lt;p&gt;&lt;strong&gt;Pack&lt;/strong&gt; edildimi edilmedimi &lt;strong&gt;PEid&lt;/strong&gt; gibi bir tool ile test etmek&lt;/p&gt;
       &lt;/li&gt;
     &lt;/ol&gt;
   &lt;/li&gt;
@@ -118,7 +401,7 @@ Analist&lt;/strong&gt;‘leri için özel geliştirilmiş &lt;strong&gt;REMnux&l
 
 &lt;p&gt;&lt;strong&gt;VMware&lt;/strong&gt; içerisinde bulunan &lt;strong&gt;Sanal Makinemiz&lt;/strong&gt; için bir &lt;strong&gt;Snapshot&lt;/strong&gt; alalım :&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;https://lh3.googleusercontent.com/rBTUrIsb76zq4sEOuAVUGba7rO0dQdOwnRNdlXVxIceYrWaXSK8B_qRsJsSQBHRL48MHM0a-6_ueCJExrHE321gIiZxnhfhlSHyw27HfDWxSXVZFthKIiPrMMpiZaiGQvhyubuus4MqCrI5Jpcdd0iWuKWSnW5wMctwcHfcwC7pFgppiU0NoUcjHLWNkM5_Unmu7hihQPDGJrrFIsKufl4jnAps8DUqOBdHiyp8CGHEorqtz50lOGxSz44XgqSkR9Y2yfZfSOQmm1q1YT2UskhAktTHc541wNOkdpsfwRtgEFJTUzBxZZ5wpgfnFESV7RTTnaQJLxnPF0eBvmO5rSOwOcYIUW4k3fnXEwfyKIgZLlLj4J8FrIXa-cncD-gTQvlyDVsv6i45-tF-Q3yQbkCjASsx2hzbn4IHpvatbgnuYzVHhfRFVM91nt-M3wE6DTrVfqYa4gvvnxSHCK20qMuyKjsIneORgA0nx_MmKYCqhJSrbXNSvHEnv92FwwONu_HteJSBX-0fWLAXGE8omMV6hcC28AL1fc39e6CQ19SgWvs0qbAfS_dZcpajixHleJSqhmyC065NnBsgMkK29gBpxHTQ2zV5e1O3j1vh1hQm2XOuLqCZCOKhQpZ1CXmAeq7nkGjuXg3ZWBNVR_4fZZCZu5A0SYvI=w1797-h973-no&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://i.hizliresim.com/r5qM5N.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;Snapshot&lt;/strong&gt;‘umuzu aldığımıza göre şimdi &lt;strong&gt;Network Configuration&lt;/strong&gt; kısmına geçebiliriz.&lt;/p&gt;
 
@@ -1489,143 +1772,4 @@ Başta da memoryi leak etmemizi sağlayan “%x” format stringini hatırlıyor
 &lt;strong&gt;BPDU Root Koruması&lt;/strong&gt; :&lt;/p&gt;
 &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Router#spanning-tree rootguard
 &lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;</content><author><name></name></author><summary type="html">Spanning Tree Protocol (STP) nedir ? :</summary></entry><entry><title type="html">Mr-Robot Vulnhub - Walktrough</title><link href="http://192.168.254.251:4000/2017/12/07/mr-robot-vulnhub-walktrough.html" rel="alternate" type="text/html" title="Mr-Robot Vulnhub - Walktrough" /><published>2017-12-07T00:00:00+03:00</published><updated>2017-12-07T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2017/12/07/mr-robot-vulnhub-walktrough</id><content type="html" xml:base="http://192.168.254.251:4000/2017/12/07/mr-robot-vulnhub-walktrough.html">&lt;p&gt;Merhaba arkadaşım.Görüşmeyeli uzun süre oldu :D&lt;br /&gt;
-&lt;br /&gt;
-neyse yazımıza geçelim.&lt;/p&gt;
-
-&lt;p&gt;uzun bir süredir blog’a yazı yazmıyorum buda iyi bir dönüş postu olur umarım.&lt;br /&gt;
-&lt;br /&gt;
-MR Robot vulnhub’unu indirmek isteyenler https://www.vulnhub.com/entry/mr-robot-1,151/ buradan indirebilir.&lt;br /&gt;
-&lt;br /&gt;
-Çözümüne geçelim öncelikle vulnhub’umuzu indirip kurduk.kurduktan sonra küçük bir arp-scan yapıp vulnhub’un ip’sini bulalım.&lt;br /&gt;&lt;/p&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;arp-scan -l
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
- 
-&lt;img src=&quot;http://i.imgur.com/wdIjvLb.jpg&quot; alt=&quot;&quot; /&gt;
-&lt;br /&gt;
-&lt;br /&gt;
-Vulnhub’un local ip’sini bulduk : 192.168.0.101&lt;/p&gt;
-
-&lt;p&gt;sonra vazgeçilmezimiz olan nmap’imiz ile bir tarayalım.&lt;br /&gt;
-&lt;br /&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-8F0YOOeY8s0/WRnvG4_TGAI/AAAAAAAAAYw/lCWzmhV62Ok2zRyyq-VkNIul39BjIYTFgCLcB/s1600/Screenshot%2Bfrom%2B2017-05-15%2B20-38-17.png&quot; imageanchor=&quot;1&quot;&gt;&lt;img border=&quot;0&quot; height=&quot;180&quot; src=&quot;https://4.bp.blogspot.com/-8F0YOOeY8s0/WRnvG4_TGAI/AAAAAAAAAYw/lCWzmhV62Ok2zRyyq-VkNIul39BjIYTFgCLcB/s320/Screenshot%2Bfrom%2B2017-05-15%2B20-38-17.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;br /&gt;
-&lt;br /&gt;
-Çıkan portlara baktım 443 portundan birşey çıkmadı 80 zaten sitenin default yayın port’u nmapten birşey çıkartamadık.&lt;br /&gt;
-&lt;br /&gt;
-Siteye NİKTO ile bir dizin taraması yaptım sonucunda robots.txt’Ye ulaştım ve vulnhub’un wordpress kullandığını öğrendim duraklamadan direk robots.txt’yi açtım ve içinden 1. flagimiz ve bir wordlist dosyası çıktı.&lt;br /&gt;
-&lt;br /&gt;
-&lt;br /&gt;
-. &lt;a href=&quot;https://1.bp.blogspot.com/-lQCa0_--qCc/WRnwWrnTTZI/AAAAAAAAAY0/qqnoeq_CF8cyJKDEvdoS56h2-5aZIL4yQCLcB/s1600/Screenshot%2Bfrom%2B2017-05-15%2B21-15-13.png&quot; imageanchor=&quot;1&quot;&gt;&lt;img border=&quot;0&quot; height=&quot;180&quot; src=&quot;https://1.bp.blogspot.com/-lQCa0_--qCc/WRnwWrnTTZI/AAAAAAAAAY0/qqnoeq_CF8cyJKDEvdoS56h2-5aZIL4yQCLcB/s320/Screenshot%2Bfrom%2B2017-05-15%2B21-15-13.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;br /&gt;
-&lt;br /&gt;
-&lt;br /&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-oC4BVxS2y24/WRnykCe7qxI/AAAAAAAAAZA/dWHf3Q6SV5kBqmfg8cyvQhRZcQMubGCCACLcB/s1600/Screenshot%2Bfrom%2B2017-05-15%2B21-24-32.png&quot; imageanchor=&quot;1&quot;&gt;&lt;img border=&quot;0&quot; height=&quot;180&quot; src=&quot;https://1.bp.blogspot.com/-oC4BVxS2y24/WRnykCe7qxI/AAAAAAAAAZA/dWHf3Q6SV5kBqmfg8cyvQhRZcQMubGCCACLcB/s320/Screenshot%2Bfrom%2B2017-05-15%2B21-24-32.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;ol&gt;
-  &lt;li&gt;flagimizi buldukta wordlist dosyası ne ayak diye bir geçiyor içimizden.&lt;br /&gt;
-&lt;br /&gt;
-Neyse diyip yolumuza devam edelim ne demiştik.&lt;br /&gt;
-&lt;br /&gt;
-Vulnhub wordpress kullanıyor duraklamadan direk sitenin kenarına /wp-login.php’mizi yazdık zaten nikto ile yaptığımız taramada url çıkmıştı.&lt;br /&gt;
-&lt;br /&gt;
-wordlist’imizde hazır vulnhub bağıra bağıra brute force deneyeceksin diyor ama sorun şu ki&lt;br /&gt;
-wordpress default userleri kabul etmiyor : admin,mrrobot vs.. gibi.&lt;br /&gt;
-&lt;br /&gt;
-Bu aşamadan sonra wpscan’ımıza sarıldık ve userimizi bulmaya çalıştık :&lt;br /&gt;
-wpscan –url http://192.168.0.101 –enumerate u&lt;br /&gt;
-&lt;br /&gt;
-&lt;br /&gt;
- &lt;a href=&quot;https://3.bp.blogspot.com/-aOAOoCyAD5g/WRnzQ9_swEI/AAAAAAAAAZI/3d_ZRFy6MBE_w6MiPMicHPXE2bA_u6J0wCLcB/s1600/Screenshot%2Bfrom%2B2017-05-15%2B21-22-55.png&quot; imageanchor=&quot;1&quot;&gt;&lt;img border=&quot;0&quot; height=&quot;180&quot; src=&quot;https://3.bp.blogspot.com/-aOAOoCyAD5g/WRnzQ9_swEI/AAAAAAAAAZI/3d_ZRFy6MBE_w6MiPMicHPXE2bA_u6J0wCLcB/s320/Screenshot%2Bfrom%2B2017-05-15%2B21-22-55.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;br /&gt;
-&lt;br /&gt;
-ama nafile buradanda birşey çıkmadı.&lt;br /&gt;
-&lt;br /&gt;
-Ama sorun yok elimizde zaten bir wordlist var onu username yerine deniyip buldum elliot çıktı userimiz geriye password kaldı wordlistimizi password yerine verelim wpscan ile ve bize kalan şeyde beklemek olsun.&lt;br /&gt;
-&lt;br /&gt;
-wpscan –url 192.168.0.101 –wordlist fsocity.dic –username elliot&lt;br /&gt;
-&lt;br /&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-9JjCZwKWWzs/WRn0OOv4FyI/AAAAAAAAAZM/gev19W9bNGM4BqbJ1VABq39LCruViwJeQCLcB/s1600/Screenshot%2Bfrom%2B2017-05-15%2B21-31-48.png&quot; imageanchor=&quot;1&quot;&gt;&lt;img border=&quot;0&quot; height=&quot;180&quot; src=&quot;https://2.bp.blogspot.com/-9JjCZwKWWzs/WRn0OOv4FyI/AAAAAAAAAZM/gev19W9bNGM4BqbJ1VABq39LCruViwJeQCLcB/s320/Screenshot%2Bfrom%2B2017-05-15%2B21-31-48.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;br /&gt;
-&lt;br /&gt;
-ve 2 saat sonunda şifremiz : ER28-0652 çıktı&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;hemen wp-login.php’mize giriş yapalım.&lt;br /&gt;
-elliot &amp;amp; ER28-0652 ile.&lt;br /&gt;
-&lt;br /&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-AHwGYfCCYJc/WRn1f5OA_aI/AAAAAAAAAZY/aLy68X27k7sWUgiz_B5klHxCpt4P9urdACLcB/s1600/Screenshot%2Bfrom%2B2017-05-15%2B21-35-36.png&quot; imageanchor=&quot;1&quot;&gt;&lt;img border=&quot;0&quot; height=&quot;180&quot; src=&quot;https://4.bp.blogspot.com/-AHwGYfCCYJc/WRn1f5OA_aI/AAAAAAAAAZY/aLy68X27k7sWUgiz_B5klHxCpt4P9urdACLcB/s320/Screenshot%2Bfrom%2B2017-05-15%2B21-35-36.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;br /&gt;
-&lt;br /&gt;
-Girdik’ten sonra Appearance kısmından 404.php dosyasını editleyelim.&lt;br /&gt;
-&lt;br /&gt;
-Ben php reverse shell kullanıyorum burda.&lt;br /&gt;
-&lt;br /&gt;
-Buradan indirip kendi ip’niz ve portunuza göre editleyebilirsiniz siz : http://pentestmonkey.net/tools/web-shells/php-reverse-shell&lt;br /&gt;
-&lt;br /&gt;
-http://192.168.0.101/404.php urlimize girdikten sonra bir backconnect alıyoruz.&lt;br /&gt;
-&lt;br /&gt;
-&lt;a href=&quot;https://1.bp.blogspot.com/-Yu0HYL8qd-0/WRn2D8fzFYI/AAAAAAAAAZc/A7IQ4k5E-M4pDBbX3bY7-DBth2S115YSACLcB/s1600/Screenshot%2Bfrom%2B2017-05-15%2B21-38-33.png&quot; imageanchor=&quot;1&quot;&gt;&lt;img border=&quot;0&quot; height=&quot;180&quot; src=&quot;https://1.bp.blogspot.com/-Yu0HYL8qd-0/WRn2D8fzFYI/AAAAAAAAAZc/A7IQ4k5E-M4pDBbX3bY7-DBth2S115YSACLcB/s320/Screenshot%2Bfrom%2B2017-05-15%2B21-38-33.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;br /&gt;
-&lt;br /&gt;
-artık bizim yapmamız gereken diğer keyleri aramak.&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;ol&gt;
-  &lt;li&gt;keyimizide bulduk zaten backconnectimiz bizi / dizininde başlattı oradan home’a girerek sonra userimizin dizinine girerek diğer keyimizide bulmuş olduk.&lt;br /&gt;
-&lt;br /&gt;
-Ama bir sorunumuz var key’e erişimimiz yok ve keyimizin altındada bir user ve şifrelenmiş bir MD5 dosyası var.&lt;br /&gt;
-&lt;br /&gt;
- &lt;a href=&quot;https://2.bp.blogspot.com/-QADMv1fcqVc/WRn21mcTpyI/AAAAAAAAAZg/IJPuA8Wkpjwj70HdG-PZYJB6TBaks7lhgCLcB/s1600/Screenshot%2Bfrom%2B2017-05-15%2B21-41-50.png&quot; imageanchor=&quot;1&quot;&gt;&lt;img border=&quot;0&quot; height=&quot;180&quot; src=&quot;https://2.bp.blogspot.com/-QADMv1fcqVc/WRn21mcTpyI/AAAAAAAAAZg/IJPuA8Wkpjwj70HdG-PZYJB6TBaks7lhgCLcB/s320/Screenshot%2Bfrom%2B2017-05-15%2B21-41-50.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;br /&gt;
-&lt;br /&gt;
-muhtemelen root kullanıcısı : robot
-ve şifrelenmiş MD5 ise robot userinin şifresi.&lt;br /&gt;
-&lt;br /&gt;
-Online MD5 decrypter’ler aracılığıyla şifreyi kırdım.&lt;br /&gt;
-&lt;br /&gt;
-&lt;a href=&quot;https://4.bp.blogspot.com/-8VxRLtP4gIA/WRn3cRNu9WI/AAAAAAAAAZo/zdjVWs1qjlAo5BxbNsxbZXe8GudK4XahACLcB/s1600/Screenshot%2Bfrom%2B2017-05-15%2B21-45-41.png&quot; imageanchor=&quot;1&quot;&gt;&lt;img border=&quot;0&quot; height=&quot;180&quot; src=&quot;https://4.bp.blogspot.com/-8VxRLtP4gIA/WRn3cRNu9WI/AAAAAAAAAZo/zdjVWs1qjlAo5BxbNsxbZXe8GudK4XahACLcB/s320/Screenshot%2Bfrom%2B2017-05-15%2B21-45-41.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;br /&gt;
-&lt;br /&gt;
-Şifremiz : abcdefghijklmnopqrstuvwxyz çıktı. Hemen robot kullanıcısına deneyelim şifreyi.&lt;br /&gt;
-&lt;br /&gt;
-python ile /bin/bash’e spawn olduk : python -c ‘import pty;pty.spawn(“/bin/bash”)’&lt;br /&gt;
-&lt;br /&gt;
-su robot diyip şifreyi verdik.&lt;br /&gt;
-&lt;br /&gt;
- &lt;a href=&quot;https://2.bp.blogspot.com/-yHByTQV1nbU/WRn4t2bdDuI/AAAAAAAAAZw/Q0kJ9lbJD3keZKkrw2IvMkdzomVt_6igACLcB/s1600/Screenshot%2Bfrom%2B2017-05-15%2B21-50-38.png&quot; imageanchor=&quot;1&quot;&gt;&lt;img border=&quot;0&quot; height=&quot;180&quot; src=&quot;https://2.bp.blogspot.com/-yHByTQV1nbU/WRn4t2bdDuI/AAAAAAAAAZw/Q0kJ9lbJD3keZKkrw2IvMkdzomVt_6igACLcB/s320/Screenshot%2Bfrom%2B2017-05-15%2B21-50-38.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;br /&gt;
-&lt;br /&gt;
-Ve okuyamadığımız flagimizi robot kullanıcısı sayesinde okuduk.&lt;br /&gt;
-&lt;br /&gt;
-&lt;a href=&quot;https://3.bp.blogspot.com/-ojiEelauMgQ/WRn5GIG6raI/AAAAAAAAAZ0/JXzWec3pEy0H8eof2fsMPznxuMocYU15ACLcB/s1600/Screenshot%2Bfrom%2B2017-05-15%2B21-52-57.png&quot; imageanchor=&quot;1&quot;&gt;&lt;img border=&quot;0&quot; height=&quot;180&quot; src=&quot;https://3.bp.blogspot.com/-ojiEelauMgQ/WRn5GIG6raI/AAAAAAAAAZ0/JXzWec3pEy0H8eof2fsMPznxuMocYU15ACLcB/s320/Screenshot%2Bfrom%2B2017-05-15%2B21-52-57.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;br /&gt;
-&lt;br /&gt;&lt;/li&gt;
-  &lt;li&gt;Flagimiz : 822c73956184f694993bede3eb39f959 çıktı.&lt;br /&gt;
-&lt;br /&gt;
-Şimdi geldik son flagi bulmaya.&lt;br /&gt;
-&lt;br /&gt;
-Root olmadığım için diğer flagi bulamadım uzun bir süre.&lt;br /&gt;
-&lt;br /&gt;
-Robot yetkisi ilede flage ulaşabilirmiyiz diye bir permission taraması yaptım 6000’e.&lt;br /&gt;
-&lt;br /&gt;
-&lt;a href=&quot;https://3.bp.blogspot.com/-Pw15dsOF-pc/WRn7SmlE1nI/AAAAAAAAAZ8/JllmdVjKQ_AoPIqCJ109g35ZBU7PicvPQCLcB/s1600/Screenshot%2Bfrom%2B2017-05-15%2B22-00-06.png&quot; imageanchor=&quot;1&quot;&gt;&lt;img border=&quot;0&quot; height=&quot;180&quot; src=&quot;https://3.bp.blogspot.com/-Pw15dsOF-pc/WRn7SmlE1nI/AAAAAAAAAZ8/JllmdVjKQ_AoPIqCJ109g35ZBU7PicvPQCLcB/s320/Screenshot%2Bfrom%2B2017-05-15%2B22-00-06.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;br /&gt;
-&lt;br /&gt;
-sistem üzerinde nmap kullanıldığını gördüm ve hemen sürümüne daldım çünkü bilinen bazı sürümlerde privilege escalation ortaya çıkıyordu.&lt;br /&gt;
-&lt;br /&gt;
-&lt;a href=&quot;https://3.bp.blogspot.com/-kDZ8lDjYtuw/WRn7nQOFKdI/AAAAAAAAAaA/bmXHzRS9UMcFq4guvt-fNoEr2SMcS9DGQCLcB/s1600/Screenshot%2Bfrom%2B2017-05-15%2B22-03-34.png&quot; imageanchor=&quot;1&quot;&gt;&lt;img border=&quot;0&quot; height=&quot;180&quot; src=&quot;https://3.bp.blogspot.com/-kDZ8lDjYtuw/WRn7nQOFKdI/AAAAAAAAAaA/bmXHzRS9UMcFq4guvt-fNoEr2SMcS9DGQCLcB/s320/Screenshot%2Bfrom%2B2017-05-15%2B22-03-34.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;br /&gt;
-&lt;br /&gt;
-nmap versiyonumuz 3.81 çıktı ve hemen google’ye sarıldım ve nmap te default root yetkisi veren bir parametreile karşılaştım.&lt;br /&gt;
-&lt;br /&gt;
-–interactive bu komut ile hemen sisteme bir flag taraması yaptırdım.&lt;br /&gt;
-&lt;br /&gt;
-Farkettiyseniz her flagte&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;key-1-of-3.txt
-key-2-of-3.txt&lt;/p&gt;
-
-&lt;p&gt;diye gidiyor her flag değerinde 3 ile karşılaştırılan farklı oluyor&lt;/p&gt;
-
-&lt;p&gt;son flagımızda 3. flagımız olduğuna göre ve root yetkisinide elimizde tuttuğumuza göre.&lt;br /&gt;
-&lt;br /&gt;
-sistemde / dizinine geçip : find / -name “key-3-of3.txt”&lt;/p&gt;
-
-&lt;p&gt;komutu ile son flagimizi arayalım.&lt;br /&gt;
-&lt;br /&gt;
-&lt;a href=&quot;https://2.bp.blogspot.com/-lcATDS_D8HE/WRn9P00d5VI/AAAAAAAAAaI/pGJxzLbJScY3RhJOKV3oag7BR9WlDm4PwCLcB/s1600/Screenshot%2Bfrom%2B2017-05-15%2B22-10-42.png&quot; imageanchor=&quot;1&quot;&gt;&lt;img border=&quot;0&quot; height=&quot;180&quot; src=&quot;https://2.bp.blogspot.com/-lcATDS_D8HE/WRn9P00d5VI/AAAAAAAAAaI/pGJxzLbJScY3RhJOKV3oag7BR9WlDm4PwCLcB/s320/Screenshot%2Bfrom%2B2017-05-15%2B22-10-42.png&quot; width=&quot;320&quot; /&gt;&lt;/a&gt;&lt;br /&gt;
-&lt;br /&gt;
-ve son flagimizide böylelikle buluyoruz. : 04787ddef27c3dee1ee161b21670b4e4&lt;/p&gt;
-
-&lt;p&gt;bir dahaki yazımda görüşürüz :)&lt;/p&gt;</content><author><name></name></author><summary type="html">Merhaba arkadaşım.Görüşmeyeli uzun süre oldu :D neyse yazımıza geçelim.</summary></entry></feed>
+&lt;/div&gt;</content><author><name></name></author><summary type="html">Spanning Tree Protocol (STP) nedir ? :</summary></entry></feed>
