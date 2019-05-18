@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.2">Jekyll</generator><link href="http://192.168.254.251:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://192.168.254.251:4000/" rel="alternate" type="text/html" /><updated>2019-05-18T17:10:11+03:00</updated><id>http://192.168.254.251:4000/</id><title type="html">Daily Security</title><subtitle>In this blog we're going to solve CTF's &amp; Write Some Software's.My goal is redirect my little knowledge to other people.</subtitle><entry><title type="html">Malware Analysis - Static Analysis (Part 2)</title><link href="http://192.168.254.251:4000/2019/05/18/malware-analysis-part-2.html" rel="alternate" type="text/html" title="Malware Analysis - Static Analysis (Part 2)" /><published>2019-05-18T00:00:00+03:00</published><updated>2019-05-18T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2019/05/18/malware-analysis-part-2</id><content type="html" xml:base="http://192.168.254.251:4000/2019/05/18/malware-analysis-part-2.html">&lt;h4 id=&quot;malware-analysis---static-analysis-part-2&quot;&gt;Malware Analysis - Static Analysis (Part 2)&lt;/h4&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.2">Jekyll</generator><link href="http://192.168.254.251:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://192.168.254.251:4000/" rel="alternate" type="text/html" /><updated>2019-05-18T17:30:05+03:00</updated><id>http://192.168.254.251:4000/</id><title type="html">Daily Security</title><subtitle>In this blog we're going to solve CTF's &amp; Write Some Software's.My goal is redirect my little knowledge to other people.</subtitle><entry><title type="html">Malware Analysis - Static Analysis (Part 2)</title><link href="http://192.168.254.251:4000/2019/05/18/malware-analysis-part-2.html" rel="alternate" type="text/html" title="Malware Analysis - Static Analysis (Part 2)" /><published>2019-05-18T00:00:00+03:00</published><updated>2019-05-18T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2019/05/18/malware-analysis-part-2</id><content type="html" xml:base="http://192.168.254.251:4000/2019/05/18/malware-analysis-part-2.html">&lt;h4 id=&quot;malware-analysis---static-analysis-part-2&quot;&gt;Malware Analysis - Static Analysis (Part 2)&lt;/h4&gt;
 
 &lt;p&gt;Merhaba arkadaşlar &lt;strong&gt;Malware Analizi&lt;/strong&gt; serimin ikinci part’ına hoşgeldiniz.&lt;/p&gt;
 
@@ -35,10 +35,7 @@
     &lt;p&gt;Genellikle packlenmiş yani sıkıştırılmış dosyalar bu packing’i kendi içinde çözmek için anahtarlar kullanır.&lt;/p&gt;
   &lt;/li&gt;
   &lt;li&gt;
-    &lt;p&gt;Dahada basit bir şekilde &lt;strong&gt;Packing&lt;/strong&gt; bir &lt;strong&gt;Zararlı Yazılımın&lt;/strong&gt; asıl kodlarını &lt;strong&gt;Encode&lt;/strong&gt; eder yani &lt;strong&gt;Şifreler&lt;/strong&gt;.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;Bir &lt;strong&gt;Zararlı Yazılım&lt;/strong&gt;‘ı &lt;strong&gt;Pack&lt;/strong&gt;‘lemenin asıl amacı &lt;strong&gt;Ana Kod&lt;/strong&gt;‘u &lt;strong&gt;Encode&lt;/strong&gt; etmek ve sonra bu &lt;strong&gt;Zararlı Yazılım&lt;/strong&gt; çalıştığında &lt;strong&gt;Encode&lt;/strong&gt; edilmiş kodu &lt;strong&gt;Memory&lt;/strong&gt; yani &lt;strong&gt;Hafıza&lt;/strong&gt; içerisinde çözmektir.&lt;/p&gt;
+    &lt;p&gt;Bir &lt;strong&gt;Zararlı Yazılım&lt;/strong&gt;‘ı &lt;strong&gt;Pack&lt;/strong&gt;‘lemenin asıl amacı &lt;strong&gt;Ana Kod&lt;/strong&gt;‘u &lt;strong&gt;Sıkıştırdıktan&lt;/strong&gt; sonra bu &lt;strong&gt;Zararlı Yazılım&lt;/strong&gt; çalıştığında &lt;strong&gt;Sıkıştırılmış&lt;/strong&gt;  kodu &lt;strong&gt;Memory&lt;/strong&gt; yani &lt;strong&gt;Hafıza&lt;/strong&gt; içerisinde çözmektir.&lt;/p&gt;
   &lt;/li&gt;
   &lt;li&gt;
     &lt;p&gt;Bir &lt;strong&gt;Malware&lt;/strong&gt;‘nin analizini engellemek için ve kafa karıştırmak için çokça kullanılan bir yöntemdir.&lt;/p&gt;
@@ -79,12 +76,12 @@
 
 &lt;p&gt;&lt;strong&gt;Packer&lt;/strong&gt;&lt;/p&gt;
 &lt;ul&gt;
-  &lt;li&gt;Bir yazılımı &lt;strong&gt;Encode&lt;/strong&gt; etmeye yarayan yazılım.&lt;/li&gt;
+  &lt;li&gt;Bir yazılımı &lt;strong&gt;Sıkıştırmaya&lt;/strong&gt; yarayan yazılım.&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;&lt;strong&gt;Unpacker&lt;/strong&gt;&lt;/p&gt;
 &lt;ul&gt;
-  &lt;li&gt;&lt;strong&gt;Encode&lt;/strong&gt; edilmiş bir yazılımı çözmeye yarayan yazılım&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Sıkıştırılmış&lt;/strong&gt; kodu eski haline getirmeye yarayan yazılım.&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;&lt;strong&gt;PE Sections&lt;/strong&gt;&lt;/p&gt;
