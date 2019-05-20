@@ -1,4 +1,230 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.2">Jekyll</generator><link href="http://192.168.254.251:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://192.168.254.251:4000/" rel="alternate" type="text/html" /><updated>2019-05-18T17:30:05+03:00</updated><id>http://192.168.254.251:4000/</id><title type="html">Daily Security</title><subtitle>In this blog we're going to solve CTF's &amp; Write Some Software's.My goal is redirect my little knowledge to other people.</subtitle><entry><title type="html">Malware Analysis - Static Analysis (Part 2)</title><link href="http://192.168.254.251:4000/2019/05/18/malware-analysis-part-2.html" rel="alternate" type="text/html" title="Malware Analysis - Static Analysis (Part 2)" /><published>2019-05-18T00:00:00+03:00</published><updated>2019-05-18T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2019/05/18/malware-analysis-part-2</id><content type="html" xml:base="http://192.168.254.251:4000/2019/05/18/malware-analysis-part-2.html">&lt;h4 id=&quot;malware-analysis---static-analysis-part-2&quot;&gt;Malware Analysis - Static Analysis (Part 2)&lt;/h4&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.2">Jekyll</generator><link href="http://192.168.254.251:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://192.168.254.251:4000/" rel="alternate" type="text/html" /><updated>2019-05-20T22:55:37+03:00</updated><id>http://192.168.254.251:4000/</id><title type="html">Daily Security</title><subtitle>In this blog we're going to solve CTF's &amp; Write Some Software's.My goal is redirect my little knowledge to other people.</subtitle><entry><title type="html">Malware Analysis - Dynamic Analysis (Part 3)</title><link href="http://192.168.254.251:4000/2019/05/20/malware-analysis-part-3.html" rel="alternate" type="text/html" title="Malware Analysis - Dynamic Analysis (Part 3)" /><published>2019-05-20T00:00:00+03:00</published><updated>2019-05-20T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2019/05/20/malware-analysis-part-3</id><content type="html" xml:base="http://192.168.254.251:4000/2019/05/20/malware-analysis-part-3.html">&lt;h1 id=&quot;malware-analysis---dynamic-analysis-part-3&quot;&gt;Malware Analysis - Dynamic Analysis (Part 3)&lt;/h1&gt;
+&lt;p&gt;Merhaba arkadaşlar &lt;strong&gt;Malware Analizi&lt;/strong&gt; serimin üçüncü part’ına hoşgeldiniz.&lt;/p&gt;
+
+&lt;p&gt;Bu partımızda artık canlı bir &lt;strong&gt;Malware&lt;/strong&gt; üzerinde işlemler gerçekleştireceğiz.&lt;/p&gt;
+
+&lt;p&gt;İlk part’ımızda anlattığım gibi &lt;strong&gt;Statik&lt;/strong&gt; denildiğinde çalıştırmadan &lt;strong&gt;Dinamik&lt;/strong&gt; denildiğinde ise çalıştırdıktan sonra analizini gerçekleştiriyoruz.&lt;/p&gt;
+
+&lt;p&gt;Bu yazım içerisinde artık &lt;strong&gt;Sanal Makine&lt;/strong&gt; içerisinde testler gerçekleştireceğiz o yüzden &lt;strong&gt;Win 7&lt;/strong&gt; ve &lt;strong&gt;REMnux&lt;/strong&gt; işletim sistemlerini kurduğunuzu varsayıyorum.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Win 7&lt;/strong&gt; içerisinden bir görsel :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://resmim.net/f/mvpoDx.png?nocache&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;REMnux&lt;/strong&gt; içerisinden bir görsel :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://resmim.net/f/VWc9OJ.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Yazımıza başlamadan önce ilk part’ımızı okuduğunuzu ve &lt;strong&gt;Güvenli&lt;/strong&gt; bir ortam kurduğunuzu varsayıyorum.&lt;/p&gt;
+
+&lt;p&gt;Eğer kurmadıysanız sizi ilk part’ımıza alalım : &lt;a href=&quot;https://blacknbunny.github.io/2019/05/16/malware-analysis-part-1.html&quot;&gt;Malware Analysis - Lab Setup (Part 1)&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Malware&lt;/strong&gt;‘nin dışa yayılmayacağından eminsek yavaştan yazımıza geçebiliriz demektir.&lt;/p&gt;
+
+&lt;h2 id=&quot;dinamik-analizin-bize-sağladıkları&quot;&gt;Dinamik Analizin Bize Sağladıkları&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;Statik&lt;/strong&gt; analizden farklı olarak &lt;strong&gt;Malware&lt;/strong&gt;‘yi çalıştıracağımızdan &lt;strong&gt;Malware&lt;/strong&gt;‘nin sistem içerisinde neler gerçekleştirdiğini daha iyi inceleyebileceğiz sonuçları &lt;strong&gt;Monitoring&lt;/strong&gt; ederek yani izleyerek.&lt;/p&gt;
+
+&lt;p&gt;Öncelikle &lt;strong&gt;Malware&lt;/strong&gt;‘mizi nasıl izleyebileceğimizden bahsetmeden önce &lt;strong&gt;Escape&lt;/strong&gt; kelimesinden okurlarıma bahsetmek istiyorum.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Virtual Machine Escape&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Sanal Makine&lt;/strong&gt;‘mizde çalıştıracağımız &lt;strong&gt;Malware&lt;/strong&gt;‘yi asıl bilgisayarımızdan ve bu bilgisayarımızın &lt;strong&gt;Network&lt;/strong&gt;‘ünden izole ettik yalnız hala &lt;strong&gt;%100&lt;/strong&gt; güvende değiliz.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Sebebide bazı &lt;strong&gt;Malware&lt;/strong&gt; geliştiricilerinin biraz akıllı davranması.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Bir &lt;strong&gt;Malware&lt;/strong&gt; çalıştığı yerin &lt;strong&gt;Sanal Makine&lt;/strong&gt; veya &lt;strong&gt;Gerçek Bir Sistem&lt;/strong&gt; olduğunu anlayabilir. Ve anlamakla kalmayıp aynı zamanda eğer kendisi &lt;strong&gt;Sanal Makine&lt;/strong&gt; içerisindeyse asıl makinemize geçmek için bazı &lt;strong&gt;Zafiyet&lt;/strong&gt;‘leri veya &lt;strong&gt;Teknik&lt;/strong&gt;‘leri kullanabilir.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Bunu önlemek içinde &lt;strong&gt;Statik Analiz&lt;/strong&gt; ile çalıştırmadan önce incelememiz çok önemli. Avcıyken avlanmak istemeyiz.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Bu yazı içerisinde benim internetten bulduğum &lt;strong&gt;Malware&lt;/strong&gt; bu gibi işlemlere kalkışmıyor. Dolayısıyla böyle bir duruma maruz kalmayacağız.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;VM Escape&lt;/strong&gt;‘in daha da derinlerine girecek olursak şayet :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://resmim.net/f/o7IRf4.png?nocache&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Katmanlar arasında geçiş sağlayan &lt;strong&gt;Saldırılar&lt;/strong&gt; denilebilir bunlara.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Hypervisor&lt;/strong&gt;‘dan &lt;strong&gt;Operating System&lt;/strong&gt;‘imize giden yolu açan &lt;strong&gt;Saldırı&lt;/strong&gt;‘lara &lt;strong&gt;Virtual Machine Escape&lt;/strong&gt; adı verilebilir.&lt;/p&gt;
+
+&lt;p&gt;İlerideki safhalarda yukarıda bahsettiğim &lt;strong&gt;Malware&lt;/strong&gt;‘nin linkini sizlere vereceğim benimle beraber adım adım ilerlemeniz için.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Dinamik Analiz&lt;/strong&gt;‘in bize sunduklarına gelirsek şayet.&lt;/p&gt;
+
+&lt;p&gt;Canlı olarak &lt;strong&gt;Malware&lt;/strong&gt;‘yi çalıştıracağımızdan :&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Process&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Registry&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;File System&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Network&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Debugging&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Yukarıda saydıklarımın ne gibi &lt;strong&gt;Aktivite&lt;/strong&gt;‘lerde bulunacağını izleyebileceğiz.&lt;/p&gt;
+
+&lt;p&gt;Terimlere dahada derinden bakıp yavaştan &lt;strong&gt;Malware&lt;/strong&gt;‘mizi &lt;strong&gt;Monitor&lt;/strong&gt; etmeye başlamadan önce &lt;strong&gt;Malware&lt;/strong&gt;‘nin linkini vereyim : &lt;a href=&quot;https://app.any.run/tasks/a5eeea09-1e5d-4538-98a2-b1f23c6baaf6/&quot;&gt;Malware Sample app.any.run&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Buradaki &lt;strong&gt;Sample&lt;/strong&gt; butonundan &lt;strong&gt;Malware&lt;/strong&gt;‘yi indirebilirsiniz.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Rar&lt;/strong&gt;‘ın şifresi &lt;strong&gt;infected&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;h4 id=&quot;process-monitoring&quot;&gt;Process Monitoring&lt;/h4&gt;
+
+&lt;p&gt;&lt;strong&gt;Malware&lt;/strong&gt;‘miz &lt;strong&gt;Process&lt;/strong&gt; olarak çalışmaya başladıktan sonra bu &lt;strong&gt;Process&lt;/strong&gt;‘in ne gibi &lt;strong&gt;Aktivite&lt;/strong&gt;‘lerde bulunduğunu incelemek diyebiliriz buna kısaca.&lt;/p&gt;
+
+&lt;p&gt;Bunu yapmak içinde benim sıkça kullandığım &lt;strong&gt;Tool&lt;/strong&gt;‘u indirmek için : &lt;a href=&quot;https://docs.microsoft.com/en-us/sysinternals/downloads/procmon&quot;&gt;Sysinternals Procmon&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Ayrıca bu &lt;strong&gt;Tool&lt;/strong&gt; yukarıda isimlerini saydığımız &lt;strong&gt;Registry&lt;/strong&gt;, &lt;strong&gt;File System&lt;/strong&gt;, &lt;strong&gt;Network&lt;/strong&gt; aktivitelerinide izlememizi sağlıyor.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Win 7&lt;/strong&gt;‘ye kurup açtıktan sonra &lt;strong&gt;Malware&lt;/strong&gt;‘mizin &lt;strong&gt;Process&lt;/strong&gt;‘inin &lt;strong&gt;Monitor&lt;/strong&gt; edilmesinden sonraki çıktı :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://resmim.net/f/5t7yc5.png?nocache&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Bu kısımda görebiliriz ki &lt;strong&gt;Malware&lt;/strong&gt;‘miz &lt;strong&gt;Registry&lt;/strong&gt; içerisinde bazı işlemler yapıyor. Aynı zamanda &lt;strong&gt;Operation&lt;/strong&gt; kısmına dikkat edersek &lt;strong&gt;LoadImage&lt;/strong&gt;, &lt;strong&gt;CreateFile&lt;/strong&gt; gibi işlemlerinde &lt;strong&gt;Process&lt;/strong&gt;‘imiz içerisinde geçtiğini görebiliriz.&lt;/p&gt;
+
+&lt;p&gt;Ayrıca &lt;strong&gt;PID&lt;/strong&gt; kısmına dikkat edersek &lt;strong&gt;Ana Process&lt;/strong&gt;‘in altında ayrı bir &lt;strong&gt;malware_sample.exe&lt;/strong&gt; adında &lt;strong&gt;Process&lt;/strong&gt; daha oluşturulmuş. Bunu farklı &lt;strong&gt;PID&lt;/strong&gt;‘ler ile anladım ben yalnız bunu &lt;strong&gt;Procmon&lt;/strong&gt; içerisinde &lt;strong&gt;Process&lt;/strong&gt;‘in &lt;strong&gt;Properties&lt;/strong&gt;‘inden &lt;strong&gt;Stack&lt;/strong&gt; kısmına bakarakda anlayabilirsiniz.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://resmim.net/f/BIzJrm.png?nocache&quot; alt=&quot;Process Özellikleri&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Yukarıdaki şekilde &lt;strong&gt;Process&lt;/strong&gt;‘in &lt;strong&gt;Özellik&lt;/strong&gt;‘lerine girdiğimizde &lt;strong&gt;Stack&lt;/strong&gt; kısmına tıklıyoruz.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://resmim.net/f/4J7p9q.png?nocache&quot; alt=&quot;DLL &amp;amp; Function kullanımı&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Ve burada basit bir şekilde gözlemleyebiliyoruz &lt;strong&gt;Process&lt;/strong&gt;‘in gerçekleştirdiği &lt;strong&gt;Operasyon&lt;/strong&gt;‘un hangi &lt;strong&gt;DLL&lt;/strong&gt;‘ler ve &lt;strong&gt;Fonksiyon&lt;/strong&gt;‘lar tarafından uygulandığını.&lt;/p&gt;
+
+&lt;p&gt;Basit bir şekilde &lt;strong&gt;Malware&lt;/strong&gt;‘mizin alt bir &lt;strong&gt;Process&lt;/strong&gt; oluşturduğunu görebiliriz.&lt;/p&gt;
+
+&lt;p&gt;Bu arada şunuda söylemeliyim ki bu &lt;strong&gt;Malware&lt;/strong&gt;‘yi ilk kez izliyorum blog’u yazarken inceleyip yazıyorum.&lt;/p&gt;
+
+&lt;h4 id=&quot;registry-monitoring&quot;&gt;Registry Monitoring&lt;/h4&gt;
+
+&lt;p&gt;Bir &lt;strong&gt;Malware&lt;/strong&gt;‘nin &lt;strong&gt;Dinamik Analizi&lt;/strong&gt;‘ni gerçekleştiriyorsak şayet bakmamız gereken önemli noktalardan biri &lt;strong&gt;Registry&lt;/strong&gt; değişiklikleridir.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://resmim.net/f/dGDgaW.png?nocache&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Bu &lt;strong&gt;Malware&lt;/strong&gt; içerisinde herhangi bir şekilde &lt;strong&gt;Registry&lt;/strong&gt; değişikliği yok. Sadece &lt;strong&gt;Registry&lt;/strong&gt; değeri okuma mevcut.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;HKLM\System\CurrentControlSet\Session Manager&lt;/li&gt;
+  &lt;li&gt;HKLM\System\CurrentControlSet\Control\Safeboot&lt;/li&gt;
+  &lt;li&gt;vs…&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Gibi &lt;strong&gt;Registry Value&lt;/strong&gt;‘lerini okuyor. Yalnız hiçbir değişiklik yok.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Registry&lt;/strong&gt; değişiklikleri &lt;strong&gt;Dinamik Malware Analizi&lt;/strong&gt;‘nde çok önemlidir. Bu &lt;strong&gt;Malware Sample&lt;/strong&gt;‘mizde herhangi bir değişiklik bulamasakta bakılması ve incelenmesi gereken yerlerden biridir.&lt;/p&gt;
+
+&lt;h4 id=&quot;file-system-monitoring&quot;&gt;File System Monitoring&lt;/h4&gt;
+
+&lt;p&gt;&lt;strong&gt;File System Monitoring&lt;/strong&gt;‘i gerçekleştirmek için &lt;strong&gt;Procmon&lt;/strong&gt; içerisindeki butonlardan &lt;strong&gt;FS Activity&lt;/strong&gt; kısmını seçmemiz yeterli :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://resmim.net/f/H00Rsw.png?nocache&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Malware&lt;/strong&gt;‘mizin burada gerçekleştirdiği bir çok dosya &lt;strong&gt;okuma&lt;/strong&gt;, &lt;strong&gt;oluşturma&lt;/strong&gt;, &lt;strong&gt;yeniden yazma&lt;/strong&gt; gerçekleştirdiğini görebiliriz.&lt;/p&gt;
+
+&lt;p&gt;Bunların arasından benim ilgimi en çok çeken &lt;strong&gt;System32&lt;/strong&gt; içerisinde :&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;WSOCK32.dll&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;netapi32.dll&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;netutils.dll&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Kütüphane&lt;/strong&gt;‘lerini oluşturması.&lt;/p&gt;
+
+&lt;p&gt;Bu &lt;strong&gt;DLL&lt;/strong&gt;‘lerden &lt;strong&gt;Malware&lt;/strong&gt;‘nin &lt;strong&gt;İnternet&lt;/strong&gt; üzerinden birşeyler döndürdüğünü anlamak basit.&lt;/p&gt;
+
+&lt;h4 id=&quot;network-monitoring&quot;&gt;Network Monitoring&lt;/h4&gt;
+
+&lt;p&gt;Bakalım &lt;strong&gt;Malware&lt;/strong&gt;‘miz internet üzerinden neler çeviriyor.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;REMnux&lt;/strong&gt;‘u açıp &lt;strong&gt;fakedns&lt;/strong&gt; ve &lt;strong&gt;inetsim&lt;/strong&gt; komutlarını çalıştıralım.&lt;/p&gt;
+
+&lt;p&gt;Bu sayede sahte &lt;strong&gt;DNS&lt;/strong&gt;, &lt;strong&gt;HTTP&lt;/strong&gt;, &lt;strong&gt;FTP&lt;/strong&gt; vs.. gibi sunucumuz çalışacak ve &lt;strong&gt;Win 7&lt;/strong&gt; içerisinden &lt;strong&gt;Malware&lt;/strong&gt;‘nin gerçekleştirdiği tüm &lt;strong&gt;Network Istek&lt;/strong&gt;‘leri bizim &lt;strong&gt;REMnux&lt;/strong&gt;‘umuza yönlendirilecek.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;fakedns&lt;/strong&gt;
+&lt;img src=&quot;https://resmim.net/f/jPs7ZM.png?nocache&quot; alt=&quot;fakedns&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Inetsim&lt;/strong&gt;
+&lt;img src=&quot;https://resmim.net/f/Pu2ze0.png?nocache&quot; alt=&quot;inetsim&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Şimdi &lt;strong&gt;Malware&lt;/strong&gt;‘mizi tekrar çalıştırıp yapacağı &lt;strong&gt;Request&lt;/strong&gt;‘leri izlemeye koyulabiliriz.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://resmim.net/f/cfYd2N.png?nocache&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Sahte &lt;strong&gt;DNS&lt;/strong&gt; sunucumuza gelen istekleri incelediğimiz zaman görebiliriz ki :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;tain0077.warzonedns.com
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;DNS&lt;/strong&gt; sunucusuna &lt;strong&gt;Malware&lt;/strong&gt;‘miz tekrar tekrar istek gönderiyor.&lt;/p&gt;
+
+&lt;p&gt;Bunun dışındaki istekler &lt;strong&gt;Windows&lt;/strong&gt; ile alakalı tek önemli &lt;strong&gt;DNS Request&lt;/strong&gt;‘i şuan bu bizim için.&lt;/p&gt;
+
+&lt;p&gt;İnternet’ten bu &lt;strong&gt;DNS&lt;/strong&gt; sunucusuna ulaşmak istediğimde bu yerin kapandığını gördüm.&lt;/p&gt;
+
+&lt;p&gt;Muhtemelen &lt;strong&gt;Malware&lt;/strong&gt;‘mizin &lt;strong&gt;C&amp;amp;C&lt;/strong&gt; yani &lt;strong&gt;Command and Control Server&lt;/strong&gt;‘iydi.&lt;/p&gt;
+
+&lt;p&gt;Bu &lt;strong&gt;C&amp;amp;C&lt;/strong&gt; server’i ne kadar kapanmış olsada &lt;strong&gt;DNS&lt;/strong&gt; üzerinden ne gibi bir bağlantı kurup neleri yönlendirdiğini görmek için yavaştan bu &lt;strong&gt;Malware&lt;/strong&gt;‘yi &lt;strong&gt;Debug&lt;/strong&gt; etmeye başlayalım.&lt;/p&gt;
+
+&lt;h4 id=&quot;debugging&quot;&gt;Debugging&lt;/h4&gt;
+
+&lt;p&gt;Bir önceki &lt;strong&gt;Statik Analiz&lt;/strong&gt; part’ımızda &lt;strong&gt;Packing&lt;/strong&gt;‘den bahsettik.&lt;/p&gt;
+
+&lt;p&gt;Yalnız şuan üzerinde durduğumuz &lt;strong&gt;Malware&lt;/strong&gt;  üzerinde hiçbir işlem yapmadık.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Hex Editor&lt;/strong&gt; ile &lt;strong&gt;Malware&lt;/strong&gt;‘mizi açtığımda bu &lt;strong&gt;Malware&lt;/strong&gt;‘nin &lt;strong&gt;UPX Packer&lt;/strong&gt; ile &lt;strong&gt;Sıkıştırıldığını gördüm.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://resmim.net/f/IYLRGV.png?nocache&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Daha net bir &lt;strong&gt;Debugging&lt;/strong&gt; işlemi için bu sıkıştırılmış &lt;strong&gt;Malware&lt;/strong&gt;‘yi asıl haline çevirmemiz gerekiyor.&lt;/p&gt;
+
+&lt;p&gt;Bunu elimizle halletmemiz gerek.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Statik Analiz (Part 2)&lt;/strong&gt; yazım içerisinde &lt;strong&gt;Sıkıştırılmış Zararlı Yazılım&lt;/strong&gt;‘ları tekrar eski haline manuel olarak nasıl getirebileceğimizi az çok anlattım.&lt;/p&gt;
+
+&lt;p&gt;Bu yüzden canlı olarak nasıl yapıldığını anlatan bir video bırakıyorum buraya :&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=42bgdnCvQMI&quot;&gt;UPX Easily Unpacked All Versions&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Yada ben bunlarla uğraşmam üşeniyorum diyorsanız. Direk &lt;strong&gt;Malware&lt;/strong&gt;‘yi çalıştırıp sonra debuggeriniz ile &lt;strong&gt;Attach&lt;/strong&gt; olunuz.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Packer&lt;/strong&gt; hafıza içerisinde &lt;strong&gt;Sıkıştırmayı&lt;/strong&gt; eski haline getireceğinden &lt;strong&gt;Malware&lt;/strong&gt;‘nin tüm koduna direkt olarak ulaşabileceksiniz.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://resmim.net/f/4gOVxG.png?nocache&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Ve &lt;strong&gt;Malware&lt;/strong&gt;‘mizin gidişatını inceleyerek yani &lt;strong&gt;Monitor&lt;/strong&gt; ederek internet üzerinde yaptığı işlemleri kesinleştirmiş olduk.&lt;/p&gt;
+
+&lt;p&gt;Bu seri bir &lt;strong&gt;Malware&lt;/strong&gt;‘nin nerelerine ne şekilde bakılmasını, ne şekilde ve nerede incelenmesi gerektiğini anlatmak için oluşturduğum bir seriydi.&lt;/p&gt;
+
+&lt;h1 id=&quot;the-end&quot;&gt;THE END&lt;/h1&gt;
+
+&lt;p&gt;Bu yazıda &lt;strong&gt;Dynamic Malware Analysis&lt;/strong&gt; konusuna değindik.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Malware Analizi&lt;/strong&gt; serimin son partıydı bu.&lt;/p&gt;
+
+&lt;p&gt;Tabiki tüm &lt;strong&gt;Malware Analiz&lt;/strong&gt; konusu benim anlattığım kadar değil hatta anlattıklarıma temeli bile diyebiliriz.&lt;/p&gt;
+
+&lt;p&gt;Benim gözümde yeni çıkan &lt;strong&gt;Malware&lt;/strong&gt;‘lerin analizinin yapılması yeni &lt;strong&gt;Zaafiyet&lt;/strong&gt; ve &lt;strong&gt;Teknik&lt;/strong&gt;‘leri bulmamıza çok yardımcı olacaktır.&lt;/p&gt;
+
+&lt;p&gt;Ben analizini yapmak için &lt;strong&gt;Malware&lt;/strong&gt; istiyorum diyenlerimiz var ise &lt;strong&gt;Google&lt;/strong&gt; dayımıza &lt;strong&gt;Malware Samples&lt;/strong&gt; yazması yeterli olacaktır.&lt;/p&gt;
+
+&lt;p&gt;Bu serimizinde sonuna geldik. Umarım güzel bir seri okutabilmişimdir sizlere.&lt;/p&gt;
+
+&lt;p&gt;İleride yazacaklarıma &lt;strong&gt;Oylama&lt;/strong&gt; ile karar veriyorum twitter üzerinden.&lt;/p&gt;
+
+&lt;p&gt;Sorunuz varsa çekinmeyin bu konuda veya farklı bir konuda.&lt;/p&gt;
+
+&lt;p&gt;Sorular için twitter adresim : &lt;a href=&quot;https://twitter.com/0DAYanc&quot;&gt;0DAYanc&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Malware Analysis - Dynamic Analysis (Part 3) Merhaba arkadaşlar Malware Analizi serimin üçüncü part’ına hoşgeldiniz.</summary></entry><entry><title type="html">Malware Analysis - Static Analysis (Part 2)</title><link href="http://192.168.254.251:4000/2019/05/18/malware-analysis-part-2.html" rel="alternate" type="text/html" title="Malware Analysis - Static Analysis (Part 2)" /><published>2019-05-18T00:00:00+03:00</published><updated>2019-05-18T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2019/05/18/malware-analysis-part-2</id><content type="html" xml:base="http://192.168.254.251:4000/2019/05/18/malware-analysis-part-2.html">&lt;h4 id=&quot;malware-analysis---static-analysis-part-2&quot;&gt;Malware Analysis - Static Analysis (Part 2)&lt;/h4&gt;
 
 &lt;p&gt;Merhaba arkadaşlar &lt;strong&gt;Malware Analizi&lt;/strong&gt; serimin ikinci part’ına hoşgeldiniz.&lt;/p&gt;
 
@@ -1687,86 +1913,4 @@ Başta da memoryi leak etmemizi sağlayan “%x” format stringini hatırlıyor
 
 &lt;p&gt;&lt;a href=&quot;https://linux.die.net/man/3/printf&quot;&gt;Man page&lt;/a&gt;&lt;/p&gt;
 
-&lt;p&gt;&lt;a href=&quot;https://en.wikipedia.org/wiki/Printf_format_string&quot;&gt;Wikipedia&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Format String Nedir ? Format string metin ve format parametreleri tutan bir ASCII’dir. Çoğu programlama dilinde de görebiliriz ki herhangi bir metin yazacağımız zaman bu metini direk yazımızın içine değilde bir değişkene aktarırız, ve bu değişkenide yazımızın içerisinde format stringler aracılığıyla kullanırız.</summary></entry><entry><title type="html">Spanning Tree Protocol(STP) Saldırı ve Korunma Yöntemleri</title><link href="http://192.168.254.251:4000/2017/12/07/spanning-tree-protocolstp-saldiri-ve-korunma-yontemleri.html" rel="alternate" type="text/html" title="Spanning Tree Protocol(STP) Saldırı ve Korunma Yöntemleri" /><published>2017-12-07T00:00:00+03:00</published><updated>2017-12-07T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2017/12/07/spanning-tree-protocolstp-saldiri-ve-korunma-yontemleri</id><content type="html" xml:base="http://192.168.254.251:4000/2017/12/07/spanning-tree-protocolstp-saldiri-ve-korunma-yontemleri.html">&lt;h1 id=&quot;spanning-tree-protocol-stp-nedir--&quot;&gt;Spanning Tree Protocol (STP) nedir ? :&lt;/h1&gt;
-
-&lt;p&gt;Switching loops yani anahtarlama döngülerini engellemek için geliştirilmiş &lt;a href=&quot;https://en.wikipedia.org/wiki/OSI_model&quot; target=&quot;_blank&quot;&gt;OSI Model’inde&lt;/a&gt; bulunan &lt;strong&gt;ikinci katman(layer 2)&lt;/strong&gt; içerisinde bulunan bir protokol’dur.&lt;/p&gt;
-
-&lt;p&gt;STP barındıran switch’ler kendilerine bir root switch (kök anahtar) seçerler ayrıca her switch’in bir adet &lt;strong&gt;Bridge ID&lt;/strong&gt; değeri vardır, bu değer &lt;strong&gt;Bridge Priority&lt;/strong&gt; ve &lt;strong&gt;Bridge’nin Mac Adresi&lt;/strong&gt; ile oluşur.&lt;/p&gt;
-
-&lt;p&gt;En düşük &lt;strong&gt;Bridge ID&lt;/strong&gt;‘ye sahip olan &lt;strong&gt;Bridge&lt;/strong&gt;, &lt;strong&gt;Root Bridge(Root Switch)&lt;/strong&gt; olarak seçilir.&lt;strong&gt;Bridge Priority&lt;/strong&gt;‘nin default değeri 32768’dir ve düzenlenebilir’dir.&lt;/p&gt;
-
-&lt;p&gt;Bu seçim BPDU aracılığıyla yapılır.Ağa BPDU  üreten bilgisayar bağlanıp, bağlanan bilgisayarın ürettiği BPDU’nun içindeki &lt;strong&gt;Bridge Priority&lt;/strong&gt; değeri’de 0 yapılarak, ağa bağladığımız bilgisayarın kök switch yerini almasını sağlayabiliriz.&lt;/p&gt;
-
-&lt;h1 id=&quot;spanning-tree-protocol-stp-saldırıları-&quot;&gt;Spanning Tree Protocol (STP) saldırıları :&lt;/h1&gt;
-&lt;p&gt;Normal bir ddos veya dos saldırısından örnek vererek yola çıkalım gönderdiğiniz paketler genelde tcp/ip veya udp/ip olarak gider ve tüneli tıkayıp girişleri engeller.&lt;/p&gt;
-
-&lt;p&gt;Bu saldırıda ise tcp/ip veya udp/ip yerine &lt;strong&gt;BPDU Configuration&lt;/strong&gt; paketleri kullanılıyor.&lt;/p&gt;
-
-&lt;p&gt;Çok sayıda giden &lt;strong&gt;BPDU Configuration&lt;/strong&gt; paketleri ağı bir zaman’a kadar servis dışı bırakıyor, saldırının asıl amacı ağ içerisindeki haberleşmeyi kesmek.&lt;/p&gt;
-
-&lt;p&gt;Bu saldırıyı &lt;strong&gt;İkinci katman (layer 2)&lt;/strong&gt; ulaşım ve aynı zamanda saldırı aracı olan &lt;strong&gt;Yersinia&lt;/strong&gt; ile yapabiliriz.&lt;/p&gt;
-
-&lt;p&gt;Kurduğunuzu varsayarak’tan &lt;code class=&quot;highlighter-rouge&quot;&gt;yersinia -G&lt;/code&gt; ile graphical arayüzünü başlatıyoruz.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.hizliresim.com/ByXO5Q.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Sol üstteki &lt;strong&gt;Launch Attack&lt;/strong&gt; kısmın’a tıklayıp sağ taraf’tan &lt;strong&gt;STP&lt;/strong&gt;‘yi seçiyoruz ve &lt;strong&gt;Choose Attack&lt;/strong&gt; kısmının alt tarafından &lt;strong&gt;sending conf BPDUs&lt;/strong&gt;‘ı seçiyoruz ve &lt;strong&gt;OK&lt;/strong&gt; diyerek saldırıyı başlatıyoruz.Eğer En düşük &lt;strong&gt;Bridge ID&lt;/strong&gt;‘sine sahip olmak istiyorsak &lt;strong&gt;Claiming Root Role&lt;/strong&gt;‘u seçebiliriz.Ayrıca tüm trafiği dinlemek istiyorsak &lt;strong&gt;Claiming Root Role with MiTM(man in the middle)&lt;/strong&gt;‘ı seçebiliriz..&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Wireshark&lt;/strong&gt; ile &lt;strong&gt;STP&lt;/strong&gt; üzerinde giden tüm request ve response paketlerini görmemiz mümkün.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.hizliresim.com/kXrMPy.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;h1 id=&quot;spanning-tree-protocol-stp-korunma-yöntemi-&quot;&gt;Spanning Tree Protocol (STP) korunma yöntemi :&lt;/h1&gt;
-&lt;p&gt;Saldırı’yı gösterdik ve sıra güvenliğimiz’de.Yukarıda öğrendiğimize göre &lt;strong&gt;BPDU&lt;/strong&gt; bize çok büyük sıkıntılar çıkarıyor ve bunun içinde belli başlı komutlarımız var.&lt;/p&gt;
-
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;BPDU Koruması&lt;/strong&gt; :&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Switch&lt;/strong&gt;‘te genel olarak &lt;strong&gt;BPDU&lt;/strong&gt; Korumasını aktifleştirmek için :&lt;/p&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Router#spanning-tree portfast bpduguard default
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;Spesifik switch portun&lt;/strong&gt;‘da &lt;strong&gt;PortFast BPDU&lt;/strong&gt; Koruması’nı etkinleştirmek için :&lt;/p&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Router#spanning-tree bpduguard enable
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;BPDU&lt;/strong&gt; Konfigurasyon’unu doğrulamak için :&lt;/p&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Router#show spanning-tree summary totals
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;hr /&gt;
-
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-&lt;strong&gt;BPDU Filtrelemesi&lt;/strong&gt; :&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Switch&lt;/strong&gt;‘te genel olarak &lt;strong&gt;PortFast BPDU&lt;/strong&gt; Filterelemesini etkinleştirmek için :&lt;/p&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Router#spanning-tree portfast bpdufilter default
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;Spesifik switch portun&lt;/strong&gt;‘da &lt;strong&gt;PortFast BPDU&lt;/strong&gt; Filtrelemesini etkinleştirmek için :&lt;/p&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Router#spanning-tree bpdufilter enable
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;Komutların&lt;/strong&gt; Konfigurasyon’unu switch’te doğrulamak için :&lt;/p&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Router#show spanning-tree summary totals
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;&lt;/p&gt;
-&lt;hr /&gt;
-
-&lt;p&gt;&lt;br /&gt;
-&lt;br /&gt;
-&lt;strong&gt;BPDU Root Koruması&lt;/strong&gt; :&lt;/p&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Router#spanning-tree rootguard
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;</content><author><name></name></author><summary type="html">Spanning Tree Protocol (STP) nedir ? :</summary></entry></feed>
+&lt;p&gt;&lt;a href=&quot;https://en.wikipedia.org/wiki/Printf_format_string&quot;&gt;Wikipedia&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Format String Nedir ? Format string metin ve format parametreleri tutan bir ASCII’dir. Çoğu programlama dilinde de görebiliriz ki herhangi bir metin yazacağımız zaman bu metini direk yazımızın içine değilde bir değişkene aktarırız, ve bu değişkenide yazımızın içerisinde format stringler aracılığıyla kullanırız.</summary></entry></feed>
