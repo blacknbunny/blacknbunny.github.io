@@ -4,24 +4,17 @@ layout: page
 permalink: "/about/"
 ---
 
+### EN
 Name: Dayanç
 Surname: Soyadlı
 Age: 17
-"What He Fucks With ?", "What He Knows ?" : ```
-{
-	"WhatHeFucksWith?" : {
-			"Reverse Engineering",
-			"Malware Analysis",
-			"Full-Stack Development",
-			"Legally(sometimes not) Exploit Development" : ,
-			"Loves to do researchers on flex-products", }
-	"WhatHeKnows?" : {
-		"Programming Languages" : ["Python", "Perl", "Golang", "C", "Node.JS", "Java", "PHP", "Assembly x86,x64", "etc..."],
-		"Front-end" : ["Javascript", "React.JS", "Backbone.JS", "UnderScore.JS", "etc..."],
-		"Template Engines" : ["EJS", "Handlebars.JS", "Jade", "Vue.JS", "PUG", "etc..."]
-	}
-}
-```
+"What he fucks with ?", "What he knows ?" : [Pastebin](https://pastebin.com/Dh9eDH97)
+
+### TR
+İsim: Dayanç
+Soyisim: Soyadlı
+Yaş: 17
+"Neler ile uğraşıyorum ?", "Ne biliyorum ?" : [Pastebin](https://pastebin.com/Dh9eDH97)
 
 Github Account : [@blacknbunny](https://github.com/blacknbunny)
 
