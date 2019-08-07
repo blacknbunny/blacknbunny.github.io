@@ -4,8 +4,6 @@ layout: page
 permalink: "/about/"
 ---
 
-# About Me / Hakkımda
-
 ### Social Links
 Github : [@blacknbunny](https://github.com/blacknbunny)
 
