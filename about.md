@@ -33,7 +33,7 @@ Age: 17
 
 **How did you learn all this shit ?** : [TOP SECRET URL](https://www.google.com/)
 
-**Do you use Instagram ?** : Yup. (@dayancsoyadli)[https://www.instagram.com/dayancsoyadli]
+**Do you use Instagram ?** : Yup. [@dayancsoyadli](https://www.instagram.com/dayancsoyadli)
 
 ### TR
 İsim: Dayanç
@@ -52,9 +52,9 @@ Yaş: 17
 
 **Okula gidiyormusun ?** : Hayır.
 
-**Bu kadar şeyi nasıl öğrendin ?** : (ÇOK GİZLİ URL)[https://www.google.com/]
+**Bu kadar şeyi nasıl öğrendin ?** : [ÇOK GİZLİ URL](https://www.google.com/)
 
-**Instagram kullanıyormusun ?** : Yup. (@dayancsoyadli)[https://www.instagram.com/dayancsoyadli]
+**Instagram kullanıyormusun ?** : Yup. [@dayancsoyadli](https://www.instagram.com/dayancsoyadli)
 
 **THE END**
 
