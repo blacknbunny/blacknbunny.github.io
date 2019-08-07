@@ -4,10 +4,24 @@ layout: page
 permalink: "/about/"
 ---
 
-Hi there :) My name is Dayanç Soyadlı and I'm a 17 year old independent security researcher. Usually I develop malwares, exploits and wrote some blog posts about things that i know. Ain't going to school, i left it when i was 12 years old. And i love writing blogs about all the things that i know so welcome to my blog !
-
-Merhaba :) Benim ismim Dayanç Soyadlı ve ben 17 yaşında bağımsız bir güvenlik araştırmacısıyım. Genellik ile malware, exploit geliştiriyorum ve bildiğim şeyler hakkında yazı yazıyorum. Okula gitmiyorum, 12 yaşındayken gitmeyi bıraktım. Bildiğim şeyler hakkında blog yazmayı çok seviyorum yani bloguma hoşgeldiniz !
-
+Name: Dayanç
+Surname: Soyadlı
+Age: 17
+"What He Fucks With ?", "What He Knows ?" : ```
+{
+	"WhatHeFucksWith?" : {
+			"Reverse Engineering",
+			"Malware Analysis",
+			"Full-Stack Development",
+			"Legally(sometimes not) Exploit Development" : ,
+			"Loves to do researchers on flex-products", }
+	"WhatHeKnows?" : {
+		"Programming Languages" : ["Python", "Perl", "Golang", "C", "Node.JS", "Java", "PHP", "Assembly x86,x64", "etc..."],
+		"Front-end" : ["Javascript", "React.JS", "Backbone.JS", "UnderScore.JS", "etc..."],
+		"Template Engines" : ["EJS", "Handlebars.JS", "Jade", "Vue.JS", "PUG", "etc..."]
+	}
+}
+```
 
 Github Account : [@blacknbunny](https://github.com/blacknbunny)
 
