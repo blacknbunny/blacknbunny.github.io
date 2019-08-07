@@ -24,7 +24,7 @@ Surname: Soyadlı
 
 Age: 17
 
-### Some of the frequently asked questions that i answered ([!]ATTENTION some of them contains so much bullshit [!])
+#### Some of the frequently asked questions that i answered ([!]ATTENTION some of them contains so much bullshit [!])
 **How much programming languages do i know ?** : 
 
 ```["Python", "Perl", "Ruby", "Node.JS", "Golang", "Assembly x32&x64", "C", "Java", "Javascript", "etc..."]```
@@ -46,7 +46,7 @@ Soyisim: Soyadlı
 
 Yaş: 17
 
-### Sıkça gelen sorulardan cevapladığım bazıları ([!]DİKKAT bazıları çok fazla saçmalık içerir [!])
+#### Sıkça gelen sorulardan cevapladığım bazıları ([!]DİKKAT bazıları çok fazla saçmalık içerir [!])
 
 **Kaç tane programlama dili biliyorum ?** :
 
