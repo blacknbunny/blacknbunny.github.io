@@ -24,6 +24,9 @@ Yaş: 17
 
 ### Bout' Me
 Github : [@blacknbunny](https://github.com/blacknbunny)
+
 Twitter : [@0DAYanc](https://www.twitter.com/0DAYanc)
+
 ฿ : 3CmyCcXuTZynytH5Sw2SNGm2P6w7iYgGcH
+
 ✉ : xazamaxi@protonmail.com
