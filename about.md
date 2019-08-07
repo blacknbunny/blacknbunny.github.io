@@ -22,10 +22,7 @@ Yaş: 17
 
 "Neler ile uğraşıyorum ?", "Ne biliyorum ?" : [Pastebin](https://pastebin.com/Dh9eDH97)
 
-
---------------------------------------------------------------------------------------
-
-
+### Bout' Me
 Github : [@blacknbunny](https://github.com/blacknbunny)
 Twitter : [@0DAYanc](https://www.twitter.com/0DAYanc)
 ฿ : 3CmyCcXuTZynytH5Sw2SNGm2P6w7iYgGcH
