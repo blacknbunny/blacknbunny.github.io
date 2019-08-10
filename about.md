@@ -23,11 +23,11 @@ Surname: Soyadlı
 Age: 17
 
 #### **Some of the frequently asked questions that i answered ([!]ATTENTION some of them contains so much bullshit [!])**
-**How much programming languages do i know ?** : 
+**How much programming languages do you know ?** : 
 
 ```["Python", "Perl", "Ruby", "Node.JS", "Golang", "Assembly x32&x64", "C", "Java", "Javascript", "etc..."]```
 
-**When did i start to deal with computers ?** : When i was 8 y/o.
+**When did you start to deal with computers ?** : When i was 8 y/o.
 
 **Are you going to school ?** : Nope.
 
@@ -44,11 +44,11 @@ Yaş: 17
 
 #### **Sıkça gelen sorulardan cevapladığım bazıları ([!]DİKKAT bazıları çok fazla saçmalık içerir [!])**
 
-**Kaç tane programlama dili biliyorum ?** :
+**Kaç tane programlama dili biliyorsun ?** :
 
 ```["Python", "Perl", "Ruby", "Node.JS", "Golang", "Assembly x32&x64", "C", "Java", "Javascript", "etc..."]```
 
-**Bilgisayarlarla uğraşmaya ne zaman başladım ?** : 8 yaşındayken.
+**Bilgisayarlarla uğraşmaya ne zaman başladın ?** : 8 yaşındayken.
 
 **Okula gidiyormusun ?** : Hayır.
 
