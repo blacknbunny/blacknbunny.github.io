@@ -5,9 +5,9 @@ layout: post
 
 # Introduction to APC, Thread and APC Code Injection
 
-Bu yazımda  bir **APC (Asynchronous Procedure Call)**'nin ne olduğundan bahsedeceğim. İnternet'te türkçe olarak böyle bir **Code Injection** tekniğinin açıklaması ve örnekleri yapıldımı diye baktığımda hiç bir kaynak bulamadım. Bu yüzdende ben yazmaya karar verdim. 
+Bu yazım da  bir **APC (Asynchronous Procedure Call)**'nin ne olduğundan bahsedeceğim. İnternet'te türkçe olarak böyle bir **Code Injection** tekniğinin açıklaması ve örnekleri yapıldımı diye baktığımda hiç bir kaynak bulamadım. Bu yüzdende ben yazmaya karar verdim. 
 
-Yazının ileriki kısımlarında **Code Injection** gerçekleştirmek için gerekli olan yazılımı **step-by-step** yani adım adım geliştireceğiz. İlk başlarda sıkıcı-anlaşılmaz gelebilir yalnız tüm anlatım birbiri ile bağlı. Kısaca **giriş-gelişme** sıkabilir bu yüzden **sonuç**'u bekleyelim.
+Yazının ileriki kısımların da **Code Injection** gerçekleştirmek için gerekli olan yazılımı **step-by-step** yani adım adım geliştireceğiz. İlk başlarda sıkıcı-anlaşılmaz gelebilir yalnız tüm anlatım birbiri ile bağlı. Kısaca **giriş-gelişme** sıkabilir bu yüzden **sonuç**'u bekleyelim.
 
 Yazı hakkında kısa bir özet geçmek gerekirse :
 
@@ -20,7 +20,7 @@ Bahsettiğim **Code Injection** tekniğinin daha önce birçok **Zararlı Yazıl
 
 * **Carberp**
 * **DorkBot**
-* Aynı zamanda da [APT33](https://www.fireeye.com/blog/threat-research/2017/09/apt33-insights-into-iranian-cyber-espionage.html) tarafından geliştirilen **TurnedUp**.
+* [APT33](https://www.fireeye.com/blog/threat-research/2017/09/apt33-insights-into-iranian-cyber-espionage.html) tarafından geliştirilen **TurnedUp**.
 
 Bu **zararlı yazılım**'lar içerisinde **APC Queue Code Injection** tekniği mevcut.
 
@@ -42,13 +42,13 @@ Bir **user-mode APC**'nin **Thread** içerisinde çalışması için **Thread**'
 
 Dolayısı ile bir **Thread** eğer **Alertable State** içerisinde olmazsa bir **asynchronous I/O** requesti olan **APC** fonksiyonunu **çalıştıramaz** yani **process** edemez.
 
-**Alertable I/O** ve **APC**'nin gerekli ilişkisini  **Windows** tarafından yazılan bu dökümanda daha detaylı öğrenebilirsiniz : [Alertable I/O](https://docs.microsoft.com/en-us/windows/win32/fileio/alertable-i-o)
+**Alertable I/O** ve **APC**'nin gerekli ilişkisini  **Windows** tarafından yazılan bu döküman da daha detaylı öğrenebilirsiniz : [Alertable I/O](https://docs.microsoft.com/en-us/windows/win32/fileio/alertable-i-o)
 
 Aklı biraz açıkgözlülüğe çalışanın aklına hemen şu soru gelecektir :
 
 * **Yani biz eğer process'in içerisinde bulunan thread'e bir APC fonksiyonu gönderirsek ve bu APC fonksiyonu bizim shellcode'umuzu içerirse bu bir APC Queue Code Injection sayılır değil mi ?**
 
-Vereceğim bu cevap ile blog yazısının tüm sihrini kaçıracağım ama yinede okuyanlar için heycanlandırıcı bir yazı olmasını istediğimden bu sorunun cevabıda **Evet**.
+Vereceğim bu cevap ile blog yazısının tüm sihrini kaçıracağım ama yinede okuyanlar için heycanlandırıcı bir yazı olmasını istediğimden bu sorunun cevabı da **Evet**.
 
 ### APC Queue Code Injection
 
@@ -58,7 +58,7 @@ Yazdığımız kodu tek tek anlatmaya başlamadan önce **APC**, **Thread**, **Q
 * **Thread** : Bir **Process** yani çalışan bir program içerisinde birden fazla işlemi aynı zamanda gerçekleştirmek istersek oluşturacağımız **Birim** yani **Unit**'tir.
 * **APC Queue to Thread** : **Thread** içerisine çalıştırılacak olan fonksiyonu sunmaktır.
 
-Daha da basiti eğer biz bir **Thread** içerisine oluşturduğumuz **APC** fonksiyonunu (bu bir shellcode'da olabilir) eklediğimizde **Thread** hata verip sonraki çalışma esnasında bizim fonksiyonumuzu çalıştıracağından **process** içerisinde oluşturulan **birim**'leri kontrol edebileceğizdir.
+Daha da basiti eğer biz bir **Thread** içerisine oluşturduğumuz **APC** fonksiyonunu (bu bir shellcode'da olabilir) eklediğimizde **Thread** hata verip sonraki çalışma esnasın da bizim fonksiyonumuzu çalıştıracağından **process** içerisinde oluşturulan **birim**'leri kontrol edebileceğizdir.
 
 Bu yukarıda anlattığımı kavrayamayan olduysa hiç sorun değil aşağıdaki resim tam olarak **APC Queue Code Injection** tekniğinin nasıl çalıştığını çok basit gözler önüne seriyor.
 
