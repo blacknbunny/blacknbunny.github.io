@@ -54,7 +54,7 @@ Vereceğim bu cevap ile blog yazısının tüm sihrini kaçıracağım ama yined
 
 Yazdığımız kodu tek tek anlatmaya başlamadan önce **APC**, **Thread**, **Queue** gibi terimleri daha iyi anlaşılması adına tekrar anlatalım.
 
-* **APC (Asynchronous Procedure Call) **  : Asenkron (Eşzamansız) olarak çalışan bir fonksiyondur.
+* **APC (Asynchronous Procedure Call)**  : Asenkron (Eşzamansız) olarak çalışan bir fonksiyondur.
 * **Thread** : Bir **Process** yani çalışan bir program içerisinde birden fazla işlemi aynı zamanda gerçekleştirmek istersek oluşturacağımız **Birim** yani **Unit**'tir.
 * **APC Queue to Thread** : **Thread** içerisine çalıştırılacak olan fonksiyonu sunmaktır.
 
