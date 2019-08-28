@@ -5,7 +5,7 @@ layout: post
 
 # Introduction to APC, Thread and APC Code Injection
 
-Bu yazım da  bir **APC (Asynchronous Procedure Call)**'nin ne olduğundan bahsedeceğim. İnternet'te türkçe olarak böyle bir **Code Injection** tekniğinin açıklaması ve örnekleri yapıldımı diye baktığımda hiç bir kaynak bulamadım. Bu yüzdende ben yazmaya karar verdim. 
+Bu yazımda da bir **APC (Asynchronous Procedure Call)**'nin ne olduğundan bahsedeceğim. İnternet'te türkçe olarak böyle bir **Code Injection** tekniğinin açıklaması ve örnekleri yapıldımı diye baktığımda hiç bir kaynak bulamadım. Bu yüzdende ben yazmaya karar verdim. 
 
 Yazının ileriki kısımların da **Code Injection** gerçekleştirmek için gerekli olan yazılımı **step-by-step** yani adım adım geliştireceğiz. İlk başlarda sıkıcı-anlaşılmaz gelebilir yalnız tüm anlatım birbiri ile bağlı. Kısaca **giriş-gelişme** sıkabilir bu yüzden **sonuç**'u bekleyelim.
 
