@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Loadable Kernel Module Development</title>
+  <meta name="description" content="Loadable Kernel Module (LKM)">
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://localhost:4000/ss/2019/04/22/loadable-kernel-module.html">
+  <link rel="alternate" type="application/rss+xml" title="Daily Security" href="/feed.xml">
+  
+  
+</head>
+
+
+  <body>
+
+    <header class="site-header" role="banner">
+
+  <div class="wrapper">
+    
+    
+    <a class="site-title" href="/">Daily Security</a>
+  
+    
+      <nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger">
+          
+            
+            
+          
+            
+            
+          
+            
+            
+            <a class="page-link" href="/about/">About</a>
+            
+          
+            
+            
+            <a class="page-link" href="/about/">About</a>
+            
+          
+            
+            
+          
+            
+            
+          
+            
+            
+          
+            
+            
+          
+        </div>
+      </nav>
+    
+  </div>
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Loadable Kernel Module Development</h1>
+    <p class="post-meta">
+      <time datetime="2019-04-22T00:00:00+03:00" itemprop="datePublished">
+        
+        Apr 22, 2019
+      </time>
+      </p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <h1 id="loadable-kernel-module-lkm">Loadable Kernel Module (LKM)</h1>
+
+<p>Merhaba arkadaşlar. <strong>Loadable Kernel Module (LKM)</strong> yazıma hoşgeldiniz.</p>
+
+<p>Bu yazımda sizlere <strong>Yüklenebilir Çekirdek Modülünün</strong> yani <strong>LKM</strong>‘nin geliştirilmesinden bahsedeceğim. Dürüst olursam benim bu, önceki ve ilerideki gelecek yazılarımdan bahsetmiş ve bahsedecek olma sebebim rootkit geliştirebilesiniz diye ama insanlık adına kullanacağım diyen olursa oda kabulumdur.</p>
+
+<p><strong>LKM</strong> rootkit geliştirilmesinin en basit yoludur ayrıca bu karşısında basitçe savunma kurabileceğiniz bir yoldur. İşletim sisteminde bir kere root alındıktan sonra rootkit bu yetkiyi kontrol etmenin en iyi yoludur. Bunuda ek bilgi olarak verdiğime göre artık yazımıza geçip <strong>LKM</strong>‘nin nasıl yazıldığından bahsedelim.</p>
+
+<p><strong>LKM</strong>‘yi <strong>kernel</strong> yani <strong>çekirdek</strong> için bir eklenti olarak düşünebiliriz ayrıca <strong>LKM</strong> size bulunduğunuz yetkiler ile <strong>kernel</strong> içerisinde kod çalıştırmanızı sağlar. <strong>LKM</strong> az çok kafanızda bunun ne olduğu canlandıysa devam edelim.</p>
+
+<h1 id="i̇lk-yüklenebilir-çekirdek-modülümüz">İlk Yüklenebilir Çekirdek Modülümüz</h1>
+<p>Bu modülü yazmadan önce bize kütüphanelerimiz gerek her programda olduğu gibi :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#include &lt;linux/module.h&gt;
+#include &lt;linux/init.h&gt;
+</code></pre></div></div>
+
+<p>Bu kısımdan sonra bu modül hakkında bilgileri verdiğimiz kısım geliyor :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>MODULE_AUTHOR("blacknbunny");
+MODULE_DESCRIPTION("Basit Merhaba Dunya Modulu");
+MODULE_LICENSE("GPL");
+</code></pre></div></div>
+
+<p>Modülü kimin yazdığı, modül hakkında açıklama ve lisans yer alıyor bu kısımda.</p>
+
+<p>Bu kısmıda anladığımıza göre biraz daha teknik bölüm olan yükleme kısmına gelelim :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>static int __init merhaba_init(void)
+{
+  printk("Merhaba Dünya!\n");
+  return 0;
+}
+</code></pre></div></div>
+<p>Bu kısımda modülümüz kernel’e yüklendikten sonra çalışma aşamasında ne yapacağını belirliyor.</p>
+
+<p>Fonksiyon tipimizi ve return tipini belirledikten sonra burada karşımıza çıkan farklı bir fonksiyon var oda <strong>printk</strong> fonksiyonu.</p>
+
+<p>Bu fonksiyon adındanda anlaşılabileceği gibi kernel içerisinde yazdırma yapan bir fonksiyon bu. Daha da detaylı incelemek istiyorum diyen varsa aranızda buyurun <a href="https://en.wikipedia.org/wiki/Printk">Wikipedia printk</a>.</p>
+
+<p>Kernel içerisinde modülümüz aracılığı ile “Merhaba Dünya” yazdırdık fakat her girişin bir çıkışıda vardır <strong>I/O</strong> mantığı gibi düşünün. Günün sonunda bunu nasıl kernel içerisine install edeceğimizi göreceğin <strong>insmod</strong> komutu ile yalnız bunu birde kernelin içinden çıkarmak var bunuda <strong>rmmod</strong> ile yapabiliyoruz.</p>
+
+<p>Rootkitimizi karşıdaki sisteme yükleyip uçup kaçtıktan sonra bu rootkit modülünü sistemden çıkartmamız gerekebilir. O zamanda rootkit içerisinde bir çıkış fonksiyonunun bulunması gerekebilir tabi bu basit bir <strong>LKM</strong> olduğundan detaya girmiyorum.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>static void __exit merhaba_exit(void)
+{
+  printk("Hello world kernelden cikartiliyor.\n");
+  return;
+}
+</code></pre></div></div>
+
+<p>Bu şekilde de modülümüzü kernel içerisinden <strong>Unload</strong> edebiliyoruz. Şimdi geldi son kodumuza tüm bu <strong>__init</strong> ve <strong>__exit</strong> fonksiyonlarını modül içine yüklemeye :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>module_init(merhaba_init);
+module_exit(merhaba_exit);
+</code></pre></div></div>
+
+<p>Ve <strong>module_init</strong> ile yüklenmenin <strong>module_exit</strong> ilede çıkarılmanın gerçekleştiğini görebiliyoruz.</p>
+
+<p>Şimdi geriye kalan tüm bu kodu birleştirip bir adet <strong>Makefile</strong> dosyası oluşturup <strong>make</strong> komutu ile derlemek.</p>
+
+<p>Alttaki <strong>LKM</strong>‘yi <strong>merhaba.c</strong> olarak kaydettiğinizi varsayıyorum.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#include &lt;linux/module.h&gt;
+#include &lt;linux/init.h&gt;
+
+MODULE_AUTHOR("blacknbunny");
+MODULE_DESCRIPTION("Basit Merhaba Dunya Modulu");
+MODULE_LICENSE("GPL");
+
+static int __init merhaba_init(void)
+{
+  printk("Merhaba Dünya!\n");
+  return 0;
+}
+
+static void __exit merhaba_exit(void)
+{
+  printk("Hello world kernelden cikartiliyor.\n");
+  return;
+}
+
+module_init(merhaba_init);
+module_exit(merhaba_exit);
+</code></pre></div></div>
+
+<h1 id="make-ile-lkm-derlenmesi">Make ile LKM derlenmesi</h1>
+<p>Bu modülü derlemek içinde komut satırımızdan yada bir pad ile <strong>Makefile</strong> adında bir dosya oluşturup içine eklememiz lazım.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>obj-m += merhaba.o
+
+all:
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+
+clean:
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
+</code></pre></div></div>
+
+<p>Derlemeyi gerçekleştirmek için alttaki komut satırında gerçekleştirdiğim komutları kullanabilirsiniz.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>remnux@remnux:~/heyhey$ ls
+Makefile  merhaba.c
+remnux@remnux:~/heyhey$ make
+make -C /lib/modules/3.13.0-53-generic/build M=/home/remnux/heyhey modules
+make[1]: Entering directory `/usr/src/linux-headers-3.13.0-53-generic'
+  CC [M]  /home/remnux/heyhey/merhaba.o
+  Building modules, stage 2.
+  MODPOST 1 modules
+  CC      /home/remnux/heyhey/merhaba.mod.o
+  LD [M]  /home/remnux/heyhey/merhaba.ko
+make[1]: Leaving directory `/usr/src/linux-headers-3.13.0-53-generic'
+</code></pre></div></div>
+
+<p><strong>make</strong> komutu sonrasında tekrar <strong>ls</strong> komutunu çalıştırdığımızda klasörümüzdeki dosya sayısının arttığını görebiliriz :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>remnux@remnux:~/heyhey$ ls
+Makefile   merhaba.ko     merhaba.mod.o  modules.order
+merhaba.c  merhaba.mod.c  merhaba.o      Module.symvers
+remnux@remnux:~/heyhey$
+</code></pre></div></div>
+
+<p>Bu dosyaların arasından bizim modülümüz <strong>merhaba.ko</strong>. Bu modülü kernel içerisine <strong>load</strong> edebilmemiz yani yükleyebilmemiz için başta da bahsettiğimiz <strong>insmod</strong> komutunu kullanmamız gerekli.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>remnux@remnux:~/heyhey$ insmod ./merhaba.ko
+insmod: ERROR: could not insert module ./merhaba.ko: Operation not permitted
+remnux@remnux:~/heyhey$ sudo insmod ./merhaba.ko
+remnux@remnux:~/heyhey$ dmesg | tail -n 1
+[ 6350.260783] Merhaba D\xffffffc3\xffffffbc\xffffffbcnya!
+remnux@remnux:~/heyhey$ 
+</code></pre></div></div>
+
+<p><strong>insmod</strong> ile bunu kernele yükleyip <strong>dmesg</strong> ile incelediğimizde kernelde bize gelen <strong>Merhaba Dünya</strong> çıktısını görebiliriz. Yalnız kernel içerisinde türkçe karakter kullanımı mevcut olmadığından ve size bunuda ek olarak göstermek istediğimden çıktıyı <strong>hex code</strong>‘ları ile almış bulunuyoruz.</p>
+
+<p>Modülümüzün sağlıklı şekilde çalıştığını gözlemledik ve eğer bu modülü silmek istiyorsak <strong>rmmod</strong> komutunu kullanabiliriz :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>remnux@remnux:~/heyhey$ sudo rmmod merhaba
+remnux@remnux:~/heyhey$ dmesg | tail -n 1
+[ 6593.845495] Hello world kernelden cikartiliyor.
+remnux@remnux:~/heyhey$
+</code></pre></div></div>
+
+<p>Ve çıkartılma sonucunda bizim modülümüz içerisinde belirlediğimiz <strong>__exit</strong> fonksiyonu çalıştı.</p>
+
+<p>Eğer modülleri listelemek istiyorsanız <strong>lsmod</strong> komutunu kullanabilirsiniz örneğin :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>remnux@remnux:~/heyhey$ lsmod | grep merhaba
+merhaba                12427  0 
+remnux@remnux:~/heyhey$
+</code></pre></div></div>
+
+<p>Bu yazımızda basit bir şekilde <strong>LKM</strong> yani <strong>Yüklenebilir Çekirdek Modülünü</strong> en basit şeklinde geliştirmeyi öğrendik.</p>
+
+<p>Bir daha ki yazımda büyük ihtimal <strong>sys_call_table hijacking</strong> anlatacağım.</p>
+
+<p>Sonra ki yazılarda da artık bir rootkit yazarız diye düşünüyorum. Kendinize iyi bakın görüşmek dileği ile !</p>
+
+  </div>
+
+  
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Daily Security</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>
+            
+              Daily Security
+            
+            </li>
+            
+            <li><a href="mailto:xazamaxi@protonmail.com">xazamaxi@protonmail.com</a></li>
+            
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+          <li>
+            <a href="https://github.com/blacknbunny"><span class="icon icon--github"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
+</span><span class="username">blacknbunny</span></a>
+
+          </li>
+          
+
+          
+          <li>
+            <a href="https://twitter.com/0DAYanc"><span class="icon icon--twitter"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27 c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767 c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206 C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271 c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469 c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg>
+</span><span class="username">0DAYanc</span></a>
+
+          </li>
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>In this blog we&#39;re going to solve CTF&#39;s &amp; Write Some Software&#39;s.My goal is redirect my little knowledge to other people.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>

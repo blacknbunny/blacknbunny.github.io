@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Rootkit Development - (Part 1)</title>
+  <meta name="description" content="Rootkit Development - (Part 1)">
+
+  <link rel="stylesheet" href="/assets/main.css">
+  <link rel="canonical" href="http://localhost:4000/ss/2019/05/29/rootkit-development-part-1.html">
+  <link rel="alternate" type="application/rss+xml" title="Daily Security" href="/feed.xml">
+  
+  
+</head>
+
+
+  <body>
+
+    <header class="site-header" role="banner">
+
+  <div class="wrapper">
+    
+    
+    <a class="site-title" href="/">Daily Security</a>
+  
+    
+      <nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger">
+          
+            
+            
+          
+            
+            
+          
+            
+            
+            <a class="page-link" href="/about/">About</a>
+            
+          
+            
+            
+            <a class="page-link" href="/about/">About</a>
+            
+          
+            
+            
+          
+            
+            
+          
+            
+            
+          
+            
+            
+          
+        </div>
+      </nav>
+    
+  </div>
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Rootkit Development - (Part 1)</h1>
+    <p class="post-meta">
+      <time datetime="2019-05-29T00:00:00+03:00" itemprop="datePublished">
+        
+        May 29, 2019
+      </time>
+      </p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <h1 id="rootkit-development---part-1">Rootkit Development - (Part 1)</h1>
+
+<p>Merhaba arkadaşlar.</p>
+
+<p><strong>Rootkit Development</strong>‘in ilk part’ına hoşgeldiniz.</p>
+
+<p>Bu yazımızda bir <strong>Rootkit</strong>‘in ne olduğunu tam olarak anlayacağız.</p>
+
+<p>Aynı zamanda <strong>Rootkit</strong>‘ler ile daha haşır neşir olacağız.</p>
+
+<p>Bu yazının başında önemli bir açıklama olarak şunu söylemek istiyorum bu <strong>Rootkit Development</strong> serisinden sonra oluşabilecek durumlardan ben sorumlu değilim.</p>
+
+<p>Bunun dışında bu <strong>Rootkit Development</strong> serisi hem <strong>Windows</strong> hem <strong>Linux</strong> aynı zamanda da <strong>Mac OS</strong> işletim sistemleri için geçerli olan bilgileri içermektedir.</p>
+
+<p>Yani daha basit bir şekilde <strong>Ortaya karışık birşeyler yap usta</strong> denildikten sonra bu yazıyı yazmış bulunmaktayım.</p>
+
+<p>Seri sonunda <strong>Rootkit Geliştirmek</strong>, <strong>Rootkitleri tanımak</strong>, <strong>Kernel</strong>, <strong>Software Sec</strong>, <strong>Hardware Sec</strong> vs … gibi cümleler ve kelimelerle daha haşır neşir olacağız.</p>
+
+<p>Ve bunlar dışında <strong>Kernel</strong>, <strong>Hooking</strong>, <strong>Tracing</strong>, <strong>HIDS</strong> gibi anahtar kelimeler ile daha da yakınlaşacağız.</p>
+
+<p>Bu yazıda fazla teknik detaya girmeden aşşağıdaki konuları anlatacağım :</p>
+
+<ol>
+  <li>
+    <p><strong>Rootkit Nedir ?</strong></p>
+  </li>
+  <li>
+    <p><strong>Rootkit Tipleri Nelerdir ?</strong></p>
+  </li>
+  <li><strong>Rootkit Gizlenme Süreçleri Nelerdir ?</strong>
+    <ul>
+      <li><strong>HIDS Nedir ?</strong>
+        <ul>
+          <li><strong>HIDS’ler nasıl bypass edilir ?</strong></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li><strong>Logging, Tracing, Hooking Nedir ?</strong>
+    <ul>
+      <li><strong>Hooking Türleri Nelerdir ?</strong>
+        <ul>
+          <li><strong>System Calls</strong>
+            <ul>
+              <li><strong>Hooking System Call</strong></li>
+              <li><strong>System Call Modules</strong>
+                <ul>
+                  <li><strong>System Call Function</strong></li>
+                  <li><strong>sysent Structure</strong></li>
+                  <li><strong>Offset Value</strong></li>
+                  <li><strong>modfind Function</strong></li>
+                  <li><strong>modstat Function</strong></li>
+                  <li><strong>syscall Function</strong></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+          <li><strong>Network Connections</strong></li>
+          <li><strong>Processes</strong></li>
+          <li><strong>BSD Communication Protocols</strong>
+            <ul>
+              <li><strong>protosw Structure</strong></li>
+              <li><strong>inetsw[] Switch Table</strong></li>
+              <li><strong>mbuf Structure</strong></li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li><strong>Kernel Process Tracing Nedir ?</strong></li>
+      <li><strong>Keystroke Logging</strong></li>
+    </ul>
+  </li>
+  <li><strong>Kernel Object Nedir ?</strong>
+    <ul>
+      <li><strong>Direct Kernel Object Manipulation</strong></li>
+    </ul>
+  </li>
+</ol>
+
+<p><strong>Rootkit Development</strong>‘in ilk partında yer vereceğim konular bunlar.</p>
+
+<p>Ikinci <strong>Rootkit Development</strong> partında daha da teknik detaya ineceğiz.</p>
+
+<h1 id="rootkit-nedir-">Rootkit Nedir ?</h1>
+
+<p>Bir <strong>Rootkit</strong>‘e kök kullanıcı takımı denilebilir.</p>
+
+<p><strong>Rootkit</strong> bulunduğu işletim sisteminin <strong>Kernel API</strong>‘sini <strong>Hook</strong> ederek çalışmaktadır genellikle.</p>
+
+<p>Yani <strong>Sistem Çağrı</strong>‘larını kendi alehine kullanıp <strong>Dosya</strong>, <strong>Process</strong> vs.. gizleyebilmektedir.</p>
+
+<p>Daha da basit bir şekilde bir <strong>Rootkit</strong> sistem içerisinde <strong>Programları</strong>, <strong>Dosyaları</strong>, <strong>Internet Bağlantılarını</strong>, <strong>Servisleri</strong>, <strong>Driverleri</strong> hatta  <strong>İşletim Sistem</strong>‘ini kontrol edebilmektedir.</p>
+
+<p>Bunun yanı sıra sistem içerisinde bulunan <strong>TCP</strong>, <strong>UDP</strong>, <strong>ICMP</strong> vs.. gibi internet protokollerini manipule edebilmektedir.</p>
+
+<p>Ayrıca arkada çalıştırdığı bir <strong>Backdoor</strong>‘un dinlediği <strong>Port</strong> adresini <strong>IP</strong> adresini gizleyebilmektedir.</p>
+
+<p><strong>Mac</strong>, <strong>Windows</strong>, <strong>Linux</strong> işletim sistemlerinde <strong>Rootkit</strong> terimi çokta farklı değildir.</p>
+
+<p><strong>Rootkit</strong> terimine daha da yakından bakacak olursak şayet :</p>
+
+<ul>
+  <li>
+    <p>Bir <strong>Rootkit</strong> kendisini veyahut <strong>Zararlı Yazılım</strong>‘ı gizlemek için kullanılabilir.</p>
+  </li>
+  <li>Aynı zamanda bir <strong>C&amp;C</strong> yani <strong>Command and Control</strong> sunucusu olarak sistem içerisinde kullanılabilir. Aşağıdaki resim <strong>rootkit.com</strong> tarafından geliştirilmiş <strong>Win2k Rootkit</strong>‘inin komutlarını içermektedir.
+    <ul>
+      <li><img src="https://resmim.net/f/MC3Qrx.png" alt="" /></li>
+    </ul>
+  </li>
+  <li>
+    <p>Görülebildiği üzere sistem içerisinde komut çalıştırmak ve <strong>Klasör, Process</strong> gizlemek mümkün. Ayrıca <strong>sniffkeys</strong> ile <strong>klavye</strong>‘de basılan tuşları yakalamakta mümkün.</p>
+  </li>
+  <li>Tabi bunlar bir <strong>Rootkit</strong>‘in yapabileceklerinden bir kaç tanesi.</li>
+</ul>
+
+<p>Tabi şöyle bir soru sormak mümkün : <strong>Malware</strong> ile <strong>Rootkit</strong> arasında ne gibi bir fark vardır ?</p>
+
+<p>Bu sorununda cevabı <strong>Rootkit</strong>‘in normal bir <strong>Malware</strong>‘nin işleyişinden farklı olarak <strong>Sistem Çağrı</strong>‘larını <strong>Kancalaması</strong> yani <strong>Hook</strong> etmesi mevcut.</p>
+
+<p>Daha önceki yazım olan <a href="https://blacknbunny.github.io/2019/05/07/linux-system-call-hooking.html">Linux System Call Hooking</a> yazım içerisinde <strong>Rootkit</strong>‘lerin nasıl çalıştığını az çok anlattım.</p>
+
+<p>Yalnız bu ve ileriki yazımda <strong>Rootkit</strong> teriminin daha derinlerine dalacağız.</p>
+
+<h1 id="rootkit-tipleri-nelerdir-">Rootkit Tipleri Nelerdir ?</h1>
+
+<p>Basit bir şekilde <strong>Rootkit</strong> tipleri :</p>
+
+<ul>
+  <li><strong>Kernel Rootkit</strong>
+    <ul>
+      <li><strong>Kernel</strong> içerisinde çalışan bir <strong>Rootkit</strong> tipidir. <strong>İşletim Sistemi</strong>‘nin <strong>Kaynak Kodunu</strong> değiştirip hatta silebilen bir <strong>Rootkit</strong> tipidir.</li>
+    </ul>
+  </li>
+  <li><strong>Hardware or Firmware Rootkit</strong>
+    <ul>
+      <li><strong>Hardware</strong> ya da <strong>Firmware</strong> içerisinde çalışan bir <strong>Rootkit</strong> tipidir.</li>
+    </ul>
+  </li>
+  <li><strong>Hypervizor or virtualized Rootkit</strong>
+    <ul>
+      <li><strong>Hypervizor</strong> içerisinde çalışan aynı zamanda <strong>Sanallaştırılmış Rootkit</strong> tipidir. <strong>Boot-up</strong> kavramında <strong>Kernel Rootkit</strong>‘i <strong>Kernel</strong> çalıştıktan sonra çalışır yalnız <strong>Hypervizor</strong> içerisinde ilk önce <strong>Rootkit</strong> çalışır dolayısıyla <strong>Kernel Rootkit</strong>‘ten daha güçlüdür. <strong>Hypervizor</strong> içeren herhangi bir durumda kendini gösterebilmektedir.</li>
+    </ul>
+  </li>
+  <li><strong>Bootloader Rootkit or Bootkit</strong>
+    <ul>
+      <li><strong>Boot</strong> içerisinde çalışan bir <strong>Rootkit</strong> ve <strong>Bootkit</strong> bizim <strong>İşletim Sistemimiz</strong> ile aynı anda çalışmaya başlar. Kendini <strong>Master Boot Record (MBR)</strong> ya da <strong>Volume Boot Record (VBR)</strong>‘a enjekte etmektedir. Dolayısıyla bir <strong>Antivirüs</strong>‘ün bu tipte bir <strong>Rootkit</strong>‘i yakalaması çok zordur.</li>
+    </ul>
+  </li>
+  <li><strong>Memory Rootkit</strong>
+    <ul>
+      <li>Bir <strong>Memory Rootkit</strong>‘i bizim <strong>RAM</strong>‘ımız içerisinde saklanmaktadır. Dolayısıyla <strong>Ram Memory</strong>‘si yani <strong>Hafızası</strong> içerisinde manipule edebilme yetkisine sahiptir. Olabilecekleri siz düşünün.</li>
+    </ul>
+  </li>
+  <li><strong>User-mode or application rootkit</strong>
+    <ul>
+      <li>Bir <strong>User-mode</strong> ya da <strong>Application Rootkit</strong>‘inin <strong>Antivirüs</strong> tarafından bulunması kolaydır. Bu tipteki <strong>Rootkit</strong>‘ler <strong>Aplikasyon</strong> yani <strong>Yazılım</strong> içerisinde saklanmaktadır. Ya da daha basit bir şekilde <strong>Kullanıcı</strong>‘nın ulaşabildiği her kısma ulaşabilmektedir.</li>
+    </ul>
+  </li>
+</ul>
+
+<p><img src="https://resmim.net/f/vEevRU.png" alt="" /></p>
+
+<p>Yukarıda ki fotorafta en çok <strong>Yetkilendirilmiş</strong> ve en az <strong>Yetkilendirilmiş</strong> çekirdeğe giden yolu görebiliriz.</p>
+
+<p>Basit bir şekilde bir <strong>İşletim Sistemi</strong>‘ni <strong>Dünya</strong>‘ya benzetmek mümkün.</p>
+
+<h1 id="rootkit-gizlenme-süreçleri-nelerdir-">Rootkit Gizlenme Süreçleri Nelerdir ?</h1>
+
+<p>Bir <strong>Rootkit</strong>‘in kendini gizleme süreci aşşağıdaki sıralamadan oluşmaktadır.</p>
+
+<ul>
+  <li>
+    <p>Örneğin <strong>ls</strong> komutu içerisinde <strong>Çıktı</strong> olarak karşımıza çıkan <strong>Dosyalar</strong> arasında istediğimiz <strong>Dosya</strong>‘yı gizlemeye yaramaktadır tabi bu sadece küçük bir örnek.</p>
+  </li>
+  <li>
+    <p>Bunu yapan basit bir <strong>Rootkit</strong> geliştirmiştim <a href="https://blacknbunny.github.io/2019/05/07/linux-system-call-hooking.html">Linux System Call Hooking</a> adlı yazımda.</p>
+  </li>
+  <li>
+    <p>Bir <strong>Rootkit</strong> ayrıca <strong>İşletim Sistemi</strong>‘nin <strong>Kaynak Kod</strong>‘unu değiştirebildiğinden kendini normal bir <strong>Kullanıcı</strong>‘nın ulaşamayacağı bir yere ekleyebilmektedir. Daha da basit şekilde <strong>Filesystem</strong>‘imizden yani <strong>Dosya Sistemi</strong>‘mizden farklı bir noktada çalıştırabilir kendisini.</p>
+  </li>
+  <li>
+    <p><strong>Sistem Çağrıları</strong>‘nı değiştirip <strong>İşletim Sistem</strong>‘i içerisinde <strong>Kullanılan Portları</strong> göstermekte kullanılan <strong>Komut</strong>‘ları manipule edip kendini gizleyebilmektedir.</p>
+  </li>
+  <li>
+    <p>Ayrıca bir <strong>Rootkit</strong> çalıştığı <strong>Process</strong>‘i bu <strong>Process</strong>‘leri göstermekte kullanılan <strong>Yazılımlar</strong>‘dan kendini gizleyebilmektedir.</p>
+  </li>
+  <li>
+    <p>Tabi bunlar bir kaç tanesi. Bir <strong>Rootkit</strong>‘in kendini gizlemesi için gerçekleştirebileceği senaryolar çok fazla.</p>
+  </li>
+</ul>
+
+<h3 id="hids-nedir-">HIDS Nedir ?</h3>
+
+<p>Şimdi diyebilirsiniz ki babacım sen bana <strong>Rootkit</strong> yazmasını göster <strong>HIDS</strong> ne ya geç bunları. Yalnız <strong>Rootkit</strong> çok genel bir terim dolayısıyla içerdiği çoğu konuya değinmek istiyorum bu yazımda. Zaten <strong>Part 2</strong>‘de çok çok daha derine inip kendi <strong>Rootkit</strong>‘imizi bile geliştirebiliriz.</p>
+
+<p>O yüzden bunları bilmek ileride çok yarayacaktır.</p>
+
+<p><img src="https://resmim.net/f/yF2AMg.png" alt="" /></p>
+
+<p>Açılımı <strong>Host-based Instrusion Detection System</strong> olan <strong>HIDS</strong> genel olarak <strong>Modification</strong>‘ları <strong>Filesystem</strong>‘de bulunan <strong>Dosya</strong>‘lara kayıt edip göndermektedir.</p>
+
+<p>Daha da basit bir şekilde her bir dosyanın <strong>Hash</strong>‘ini kendi <strong>Veritabanı</strong>‘nda tutup belli bir süre aralığında bu dosyaları eskiden kayıt altına aldığı <strong>Hash</strong>‘ler ile karşılaştırıp bir dosya içerisinde <strong>Değişiklik</strong> oldu mu olmadı mı onu bulmak için vardır.</p>
+
+<p>Bunu anlatmamın sebebi ileride biz bir <strong>dosya</strong> gizlemek istersek bu dosya üzerinde değişiklik yaptığımızı <strong>HIDS</strong> anlayıp bunu engelleyecektir dolayısıylada <strong>Rootkit</strong>‘imiz <strong>Çalışmak</strong>‘ta sıkıntı çekecektir.</p>
+
+<p>Tabi bununda <strong>Bypass</strong> yöntemi mevcut.</p>
+
+<h3 id="hidsler-nasıl-bypass-edilir">HIDS’ler nasıl bypass edilir?</h3>
+
+<p>Bu da işin komik tarafı.</p>
+
+<p><strong>API Hooking</strong>‘i engellemeye çalışırken kendisi <strong>System API</strong>‘sini kullanıyor…</p>
+
+<p>Hani dedik ya <strong>Dosya</strong>‘larda gerçekleşen değişiklikleri <strong>Hash</strong> karşılaştırması ile buluyor.</p>
+
+<p>İyi güzel kardeşim buluyorsunda benim sorum <strong>Kendine</strong> niye bakmıyorsun.</p>
+
+<p><strong>HIDS</strong>‘leri <strong>Bypass</strong> etmek için içerisinde kullandığı <strong>Sistem Çağrıları</strong>‘nı <strong>Hook</strong> edip çalışma şeklini değiştirebiliriz.</p>
+
+<p>Bu şekilde bu <strong>Yazılım</strong> bizim istediğimiz şekilde çalışacaktır.</p>
+
+<p>Ve <strong>Yazılım</strong>‘a bu <strong>Dosya</strong>‘yı ya da şu <strong>Hash</strong>‘i karşılaştırma diyebileceğiz.</p>
+
+<p><strong>HIDS</strong>‘i kullanmakta olan bir sürü yazılım mevcut <strong>Monitoring</strong> için.</p>
+
+<p>Bu yazılımlardan sistem içerisinde bir <strong>Rootkit</strong> mevcut olduğunu karşı tarafın anlamasını engellemek için bu tür <strong>Yazılım</strong>‘lar içerisinde değişiklik yapmamız gerekmekte.</p>
+
+<h1 id="logging-tracing-hooking-nedir-">Logging, Tracing, Hooking Nedir ?</h1>
+
+<p>Alttaki sıralamada bunların açıklamasını bulabilirsiniz :</p>
+
+<ul>
+  <li><strong>Logging</strong>
+    <ul>
+      <li>Adından da anlaşılabileceği gibi <strong>Kayıt Tutmak</strong>‘tır. Yalnız biz <strong>Rootkit</strong>‘ler ile <strong>Yasal</strong> yoldan değil <strong>Yasadışı</strong> yoldan kayıt tutmaktayız. Dolayısıyla bir <strong>Rootkit</strong>‘in içerisinde olmazsa olmazlardan biri <strong>Kayıt Tutma</strong> işlemidir. Bu <strong>Kayıt Tutma</strong> işlemi <strong>Kurban</strong>‘dan alabildiğimiz tüm herşey dahildir. Örneğin <strong>Dosyalar</strong>, <strong>Internet Bilgisi</strong>, <strong>Internet Istekleri</strong> vs…</li>
+    </ul>
+  </li>
+  <li><strong>Tracing</strong>
+    <ul>
+      <li><strong>Rootkit</strong>‘ler tarafından kullanılan <strong>Basit</strong> bir <strong>Debugging</strong> işlemidir.</li>
+      <li><strong>Yazılım</strong> tarafından gerçekleştirilen her bir <strong>Kernel Operasyon</strong>‘unu kayıt altına almak denilebilir buna kısaca. <strong>Kernel Operasyon</strong>‘larından bazıları :
+        <ul>
+          <li><strong>System Call</strong></li>
+          <li><strong>I/O</strong></li>
+          <li><strong>Signals</strong></li>
+        </ul>
+      </li>
+      <li>Yukarıdaki listede bulunan <strong>Operasyon</strong>‘ları bir <strong>Rootkit Trace</strong> ederek gözlemleyebilmektedir. Dolayısıyla <strong>Yazılım</strong>‘ın nasıl çalıştığını bu şekilde izleyebilmektedir.</li>
+    </ul>
+  </li>
+  <li><strong>Hooking</strong>
+    <ul>
+      <li>Türkçe meali ile <strong>Kancalama</strong> denilebilir. Bir <strong>Sistem Çağrısı</strong>‘nı <strong>Kancalamak</strong> basit bir şekilde o <strong>Sistem Çağrısı</strong>‘nın yerine kendi oluşturduğumuz <strong>Sistem Çağrısı</strong>‘nı koyup <strong>Manipule</strong> etmektir.</li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="hooking-türleri-nelerdir-">Hooking Türleri Nelerdir ?</h2>
+
+<p>Basit bir şekilde <strong>Hooking Türleri</strong>‘ni aşşağıda sıraladım.</p>
+
+<ul>
+  <li><strong>API Hooking</strong>
+    <ul>
+      <li><strong>API Hooking</strong> kullanılan <strong>İşletim Sistemi</strong>‘nin <strong>API</strong>‘sinde ki <strong>Fonksiyon</strong>‘ları ya da <strong>Kütüphane</strong>‘leri <strong>Kancalamaktır</strong>.</li>
+      <li>Basit bir şekilde aşşağıdaki resim <strong>Windows API</strong>‘sinin <strong>user32.dll</strong>‘ini hook ediyor :
+        <ul>
+          <li><img src="https://mk0resourcesinfm536w.kinstacdn.com/wp-content/uploads/APIhook-2-04222014.gif" alt="" /></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li><strong>IAT Hooking</strong>
+    <ul>
+      <li><strong>Import Address Table Hooking</strong>‘e değinecek olursak şayet. <strong>Portable Executable</strong> yani <strong>Çalıştırılabilir Dosya</strong> içerisinde bulunan <strong>Import Address Table</strong>‘yi <strong>Kancalamak</strong>‘tır. Daha da basit bir şekilde :</li>
+      <li><strong>IAT</strong> içerisinden  <strong>Hook</strong> edeceğimiz <strong>Fonksiyon</strong>‘u bulduktan sonra bu <strong>Fonksiyon</strong>‘un adresini bizim yazdığımız <strong>Fonksiyon</strong>‘un adresi ile değiştirmektir.</li>
+      <li><strong>IAT</strong> basit bir şekilde <strong>PE Header</strong>‘i içerisinden bulunabilir. Aşağıda ki resim bunu daha da basit bir şekilde sizlere özetlemektedir.
+        <ul>
+          <li><img src="https://resmim.net/f/jlrKbw.png" alt="" /></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li><strong>Function Hooking</strong>
+    <ul>
+      <li>Belirlediğimiz <strong>Yazılım</strong>‘ın içerisinde ki <strong>Fonksiyon</strong>‘u oluşturduğumuz sahte <strong>Kütüphane</strong>‘yi içerisine <strong>Load-Time</strong> ya da <strong>Run-Time</strong> zamanında sahte <strong>Fonksiyon</strong>‘umuz ile değiştirmektir.</li>
+      <li>Bir önceki blog yazımda bunu anlattım bkz : <a href="https://blacknbunny.github.io/2019/04/14/Linux-Function-Hooking.html">Linux Function Hooking</a></li>
+    </ul>
+  </li>
+  <li><strong>System Call Hooking</strong>
+    <ul>
+      <li>Belirlediğimiz <strong>Yazılım</strong>‘ın içerisinde bulunan asıl <strong>Sistem Çağrısı</strong> ile sahte <strong>Sistem Çağrımızı</strong> değiştirmek denilebilir.</li>
+      <li>Bunuda anlattığım blog yazıma sizleri alalım : <a href="https://blacknbunny.github.io/2019/05/07/linux-system-call-hooking.html">Linux System Call Hooking</a></li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="system-calls">System Calls</h3>
+
+<p>Bunlara basit bir şekilde <strong>Sistem Servis İstek</strong>‘leri diyebiliriz.</p>
+
+<p>Daha da basitleştirirsek <strong>İşletim Sistemi</strong>‘ne özel <strong>Çağrılar</strong> yani <strong>Fonksiyonlar</strong> diyebiliriz.</p>
+
+<p>Sistem çağrıları <strong>Kernel</strong> versiyonuna göre değişsede basit bir şekilde bir kaç tane stabil <strong>Linux Sistem Çağrısı</strong> aşağıdaki resimde bulunabilir :</p>
+
+<p><img src="https://resmim.net/f/IzD89k.png" alt="" /></p>
+
+<p>Bu resimi aldığım web sayfası çoğu <strong>Sistem Çağrısı</strong>‘nı içermektedir bakmak isteyenleriniz olursa : <a href="http://asm.sourceforge.net/syscall.html">Syscall List</a></p>
+
+<h4 id="hooking-system-call">Hooking System Call</h4>
+
+<p>Bir sistem çağrısını <strong>Hook</strong> etmek için basit bir şekilde o <strong>Sistem Çağrısı</strong>‘nın bir sahtesini oluşturup yerini değiştirmemiz gerekmektedir.</p>
+
+<p>Yukarıda daha önce yazdığım blog yazılarında bu kısmı daha detaylı anlattım okumayanlarınız varsa.</p>
+
+<h4 id="system-call-modules">System Call Modules</h4>
+
+<p><strong>Sistem Çağrısı Modül</strong>‘leri basit bir şekilde <strong>KLD</strong>‘lerdir. <strong>İşletim Sistem</strong>‘lerinde <strong>Sistem Çağrı</strong>‘ları <strong>Sistem Servis İstekleri</strong>‘dir. Basit bir şekilde <strong>Kernel</strong>‘den yani <strong>Çekirdek</strong>‘ten bir <strong>Yazılım</strong>‘ın <strong>İstek</strong>‘te bulunmak için kullandığı bir <strong>Mekanizma</strong>‘dır.</p>
+
+<p>Her <strong>Sistem Çağrı Modülü</strong> için 3 ayrı öğe vardır. Bunlar <strong>System Call Function</strong>, <strong>sysent structure</strong>, <strong>offset value</strong>‘den oluşmaktadır.</p>
+
+<h4 id="system-call-function">System Call Function</h4>
+
+<p><strong>&lt;sys/sysent.h&gt;</strong> içerisinde <strong>Prototip</strong>‘i bulunan bir <strong>Fonksiyon</strong>‘dur bu</p>
+
+<p><strong>Parametre</strong>‘leri ve <strong>Tip</strong>‘i yukarıda bahsettiğimiz <strong>sysent.h</strong> başlık içerisinde şu şekildedir :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>typedef int     sy_call_t(struct thread *, void *);
+</code></pre></div></div>
+
+<p><strong>thread</strong> parametresi çalışmakta olan <strong>Thread</strong>‘i <strong>Point</strong> etmektedir.</p>
+
+<p><strong>void</strong> ise belirtilecek <strong>Sistem Çağrı</strong>‘sının <strong>Argüman Yapısı</strong>‘nı <strong>Point</strong> yani <strong>İşaret</strong> etmektedir.</p>
+
+<p>Basit bir şekilde bu <strong>Fonksiyon</strong>‘un <strong>Örnek</strong> kullanımı aşşağıdaki gibidir :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>struct sc_example_args {
+	char *str;
+};
+	static int
+	sc_example(struct thread *td, void *syscall_args){
+		struct sc_example_args *uap;
+		uap = (struct sc_example_args *)syscall_args;
+		
+		printf("%s\n", uap-&gt;str);
+		
+		return(0);
+}
+</code></pre></div></div>
+
+<p>Bu örnek kısaca bir <strong>Argüman</strong> alıp bunu <strong>Sistem Konsol</strong>‘una <strong>Output</strong> ediyor ve <strong>printf</strong> aracılığıyla bunu dışarıya yazdırıyor.</p>
+
+<p><strong>Sistem Çağrısı Fonksiyon</strong>‘ları <strong>Kernel</strong> içerisinde <strong>Alan</strong> ayırarak işleme geçerler.</p>
+
+<p>Ayrıca bu çağrılar genellik ile <strong>User Space</strong> ve <strong>Kernel Space</strong> içerisinde <strong>İstek</strong> beklerler.</p>
+
+<p><strong>User Space</strong> içerisinde <strong>User-mode application</strong>‘lar çalışmakta olduğu için bu <strong>Application</strong>‘lar <strong>User Space</strong> içerisinden sistem çağrılarını alırlar.</p>
+
+<p><strong>Kernel Space</strong> içerisinde de <strong>LKM</strong>‘ler gibi <strong>Kernel Modül</strong>‘leri çalışmakta olduğundan bu modüllerde <strong>Kernel-mode application</strong>‘lar sayılır ve bu <strong>Application</strong>‘lar <strong>Sistem Çağrı</strong>‘ları için <strong>Kernel</strong>‘den <strong>İstek</strong>‘te bulunur.</p>
+
+<h4 id="sysent-structure">sysent structure</h4>
+
+<p><strong>Sistem Çağrı</strong>‘ları basit bir şekilde <strong>Entry</strong>‘leri ile bir <strong>sysent</strong> yapısının içerisinde belirtilirler. Ve aşşağıdaki şekilde <strong>&lt;sys/sysent.h&gt;</strong> başlığı içerisinde belirtilmiştir bu <strong>Structure</strong> yani <strong>Yapı</strong>.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>struct sysent {
+	int sy_narg;  /* argüman sayısı */
+	sy_call_t *sy_call;  /* sistem çağrısı yada fonksiyon ismi*/
+	au_event_t sy_auevent;  /* sistem çağrısı ile ilişkili denetim durumu */
+};
+</code></pre></div></div>
+
+<p>Örnek bir <strong>Sistem Çağrısı</strong>‘nın bu <strong>Yapı</strong> içerisinde belirtilmesi :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>static struct sysent sc_example_sysent = {
+		1,    /* argüman sayısı */
+		sc_ornek  /* sistem çağrısı yada fonksiyon ismi */
+}
+</code></pre></div></div>
+
+<p>Basit bir şekilde içinde <strong>Sistem Çağrı</strong>‘larını barındıran bir <strong>Array</strong> diyebiliriz buna <strong>sysent[]</strong>.</p>
+
+<h4 id="offset-value">Offset Value</h4>
+
+<p><strong>Sistem Çağrı</strong>‘sının <strong>Sayısı</strong> olarak bilinmektedir.</p>
+
+<p>Benzersiz <strong>0</strong> ile <strong>456</strong> arasında her bir <strong>Sistem Çağrı</strong>‘sının kendine özgü bir sayısı mevcuttur.</p>
+
+<p><strong>offset</strong> değerini <strong>NO_SYSCALL</strong> ile değiştirirsek <strong>sysent</strong> içerisinde ileride bulunan ve kullanılmayan <strong>offset</strong>‘e geçiş yaparız oluşturduğumuz yada kullanacağımız <strong>Sistem Çağrı</strong>‘sı ile.</p>
+
+<p>Örnek :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>static int offset = NO_SYSCALL;
+</code></pre></div></div>
+
+<h4 id="modfind-function">modfind Function</h4>
+
+<p>Bir <strong>Kernel Modülü</strong>‘nü bulmak için kullanılan <strong>Fonksiyon</strong>‘dur.</p>
+
+<p>Örnek :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#include &lt;sys/param.h&gt;
+#include &lt;sys/module.h&gt;
+
+int
+modfind(const char *modname);
+</code></pre></div></div>
+
+<h4 id="modstat-function">modstat Function</h4>
+
+<p>Bir <strong>Kernel Modülü</strong>‘nün <strong>Status</strong>‘ünü yani <strong>Durumu</strong>‘nu döndüren <strong>Fonksiyon</strong>‘dur.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#include &lt;sys/param.h&gt;
+#include &lt;sys/module.h&gt;
+
+int
+modstat(int modid, struct module_stat *stat);
+</code></pre></div></div>
+
+<p>Dönecek bilgi <strong>stat</strong> argüman’ı içerisinde tutulmaktadır. Bu argüman <strong>&lt;sys/module.h&gt;</strong> başlığında belirtilmiştir.</p>
+
+<h4 id="syscall-function">syscall Function</h4>
+
+<p>Bir <strong>Sistem Çağrı</strong>‘sını çağırmak için kullanılan bir <strong>Fonksiyon</strong>‘dur.</p>
+
+<p>Bunuda <strong>Sistem Çağrı</strong>‘sının <strong>Offset Value</strong>‘sini alarak o çağrıyı çalıştırır.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#include &lt;sys/syscall.h&gt;
+#include &lt;unistd.h&gt;
+
+int
+syscall(int number, ...);
+</code></pre></div></div>
+
+<p>Yani <strong>Sistem Çağrı</strong>‘sının sayısını <strong>syscall function</strong>‘una verdiğimizde o <strong>Sistem Çağrısını</strong> çalıştırır.</p>
+
+<h3 id="network-connections">Network Connections</h3>
+
+<p>Bir <strong>Rootkit</strong>‘in <strong>Internet</strong> altında gerçekleştirdiklerini sırayla altta yazmış bulunmaktayım.</p>
+
+<ul>
+  <li>Bir <strong>Rootkit</strong> çalışma sırasında kendini <strong>Internet</strong> içerisinde gizlemek için <strong>Wireshark</strong>‘ın kullandığı <strong>Sistem Çağrı</strong>‘ları ile oynayıp <strong>TCP</strong>, <strong>UDP</strong> vs.. gibi <strong>Internet Protokol</strong>‘lerinde kendini gizleyebilmektedir. Dolayısıyla <strong>Rootkit</strong>‘in gerçekleştirdiği <strong>Request</strong>‘ler <strong>Rootkit</strong> tarafından gizlenebilmektedir.</li>
+  <li><strong>Wireshark</strong> bir örnekti başka bir örnek olarak <strong>Linux</strong> içerisinde gerçekleşen ağ izleme için kullanılmakta olan <strong>Yazılım</strong>‘lardan kendini gizleyebildiği için sistem içerisinde %100 gizlilik elde edebilmektedir.</li>
+  <li><strong>Rootkit</strong> geliştirmek sadece akılda oluşturulabilecek senaryolarla sınırlıdır. Yani eğer siz bu <strong>Rootkit</strong>‘i sistem içerisinde bir dosya olmaktan yada bir <strong>DNS Sunucu</strong>‘suna <strong>Request</strong> attığında bu <strong>Request</strong>‘i gizlemek bir senaryo olabilir. Dolayısıyla sistem içerisinde yapabileceğiniz tüm değişim, etkileşim aklımızda bitmektedir.</li>
+  <li>Sistem içerisinde kullanılan <strong>TCP</strong>, <strong>UDP</strong>, <strong>ICMP</strong> protokolleri bir <strong>Rootkit</strong> tarafından düzenlenebilmektedir.</li>
+  <li>Bir <strong>DNS Yazılım</strong>‘ının kullandığı <strong>Sistem Çağrısı</strong> bir <strong>Rootkit</strong> tarafından düzenlenebildiği için o <strong>Yazılım</strong> içerisinde kayıt altında tutulan <strong>DNS Request Log</strong>‘larından <strong>Rootkit</strong> kendi attığı <strong>DNS Request</strong>‘lerini yani <strong>DNS İstek</strong>‘lerini gizleyebilmektedir.</li>
+</ul>
+
+<p><img src="https://resmim.net/f/edv0td.jpg" alt="" /></p>
+
+<p><strong>Sistem Çağrıları</strong>, <strong>Sürücüler</strong>, <strong>Diskler</strong> bunların hepsi içerisinde <strong>Sistem</strong>‘den <strong>Çağrı</strong> yani <strong>Fonksiyon</strong> isteğinde bulunduğundan bunlar <strong>Rootkit</strong> tarafından düzenlenebilmektedir.</p>
+
+<p>Bir senaryo olması açısından <strong>Router</strong>‘imizin sunucusuna ulaşılırsa şayet içerisine eklenilebilecek bir <strong>Rootkit</strong> ile <strong>ISP</strong> arasında <strong>Giden, Gelen</strong> izlenilebilir.</p>
+
+<p><strong>Rootkit</strong>‘lerin <strong>Backdoor</strong> alması için birçok yol mevcut olmasına rağmen genellik ile <strong>Rootkit</strong>‘ler kendi içerisinde en azından aldığı bir <strong>Reverse Shell</strong>‘in bile beklemede olduğu <strong>IP:PORT</strong> adreslerini gizleyebilmektedir.</p>
+
+<h3 id="processes">Processes</h3>
+
+<p><strong>Rootkit</strong>‘in <strong>İnternet</strong> içinde gizlenmesinin yanı sıra kendini gizlediği alanlardan biride <strong>Process</strong>‘lerdir. Örneğin <strong>Windows</strong>‘ta <strong>Görev Yöneticisi</strong>‘ni açtığınızda orada <strong>explorer.exe</strong>‘yi görebilirsiniz.</p>
+
+<p>Bu <strong>explorer.exe</strong> bir <strong>Rootkit</strong> olsaydı şayet onu orada göremezdiniz sebebide <strong>Görev Yöneticisi</strong> bile <strong>Sistem Çağrı</strong>‘larını kullanmaktadır.</p>
+
+<p><strong>Rootkit</strong> kendini gizleyebildiği gibi bu gizlenmeninde ortaya çıkması için kullanılan methodlar vardır.</p>
+
+<p>Örneğin <strong>Process Hacker</strong> yazılımı içerisinde <strong>Gizlenmiş Process</strong>‘leri bulmak mümkün.</p>
+
+<p><img src="https://resmim.net/f/mkuzbs.jpg" alt="" /></p>
+
+<p>Tabi bu <strong>Gizlenmiş Process</strong>‘i bulmak için kullanılan methodlarında yapısını tersine kullanan methodlar mevcut.</p>
+
+<p>Dolayısı ile hep bir kaçış dönüyor <strong>Rootkit</strong> kelimesinin derinlerinde.</p>
+
+<h3 id="bsd-communication-protocols">BSD Communication Protocols</h3>
+
+<p>İsimdende anlaşılabileceği gibi <strong>BSD İletişim Protokolleri</strong>.</p>
+
+<p>Bu <strong>İletişim Protokolleri</strong> kurallardan oluşmuştur ve iki <strong>İletişim</strong> halinde olan <strong>İşlem</strong> tarafından kullanılır.</p>
+
+<p>Buna bir örnek olması için <strong>( TCP/IP Protocol )</strong> öne çıkarılabilir.</p>
+
+<p><strong>FreeBSD</strong> içerisinde bir <strong>İletişim Protokol</strong>‘u <strong>Protocol Switch Table</strong> yani <strong>protosw[]</strong> içerisinde <strong>Kayıt</strong>‘ları ile tanımlanır.</p>
+
+<p>Bu <strong>Kayıtlar</strong> düzenlenebildiği için <strong>Rootkit</strong> bunun karşısında eli boş kalmamaktadır.</p>
+
+<p><img src="https://resmim.net/f/YdCqXV.jpg" alt="" /></p>
+
+<p>Ve bu sayede bir <strong>Rootkit</strong>‘in birçok <strong>Network Layer</strong>‘ini <strong>Manipule</strong> etmesi mümkün.</p>
+
+<p><strong>Communication Endpoint</strong> tarafından <strong>Gönderilen</strong> ve <strong>Alınan</strong> istekleri bir <strong>Rootkit</strong> düzenleyebilmektedir.</p>
+
+<h4 id="protosw-structure">protosw Structure</h4>
+
+<p>Her bir <strong>Protocol Swich Table</strong> kayıdı <strong>protosw</strong> yapısının içerisinde tutulur.</p>
+
+<p>Bu <strong>Structure</strong>‘in yani <strong>Yapı</strong>‘nın kaynak kodları <code class="highlighter-rouge">&lt;sys/protosw.h&gt;</code> başlık dosyasında bulunmaktadır.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>struct protosw {
+	short   pr_type;                /* socket tipi */        
+	struct  domain *pr_domain;      /* domain protokolü */        
+	short   pr_protocol;            /* protokol numarası */        
+	short   pr_flags;/* protokol hookları */        
+	pr_input_t *pr_input;           /* protokol için input */        
+	pr_output_t *pr_output;         /* protokol için output */
+	
+	pr_ctlinput_t *pr_ctlinput;     /* control input */        
+	pr_ctloutput_t *pr_ctloutput;   /* control output */        
+	pr_usrreq_t     *pr_ousrreq;/* utility hookları*/       
+	pr_init_t *pr_init;        pr_fasttimo_t *pr_fasttimo;     /* hızlı timeout(200 ms)*/        
+	pr_slowtimo_t *pr_slowtimo;     /* yavaş timeout(500 ms) */        
+	pr_drain_t *pr_drain;           /* mümkün olan fazlalıkları boşaltmak için */        
+	struct  pr_usrreqs *pr_usrreqs; /* supersedes pr_usrreq() */
+	
+	};
+
+</code></pre></div></div>
+
+<p>Örneğin yukarıdaki <strong>Structure</strong>‘yi bir <strong>Rootkit</strong> çok basit bir şekilde <strong>Manipule</strong> edebilmektedir yani düzenleyebilmektedir.</p>
+
+<h4 id="inetsw-switch-table">inetsw[] Switch Table</h4>
+
+<p>Her bir <strong>İletişim Protokol</strong>‘unun <strong>protosw</strong> yapısı <code class="highlighter-rouge">/sys/netinet/in_proto.c</code> dosyasında belirlenmiştir. Bu dosyadan bir parça :</p>
+
+<p><img src="https://resmim.net/f/DMcOWo.jpg" alt="" />
+<img src="https://resmim.net/f/tRVlcZ.jpg" alt="" /></p>
+
+<p>Bir <strong>Rootkit</strong>‘in <strong>İletişim Protokol</strong>‘leri ile manipulasyon senaryosuna girmemesi için hiçbir neden yok.</p>
+
+<p>Düzenlemeler sonucunda <strong>Protokol</strong> değişimleri incelenebilir olucaktır.</p>
+
+<p>Tabi bu değişiklikleri farkeden bazı <strong>Yazılım</strong>‘lar mevcut olduğundan o <strong>Yazılım</strong>‘ları atlatmanın yollarıda mevcuttur.</p>
+
+<h4 id="mbuf-structure">mbuf Structure</h4>
+
+<p><strong>Veri ve Kontrol Bilgisi</strong> denilebilir kısaca <strong>mbuf</strong> yapısına.</p>
+
+<p>Aynı zamanda <strong>Network Data</strong> yani <strong>Ağ Verisi</strong> için bir <strong>Memory Buffer</strong> yani <strong>Ara Bellek</strong>‘tir.</p>
+
+<p>Aşşağıdaki resimde bu <strong>Yapı</strong>‘nın içeriklerini görebiliriz.</p>
+
+<p><img src="https://resmim.net/f/Lcus10.jpg" alt="" /></p>
+
+<p>İki <strong>Communation Process</strong> içerisinde geçen <strong>Veri</strong> ve <strong>Kontrol</strong> bilgisi bu <strong>Yapı</strong> yani <strong>Structure</strong> içerisinde tutulur.</p>
+
+<p>Bu <strong>Structure</strong> yani <strong>Yapı</strong> <code class="highlighter-rouge">&lt;sys/mbuf.h&gt;</code> başlık dosyası içerisinde tanımlanmıştır.</p>
+
+<p>Bu <strong>Veri</strong>‘yi <strong>Okumak</strong> ya da <strong>Düzenlemek</strong> için <strong>mbuf Structure</strong> içerisinde bilmemiz gereken iki alan mevcuttur.</p>
+
+<ol>
+  <li><strong>m_len</strong>
+    <ul>
+      <li>Bu alan <strong>mbuf</strong> içerisinde yer alan <strong>*Veri Miktarı</strong>‘nı tutmaktadır.</li>
+    </ul>
+  </li>
+  <li><strong>m_data</strong>
+    <ul>
+      <li>Bu alan <strong>mbuf</strong> içerisinde bulunan <strong>Veri</strong>‘yi tutar.</li>
+    </ul>
+  </li>
+</ol>
+
+<p>Aynı zamanda bir <strong>Rootkit</strong> içerisinde <strong>Communication Protocol</strong>‘unu <strong>Hook</strong> etmek istersek bakmamız gereken ilk <strong>Structure</strong>‘den biridir <strong>mbuf</strong>.</p>
+
+<p>Yani daha da basit şekilde bir <strong>Rootkit</strong> istediği <strong>İletişim Protokol</strong>‘u üzerinde değişiklik yapabilir yada bu <strong>İletişim Protokol</strong>‘unun kullanıldığı yerdeki <strong>Veri</strong> akışını <strong>Okuyabilir</strong> ya da <strong>Düzenleyebilir</strong>.</p>
+
+<h2 id="kernel-process-tracing-nedir-">Kernel Process Tracing Nedir ?</h2>
+
+<p>Basit bir şekilde <strong>Kernel</strong> izleme ve hata ayıklama tekniğidir.</p>
+
+<p><strong>Kernel Operasyon</strong>‘larına aşşağıdaki listede yazanları uygulayabiliriz.</p>
+
+<ul>
+  <li><strong>Kayıt Altında Tutmak ( Logging )</strong></li>
+  <li><strong>İzlemek, yolunu kesmek ( Intercept )</strong></li>
+  <li><strong>Ayıklamak ( Debugging )</strong></li>
+</ul>
+
+<p>Ftrace ile <strong>Kernel</strong>‘i debug edip bunu yazıya döken bir ingiliz arkadaşımız : <a href="https://jvns.ca/blog/2017/03/19/getting-started-with-ftrace/">Debugging the kernel using Ftrace </a></p>
+
+<p>Bir <strong>Rootkit</strong>‘in bu işlemi gerçekleştirmesinin sebebi musallat olacağı <strong>Yazılım</strong> varsa şayet o <strong>Yazılım</strong>‘ın kullandığı <strong>Sistem Çağrı</strong>‘larını bulup onlar için birer <strong>Hook</strong> yazmaktır.</p>
+
+<p><img src="https://resmim.net/f/TltHyI.jpg" alt="" /></p>
+
+<p>Daha önceki yazımda <strong>getdirents</strong> sistem çağrısını <strong>Hook</strong> edip <strong>ls</strong> komutundan <strong>Dosya Gizleme</strong>‘yi anlatmıştım. Ve küçük bir <strong>Rootkit</strong> yazmıştık o yazımda. Eğer okumadıysanız bu yazıyı okumaya başlamadan önce aşşağıda listelediğim yazılarımı okuyun lütfen.</p>
+
+<p>Çünkü bu yazıda çok <strong>Teknik</strong> detaya girmesemde bazılarımıza çok <strong>Teknik</strong> gelebilir o yüzden <strong>0</strong>‘dan başlaması onun için iyi olacaktır.</p>
+
+<p>Yazılarım :</p>
+
+<ul>
+  <li><a href="https://blacknbunny.github.io/2019/04/22/loadable-kernel-module.html">LKM Development</a></li>
+  <li><a href="https://blacknbunny.github.io/2019/04/14/Linux-Function-Hooking.html">Linux Function Hooking</a></li>
+  <li><a href="https://blacknbunny.github.io/2019/05/07/linux-system-call-hooking.html">Linux System Call Hooking</a></li>
+</ul>
+
+<h2 id="keystroke-logging">Keystroke Logging</h2>
+
+<p>Basit bir şekilde <strong>Sistem Çağrı</strong>‘sını <strong>Hook</strong> ederek <strong>Klavye</strong>‘de basılan tuşların kayıtlarını tutabiliriz.</p>
+
+<p>Örneğin <strong>read</strong> sistem çağrısını <strong>Hook</strong> ederek bu işe başlayabiliriz.</p>
+
+<p>Bu <strong>Sistem Çağrı</strong>‘sının <strong>C Library</strong> hali şöyle :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#include &lt;sys/types.h&gt;
+#include &lt;sys/uio.h&gt;
+#include &lt;unistd.h&gt;
+
+ssize_t
+read(int fd, void *buf, size_t nbytes);
+</code></pre></div></div>
+
+<p>Bu <strong>Sistem Çağrı</strong>‘sını kendi yazdığımız <strong>Sahte Sistem Çağrı</strong>‘sı ile değiştirirsek şayet ne zaman <strong>read</strong> sistem çağrısı kullanılsa kullanıldığı yeri kaydet diyebiliriz <strong>Rootkit</strong>‘imize.</p>
+
+<p><strong>read</strong> sistem çağrısı <strong>nbytes</strong> kısmından <strong>Veri</strong>‘yi alıp bunu <strong>buf</strong> parametresine gönderir.</p>
+
+<p>Bir <strong>Klavye Tuş Vuruşu</strong>‘nu yakalamak için <strong>buf</strong> parametresinin <strong>İçeriğini</strong> kaydetmemiz gerekmektedir. Ne zaman <strong>fd</strong> parametresi <strong>Standart Input</strong>‘a işaret eder örneğin (file descriptor 0) o zaman <strong>Klavye Tuş Vuruş</strong>‘larını yakalayabiliriz demektir.</p>
+
+<p>Aşşağıdaki <strong>Kaynak Kod</strong>‘u <strong>read</strong> sistem çağrısını <strong>Hook</strong> edip <strong>Klavye Tuş Vuruş</strong>‘larını <strong>Kernel</strong> içerisinde kaydetmek için yazılmıştır.</p>
+
+<p><strong>read Sistem Çağrısı Hook</strong> : <a href="https://pastebin.com/9hGXGtKL">Pastebin</a></p>
+
+<p>Bu <strong>Hook</strong>‘u sisteme <strong>Load</strong> ettikten yani <strong>Yükledik</strong>‘ten sonra son durum :</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>login: root
+Password:
+Last login: Mon Feb 9 00:15:22 on ttyv2
+
+root@vvmnx ~# dmesg | tail -n 32
+r
+o
+o
+t
+
+s
+i
+f
+r
+e
+</code></pre></div></div>
+
+<p>Gördüğünüz gibi <strong>Giriş Bilgi</strong>‘leri <strong>Kernel</strong> içerisinde kayıt altında tutuldu ve biz <strong>Şifre</strong>‘yi bilmesekte göremesekte bu şekilde bulmuş olduk.</p>
+
+<p>Basit bir şekilde <strong>Keystroke Logging</strong>‘i gerçekleştirmek için yollardan biri olan <strong>read</strong> sistem çağrısını <strong>Hook</strong> ettik.</p>
+
+<h1 id="kernel-object-nedir-">Kernel Object Nedir ?</h1>
+
+<p>Bir <strong>Kernel</strong> yani <strong>Çekirdek</strong> geliştiriciye kendisinden birçok özellik sunmaktadır örneğin (Process, Socket, Thread, Mutex) vs… gibi.</p>
+
+<p><strong>Object</strong>‘ler yani <strong>Nesne</strong>‘lerde bunlardan biridir.</p>
+
+<p>Bir <strong>Kernel</strong> nesnesi basitce bir <strong>Memory Block</strong>‘tur. Yani bir <strong>Structure</strong> yani <strong>Yapı</strong> düşünün ve bu yapının içerisinde <strong>Nesne</strong> yani <strong>Object</strong> hakkında bilgilerin tutulduğunu. Ve bu bilgileri tutan birçok <strong>Alan</strong> olduğunu.</p>
+
+<p>Örneğin <strong>Object</strong>‘lere örnek olması için (ID, Process Object) gibi terimler gösterilebilir.</p>
+
+<p>Yada daha güzel bir örnek olması için aşşağıdaki resme bakabiliriz :</p>
+
+<p><img src="https://resmim.net/f/4pgDMX.jpg" alt="" /></p>
+
+<p>Yukarıdaki liste <strong>Windows İşletim Sistemi</strong> içerisindeki <strong>Nesne</strong>‘lerdir. Bu <strong>Nesne</strong>‘lerin <strong>Manipulasyon</strong>‘u mümkündür.</p>
+
+<p>Bu <strong>Manipulasyon</strong> işlemi için aşşağıdaki başlığı inceleyelim.</p>
+
+<h2 id="direct-kernel-object-manipulation">Direct Kernel Object Manipulation</h2>
+
+<p>Bu <strong>Nesne</strong>‘leri <strong>Direkt</strong> olarak <strong>Manipule</strong> etmeye <strong>Direct Kernel Object Manipulation</strong> adı verilir.</p>
+
+<p>Basitçe <strong>Windows</strong> için <strong>Processes</strong>, <strong>Drivers</strong>, <strong>Files</strong> ve <strong>intermediate connection</strong>‘ları <strong>Task Manager</strong> ve <strong>Event Scheduler</strong>‘den gizlemek içi bir <strong>Rootkit</strong> tekniğidir.</p>
+
+<p>Kısaltması <strong>DKOM</strong>‘dur ve <strong>*DKOM</strong>‘un içerik listesi aşşağıdaki gibidir :</p>
+
+<ul>
+  <li><strong>Hide process</strong></li>
+  <li><strong>Hide drivers</strong></li>
+  <li><strong>Hide ports</strong></li>
+  <li><strong>Elevate privilege level of threads and processes</strong></li>
+  <li><strong>Skew forensics</strong></li>
+  <li><strong>Full control of system</strong></li>
+</ul>
+
+<p><strong>Veri Yapı</strong>‘larını yani <strong>Data Structure</strong>‘lerini <strong>Manipule</strong> edeceğimizden <strong>DKOM</strong> bize <strong>Process</strong>, <strong>Driver</strong>, <strong>Port</strong> gibi terimleri <strong>İşletim Sistemi</strong> içerisinde gizlememizi sağlayabilir.</p>
+
+<p>İlk üçü bu şekilde. Diğerleri ise isimlerindende anlaşılabileceği gibi <strong>Yetki Seviyesi Yükseltmek</strong>, <strong>Adli Tıp*, **Sistemin Tüm Kontrolu</strong> gibi durumları baz alıyor.</p>
+
+<p><strong>Data Structure</strong>‘lerini <strong>Manipule</strong> ederek <strong>DKOM</strong> sayesinde üstünden gelebileceğimiz çoğu şey böyle.</p>
+
+<p>Daha da basit anlatırsam örneğin <strong>EPROCESS Data Structure</strong>‘sini <strong>DKOM</strong> tekniği ile manipule etmek istersek şayet :</p>
+
+<p><img src="http://i159.photobucket.com/albums/t141/sovietweasel/plist.jpg" alt="" /></p>
+
+<p>Yukarıdaki <strong>Data Structure</strong>‘deki <strong>Forward link</strong> ve <strong>Back link</strong> kısımlarını <strong>Direkt</strong> olarak <strong>Manipule</strong> edip bizim <strong>Rootkit Process</strong>‘imizi <strong>Task Manager</strong> gibi <strong>Process</strong> görüntüleme araçlarından gizleyebiliyoruz.</p>
+
+<p>Bazen <strong>Hooking</strong> tekniği işe yaramadığı zaman bir <strong>Sistem</strong>‘de diğer <strong>Rootkit</strong> tekniklerini kullanmamız gerekebiliyor ve bu tekniklerden biride <strong>DKOM</strong>‘dur.</p>
+
+<p>Tabi bu kadar ile sınırlı değil. <strong>DKOM</strong>‘un daha derinlerine inmek isteyenler ve tekniği çok daha yakından tanımak isteyenlerimiz varsa bir <strong>Wikipedia</strong> kaynağı bırakıyorum alta.</p>
+
+<p><a href="https://en.wikipedia.org/wiki/Direct_kernel_object_manipulation">Direct Kernel Object Manipulation (DKOM) wikipedia</a></p>
+
+<h1 id="the-end">THE END</h1>
+
+<p>Bu yazımızında sonuna geldik.</p>
+
+<p>Çok fazla detaya girmeden <strong>Rootkit</strong> serimizin ilk partını bitirdik.</p>
+
+<p><strong>Part 2</strong>‘de daha da teknik detaya gireceğiz. Bir <strong>Rootkit</strong>‘i başından sonuna nasıl geliştirebileceğimiz nelere dikkat etmemiz gerektiği gibi konulara ve daha bir çok teknik detaya değineceğiz.</p>
+
+<p>Sorular için : <a href="https://www.twitter.com/0DAYanc">Twitter @0DAYanc</a></p>
+
+  </div>
+
+  
+</article>
+
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Daily Security</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>
+            
+              Daily Security
+            
+            </li>
+            
+            <li><a href="mailto:xazamaxi@protonmail.com">xazamaxi@protonmail.com</a></li>
+            
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+          <li>
+            <a href="https://github.com/blacknbunny"><span class="icon icon--github"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
+</span><span class="username">blacknbunny</span></a>
+
+          </li>
+          
+
+          
+          <li>
+            <a href="https://twitter.com/0DAYanc"><span class="icon icon--twitter"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27 c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767 c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206 C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271 c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469 c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg>
+</span><span class="username">0DAYanc</span></a>
+
+          </li>
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>In this blog we&#39;re going to solve CTF&#39;s &amp; Write Some Software&#39;s.My goal is redirect my little knowledge to other people.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>
