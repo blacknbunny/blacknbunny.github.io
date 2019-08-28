@@ -32,7 +32,7 @@ Yukarıda basit bir özetini geçtim ama yine de teknik açıdan anlatmakta fayd
 
 **Asynchronous Procedure Call (APC)**, **Eşzamansız (Asynchronously)** olarak çalışan, aynı zamanda da **Thread** içeriğinde çalışmakta olan bir fonksiyondur.
 
-Bir **APC**, **Thread** içerisine sunulduğu zaman sistem **Software Interrupt** adında bir hata alır. Dolayısı ile **Thread** tekrar yüklendiğinde ya da çalıştığında o **Thread** bizim **APC** fonksiyonumuzu çalıştırır.
+Bir **APC**, **Thread** içerisine sunulduğu zaman sistem **Software Interrupt** gerçekleştirir. Dolayısı ile **Thread** tekrar yüklendiğinde ya da çalıştığında o **Thread** bizim **APC** fonksiyonumuzu çalıştırır.
 
 * **System** tarafından oluşturulan bir **APC**'ye **kernel-mode APC** denilir.
 
