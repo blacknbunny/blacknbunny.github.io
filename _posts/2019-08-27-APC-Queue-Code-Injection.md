@@ -278,6 +278,8 @@ Yani eğer **Shellcode**'u ekleyeceği doğru **Thread** değilse **ENTER** tuş
 
 Ama **Kurban** yazılım içerisinde sadece bir **APC** fonksiyonu kullandığımızdan oda **SleepEx** fonksiyonu olduğundan ilk **Thread**'da direk **Meterpreter**'den **reverse_tcp** yani erişimi alacağızdır.
 
+**Saldırgan**'ın tüm kaynak kodu : [Saldırgan](https://pastebin.com/Hq6VvGme)
+
 ### Proof Of Concept ( PoC )
 
 **Saldırgan** ve **Kurban** yazılımlarının **APC Queue Code Injection** etkileşiminin gerçekleştiği bir video hazırladım bakmak isterseniz.
