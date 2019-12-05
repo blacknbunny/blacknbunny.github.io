@@ -13,7 +13,7 @@ Youtube Channel : [Dayanç Soyadlı](https://www.youtube.com/channel/UCAW77-4MVX
 
 ฿ : 3CmyCcXuTZynytH5Sw2SNGm2P6w7iYgGcH
 
-✉ : xazamaxi@protonmail.com
+✉ : zootslotsofzoots@protonmail.ch
 
 ### EN
 Name: Dayanç
