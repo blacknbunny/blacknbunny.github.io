@@ -1,11 +1,11 @@
 title: Daily Security
-email: zootslotsofzoots@protonmail.ch
+email: keymap.blind@gmail.com
 description: >-
   In this blog we're going to solve CTF's & Write Some Software's.My goal is redirect my little knowledge to other people.
 baseurl: ''
 url: blacknbunny.github.io
-twitter_username: 0DAYanc
-github_username: blacknbunny
+twitter_username: nouser
+github_username: nouser
 markdown: kramdown
 theme: minima
 exclude:
