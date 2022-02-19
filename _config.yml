@@ -7,7 +7,7 @@ url: blacknbunny.github.io
 twitter_username: nouser
 github_username: nouser
 markdown: kramdown
-theme: minima
+theme: jekyll-theme-slate
 exclude:
  - vendor/bundle/
 plugins:
